@@ -24,7 +24,7 @@ class LocalePreferenceNotifier extends AsyncNotifier<LocalePreference> {
 
   Future<void> setPreference(LocalePreference preference) async {
     final storage = await ref.read(localePreferenceStorageProvider.future);
-    state = const AsyncValue.loading();
+    state = const AsyncValue<LocalePreference>.loading().copyWithPrevious(state);
     try {
       await storage.write(preference);
       state = AsyncValue.data(preference);

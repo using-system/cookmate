@@ -8,9 +8,9 @@ import '../providers.dart';
 
 const _modelUrls = {
   ChatModelPreference.gemma4E2B:
-      'https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.task',
+      'https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm',
   ChatModelPreference.gemma4E4B:
-      'https://huggingface.co/litert-community/gemma-4-E4B-it-litert-lm/resolve/main/gemma-4-E4B-it.task',
+      'https://huggingface.co/litert-community/gemma-4-E4B-it-litert-lm/resolve/main/gemma-4-E4B-it.litertlm',
 };
 
 class ModelDownloadPage extends ConsumerStatefulWidget {

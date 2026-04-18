@@ -30,6 +30,7 @@ class LocalePreferenceNotifier extends AsyncNotifier<LocalePreference> {
       state = AsyncValue.data(preference);
     } catch (error, stack) {
       state = AsyncValue.error(error, stack);
+      rethrow;
     }
   }
 }
@@ -40,11 +41,12 @@ final localePreferenceProvider =
 );
 
 final effectiveLocaleProvider = Provider<Locale?>((ref) {
-  final preference = ref.watch(localePreferenceProvider);
-  return preference.whenOrNull(
-    data: (value) => switch (value) {
-      SystemLocalePreference() => null,
-      ForcedLocalePreference(:final locale) => locale,
-    },
-  );
+  final value = ref.watch(localePreferenceProvider).valueOrNull;
+  if (value == null) {
+    return null;
+  }
+  return switch (value) {
+    SystemLocalePreference() => null,
+    ForcedLocalePreference(:final locale) => locale,
+  };
 });

@@ -54,7 +54,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     try {
       final model = await FlutterGemma.getActiveModel(
         maxTokens: 2048,
-        preferredBackend: PreferredBackend.cpu,
+        preferredBackend: PreferredBackend.gpu,
       );
       _chat = await model.createChat(
         temperature: 0.8,
@@ -135,7 +135,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     try {
       final model = await FlutterGemma.getActiveModel(
         maxTokens: 64,
-        preferredBackend: PreferredBackend.cpu,
+        preferredBackend: PreferredBackend.gpu,
       );
       final session = await model.createSession(temperature: 0.3, topK: 1);
       await session.addQueryChunk(Message.text(

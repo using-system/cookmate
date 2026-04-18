@@ -79,7 +79,7 @@ class ChatPage extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   subtitle: Text(
-                    _formatDate(conv.updatedAt),
+                    _formatDate(context, conv.updatedAt),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   onTap: () => context.go('/home/chat/${conv.id}'),
@@ -92,13 +92,14 @@ class ChatPage extends ConsumerWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(BuildContext context, DateTime date) {
+    final l10n = AppLocalizations.of(context);
     final now = DateTime.now();
     final diff = now.difference(date);
 
-    if (diff.inMinutes < 1) return 'just now';
-    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-    if (diff.inDays < 1) return '${diff.inHours}h ago';
+    if (diff.inMinutes < 1) return l10n.chatTimeJustNow;
+    if (diff.inHours < 1) return l10n.chatTimeMinutesAgo(diff.inMinutes);
+    if (diff.inDays < 1) return l10n.chatTimeHoursAgo(diff.inHours);
     return '${date.day}/${date.month}/${date.year}';
   }
 }

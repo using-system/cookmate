@@ -118,6 +118,30 @@
   "settingsRestartRequiredButton": "Restart now",
   "@settingsRestartRequiredButton": { "description": "Button label to restart the app." },
 
+  "chatTimeJustNow": "just now",
+  "@chatTimeJustNow": { "description": "Relative time label for less than a minute ago." },
+
+  "chatTimeMinutesAgo": "{minutes}m ago",
+  "@chatTimeMinutesAgo": {
+    "description": "Relative time label for minutes ago.",
+    "placeholders": { "minutes": { "type": "int", "example": "5" } }
+  },
+
+  "chatTimeHoursAgo": "{hours}h ago",
+  "@chatTimeHoursAgo": {
+    "description": "Relative time label for hours ago.",
+    "placeholders": { "hours": { "type": "int", "example": "3" } }
+  },
+
+  "chatModelErrorBanner": "Model error: {error}",
+  "@chatModelErrorBanner": {
+    "description": "Error banner shown when model fails to load.",
+    "placeholders": { "error": { "type": "String", "example": "Failed to create engine" } }
+  },
+
+  "chatModelErrorRetry": "Retry",
+  "@chatModelErrorRetry": { "description": "Retry button on model error banner." },
+
   "cancel": "Cancel",
   "@cancel": { "description": "Generic cancel button label." },
 

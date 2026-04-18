@@ -39,8 +39,7 @@ class _ModelDownloadPageState extends ConsumerState<ModelDownloadPage> {
     });
 
     try {
-      final model = ref.read(chatModelPreferenceProvider).valueOrNull ??
-          ChatModelPreference.defaultModel;
+      final model = await ref.read(chatModelPreferenceProvider.future);
       final url = _modelUrls[model]!;
 
       await FlutterGemma.installModel(modelType: ModelType.gemmaIt)

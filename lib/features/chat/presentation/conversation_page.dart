@@ -1,3 +1,4 @@
+import 'package:cookmate/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,7 +24,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   bool _isGenerating = false;
   String _streamingContent = '';
   bool _modelReady = false;
-  bool _isFirstExchange = true;
   String? _chatError;
 
   static const _systemPrompt =
@@ -51,9 +51,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
   }
 
-  PreferredBackend _resolveBackend() {
-    final pref = ref.read(chatBackendPreferenceProvider).valueOrNull ??
-        ChatBackendPreference.defaultBackend;
+  Future<PreferredBackend> _resolveBackend() async {
+    final pref = await ref.read(chatBackendPreferenceProvider.future);
     return pref == ChatBackendPreference.gpu
         ? PreferredBackend.gpu
         : PreferredBackend.cpu;
@@ -62,7 +61,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   Future<void> _createChat({int retries = 2}) async {
     for (var attempt = 0; attempt <= retries; attempt++) {
       try {
-        final backend = _resolveBackend();
+        final backend = await _resolveBackend();
         final model = await FlutterGemma.getActiveModel(
           maxTokens: 2048,
           preferredBackend: backend,
@@ -91,29 +90,33 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
   }
 
+  bool _shouldAutoName() {
+    final conversations =
+        ref.read(conversationsProvider).valueOrNull ?? [];
+    final conv = conversations
+        .where((c) => c.id == widget.conversationId)
+        .firstOrNull;
+    if (conv == null) return false;
+    final l10n = AppLocalizations.of(context);
+    return conv.title == l10n.chatNewConversation;
+  }
+
   Future<void> _handleSend(String text) async {
     if (_isGenerating) return;
 
-    // Always show the user message immediately.
     setState(() {
       _isGenerating = true;
       _streamingContent = '';
     });
 
-    await ref
-        .read(messagesProvider(widget.conversationId).notifier)
-        .addUserMessage(text);
-    _scrollToBottom();
-
-    if (_chat == null) {
-      // Model not loaded — save user message but can't generate a response.
-      if (mounted) {
-        setState(() => _isGenerating = false);
-      }
-      return;
-    }
-
     try {
+      await ref
+          .read(messagesProvider(widget.conversationId).notifier)
+          .addUserMessage(text);
+      _scrollToBottom();
+
+      if (_chat == null) return;
+
       final response = await _generateResponse(text);
 
       if (response.isNotEmpty) {
@@ -122,12 +125,11 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             .addAssistantMessage(response);
       }
 
-      if (_isFirstExchange) {
-        _isFirstExchange = false;
+      if (_shouldAutoName()) {
         _autoName(text);
       }
     } catch (e, stack) {
-      debugPrint('Inference failed: $e\n$stack');
+      debugPrint('Send failed: $e\n$stack');
     } finally {
       if (mounted) {
         setState(() {
@@ -142,7 +144,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     try {
       return await _streamResponse(text);
     } catch (e) {
-      // Session may have been invalidated — recreate chat and retry once.
       debugPrint('First attempt failed, recreating chat: $e');
       await _createChat();
       if (_chat == null) rethrow;
@@ -168,7 +169,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
   Future<void> _autoName(String firstUserMessage) async {
     try {
-      final backend = _resolveBackend();
+      final backend = await _resolveBackend();
       final model = await FlutterGemma.getActiveModel(
         maxTokens: 64,
         preferredBackend: backend,
@@ -222,6 +223,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       );
     }
 
+    final l10n = AppLocalizations.of(context);
     final messagesAsync = ref.watch(messagesProvider(widget.conversationId));
     final conversationsAsync = ref.watch(conversationsProvider);
     final title = conversationsAsync.valueOrNull
@@ -237,14 +239,14 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           if (_chatError != null)
             MaterialBanner(
               content: Text(
-                'Model error: $_chatError',
+                l10n.chatModelErrorBanner(_chatError!),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
               actions: [
                 TextButton(
                   onPressed: _createChat,
-                  child: const Text('RETRY'),
+                  child: Text(l10n.chatModelErrorRetry),
                 ),
               ],
             ),

@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:cookmate/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 Future<void> showRestartDialog(BuildContext context) async {
   final l10n = AppLocalizations.of(context);
@@ -13,7 +12,7 @@ Future<void> showRestartDialog(BuildContext context) async {
       content: Text(l10n.settingsRestartRequiredMessage),
       actions: [
         FilledButton(
-          onPressed: () => exit(0),
+          onPressed: () => SystemNavigator.pop(),
           child: Text(l10n.settingsRestartRequiredButton),
         ),
       ],

@@ -25,7 +25,7 @@ class LocalePreferenceNotifier extends AsyncNotifier<LocalePreference> {
       await storage.write(preference);
       state = AsyncValue.data(preference);
     } catch (error, stack) {
-      state = AsyncValue.error(error, stack);
+      state = AsyncValue<LocalePreference>.error(error, stack).copyWithPrevious(state);
       rethrow;
     }
   }

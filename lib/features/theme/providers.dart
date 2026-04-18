@@ -26,7 +26,7 @@ class ThemePreferenceNotifier extends AsyncNotifier<AppTheme> {
       await storage.write(theme);
       state = AsyncValue.data(theme);
     } catch (error, stack) {
-      state = AsyncValue.error(error, stack);
+      state = AsyncValue<AppTheme>.error(error, stack).copyWithPrevious(state);
       rethrow;
     }
   }

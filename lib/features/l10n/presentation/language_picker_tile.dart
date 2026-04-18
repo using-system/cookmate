@@ -48,21 +48,27 @@ class LanguagePickerTile extends ConsumerWidget {
     final selected = await showDialog<LocalePreference>(
       context: context,
       builder: (dialogContext) {
-        return SimpleDialog(
-          title: Text(l10n.settingsLanguageDialogTitle),
-          children: [
-            _OptionTile(
-              label: l10n.settingsLanguageOptionSystem,
-              value: const SystemLocalePreference(),
-              groupValue: current,
-            ),
-            for (final code in LocalePreference.supportedLanguageCodes)
+        return RadioGroup<LocalePreference>(
+          groupValue: current,
+          onChanged: (value) {
+            if (value != null) {
+              Navigator.of(dialogContext).pop(value);
+            }
+          },
+          child: SimpleDialog(
+            title: Text(l10n.settingsLanguageDialogTitle),
+            children: [
               _OptionTile(
-                label: _languageNames[code] ?? code,
-                value: ForcedLocalePreference(Locale(code)),
-                groupValue: current,
+                label: l10n.settingsLanguageOptionSystem,
+                value: const SystemLocalePreference(),
               ),
-          ],
+              for (final code in LocalePreference.supportedLanguageCodes)
+                _OptionTile(
+                  label: _languageNames[code] ?? code,
+                  value: ForcedLocalePreference(Locale(code)),
+                ),
+            ],
+          ),
         );
       },
     );
@@ -86,23 +92,16 @@ class LanguagePickerTile extends ConsumerWidget {
 }
 
 class _OptionTile extends StatelessWidget {
-  const _OptionTile({
-    required this.label,
-    required this.value,
-    required this.groupValue,
-  });
+  const _OptionTile({required this.label, required this.value});
 
   final String label;
   final LocalePreference value;
-  final LocalePreference groupValue;
 
   @override
   Widget build(BuildContext context) {
     return RadioListTile<LocalePreference>(
       title: Text(label),
       value: value,
-      groupValue: groupValue,
-      onChanged: (_) => Navigator.of(context).pop(value),
     );
   }
 }

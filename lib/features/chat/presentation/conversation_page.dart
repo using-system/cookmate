@@ -59,25 +59,34 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         : PreferredBackend.cpu;
   }
 
-  Future<void> _createChat() async {
-    try {
-      final backend = _resolveBackend();
-      final model = await FlutterGemma.getActiveModel(
-        maxTokens: 2048,
-        preferredBackend: backend,
-      );
-      _chat = await model.createChat(
-        temperature: 0.8,
-        topK: 40,
-        systemInstruction: _systemPrompt,
-      );
-      if (mounted) {
-        setState(() => _chatError = null);
-      }
-    } catch (e, stack) {
-      debugPrint('Failed to create chat: $e\n$stack');
-      if (mounted) {
-        setState(() => _chatError = e.toString());
+  Future<void> _createChat({int retries = 2}) async {
+    for (var attempt = 0; attempt <= retries; attempt++) {
+      try {
+        final backend = _resolveBackend();
+        final model = await FlutterGemma.getActiveModel(
+          maxTokens: 2048,
+          preferredBackend: backend,
+        );
+        _chat = await model.createChat(
+          temperature: 0.8,
+          topK: 40,
+          systemInstruction: _systemPrompt,
+        );
+        if (mounted) {
+          setState(() => _chatError = null);
+        }
+        return;
+      } catch (e, stack) {
+        debugPrint('Failed to create chat (attempt ${attempt + 1}): $e');
+        if (attempt < retries) {
+          await Future<void>.delayed(const Duration(seconds: 2));
+          if (!mounted) return;
+        } else {
+          debugPrint('$stack');
+          if (mounted) {
+            setState(() => _chatError = e.toString());
+          }
+        }
       }
     }
   }
@@ -227,7 +236,11 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         children: [
           if (_chatError != null)
             MaterialBanner(
-              content: Text('Model error: $_chatError'),
+              content: Text(
+                'Model error: $_chatError',
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
               actions: [
                 TextButton(
                   onPressed: _createChat,

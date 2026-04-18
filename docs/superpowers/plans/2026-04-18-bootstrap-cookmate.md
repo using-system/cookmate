@@ -77,7 +77,7 @@ cookmate/
 
 - [ ] **Step 1: Generate the Flutter project**
 
-Run from the repo root (`/Users/usingsystem/Repos/github/cookmate`):
+Run from the repo root:
 ```bash
 flutter create \
   --org com.cookmate \

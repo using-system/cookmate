@@ -97,4 +97,42 @@ void main() {
       expect(prefs.getString('chat_backend_preference'), 'cpu');
     });
   });
+
+  group('isPreferredModelInstalledProvider', () {
+    test('returns false when no model is installed', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final container = createContainer();
+
+      final value =
+          await container.read(isPreferredModelInstalledProvider.future);
+
+      expect(value, false);
+    });
+
+    test('returns true when installed matches preferred', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'chat_model_preference': 'gemma4E2B',
+        'chat_model_installed': 'gemma4E2B',
+      });
+      final container = createContainer();
+
+      final value =
+          await container.read(isPreferredModelInstalledProvider.future);
+
+      expect(value, true);
+    });
+
+    test('returns false when installed differs from preferred', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'chat_model_preference': 'gemma4E4B',
+        'chat_model_installed': 'gemma4E2B',
+      });
+      final container = createContainer();
+
+      final value =
+          await container.read(isPreferredModelInstalledProvider.future);
+
+      expect(value, false);
+    });
+  });
 }

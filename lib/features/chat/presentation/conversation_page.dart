@@ -102,13 +102,14 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
   }
 
-  bool _shouldAutoName() {
-    final conversations =
-        ref.read(conversationsProvider).valueOrNull ?? [];
+  Future<bool> _shouldAutoName() async {
+    final repo = await ref.read(chatRepositoryProvider.future);
+    final conversations = await repo.getConversations();
     final conv = conversations
         .where((c) => c.id == widget.conversationId)
         .firstOrNull;
     if (conv == null) return false;
+    if (!mounted) return false;
     final l10n = AppLocalizations.of(context);
     return conv.title == l10n.chatNewConversation;
   }
@@ -137,7 +138,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             .addAssistantMessage(response);
       }
 
-      if (_shouldAutoName()) {
+      if (await _shouldAutoName()) {
         _autoName(text);
       }
     } catch (e, stack) {
@@ -216,13 +217,16 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
   }
 
+  bool _scrollScheduled = false;
+
   void _scrollToBottom() {
+    if (_scrollScheduled) return;
+    _scrollScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollScheduled = false;
       if (_scrollController.hasClients) {
-        _scrollController.animateTo(
+        _scrollController.jumpTo(
           _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
         );
       }
     });

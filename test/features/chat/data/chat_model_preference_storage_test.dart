@@ -52,4 +52,24 @@ void main() {
 
     expect(storage.read(), ChatModelPreference.gemma4E2B);
   });
+
+  test('readInstalled returns null when nothing is stored', () {
+    expect(storage.readInstalled(), isNull);
+  });
+
+  test('writeInstalled then readInstalled returns the written model', () async {
+    await storage.writeInstalled(ChatModelPreference.gemma4E4B);
+
+    expect(storage.readInstalled(), ChatModelPreference.gemma4E4B);
+  });
+
+  test('readInstalled returns null for unknown stored value', () async {
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'chat_model_installed': 'gemma99',
+    });
+    final prefs = await SharedPreferences.getInstance();
+    final s = ChatModelPreferenceStorage(prefs);
+
+    expect(s.readInstalled(), isNull);
+  });
 }

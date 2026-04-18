@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/chat/presentation/chat_page.dart';
+import '../features/chat/presentation/conversation_page.dart';
 import '../features/home/presentation/home_shell.dart';
 import '../features/settings/presentation/settings_page.dart';
 import '../features/splash/presentation/splash_page.dart';
@@ -23,6 +24,15 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/home/chat',
                 builder: (context, state) => const ChatPage(),
+                routes: [
+                  GoRoute(
+                    path: ':conversationId',
+                    builder: (context, state) => ConversationPage(
+                      conversationId:
+                          state.pathParameters['conversationId']!,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

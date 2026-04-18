@@ -4,11 +4,38 @@
   "appTitle": "Cookmate",
   "@appTitle": { "description": "Application display name. Same in all locales." },
 
-  "chatTitle": "Chat",
-  "@chatTitle": { "description": "AppBar title on the chat screen." },
+  "chatConversationsTitle": "Conversations",
+  "@chatConversationsTitle": { "description": "AppBar title on the conversations list screen." },
 
-  "chatPlaceholder": "Chat (coming soon)",
-  "@chatPlaceholder": { "description": "Placeholder body shown on the chat screen." },
+  "chatNewConversation": "New conversation",
+  "@chatNewConversation": { "description": "Default title for a newly created conversation." },
+
+  "chatDeleteConversation": "Delete conversation",
+  "@chatDeleteConversation": { "description": "Label for the delete conversation action." },
+
+  "chatDeleteConfirmation": "Delete this conversation?",
+  "@chatDeleteConfirmation": { "description": "Confirmation prompt before deleting a conversation." },
+
+  "chatInputHint": "Type a message\u2026",
+  "@chatInputHint": { "description": "Hint text in the message input field." },
+
+  "chatEmptyState": "No conversations yet. Tap + to start!",
+  "@chatEmptyState": { "description": "Shown when the conversation list is empty." },
+
+  "chatModelDownloadTitle": "Downloading AI model\u2026",
+  "@chatModelDownloadTitle": { "description": "Title shown during model download." },
+
+  "chatModelDownloadProgress": "{progress}% complete",
+  "@chatModelDownloadProgress": {
+    "description": "Download progress indicator.",
+    "placeholders": { "progress": { "type": "int", "example": "42" } }
+  },
+
+  "chatModelDownloadError": "Download failed. Check your connection and try again.",
+  "@chatModelDownloadError": { "description": "Error shown when model download fails." },
+
+  "chatModelDownloadRetry": "Retry",
+  "@chatModelDownloadRetry": { "description": "Retry button label on download error." },
 
   "settingsTitle": "Settings",
   "@settingsTitle": { "description": "AppBar title on the settings screen." },
@@ -51,6 +78,75 @@
 
   "settingsThemeChangeFailureSnackbar": "Couldn't change theme. Please try again.",
   "@settingsThemeChangeFailureSnackbar": { "description": "Shown when persisting the new theme fails." },
+
+  "settingsModelTitle": "AI Model",
+  "@settingsModelTitle": { "description": "Title of the model selection setting tile." },
+
+  "settingsModelDialogTitle": "Choose AI model",
+  "@settingsModelDialogTitle": { "description": "Title of the model picker dialog." },
+
+  "settingsModelOptionE2B": "Gemma 4 E2B (lighter, faster)",
+  "@settingsModelOptionE2B": { "description": "Label for the Gemma 4 E2B model option." },
+
+  "settingsModelOptionE4B": "Gemma 4 E4B (smarter, heavier)",
+  "@settingsModelOptionE4B": { "description": "Label for the Gemma 4 E4B model option." },
+
+  "settingsModelChangeFailureSnackbar": "Couldn't change model. Please try again.",
+  "@settingsModelChangeFailureSnackbar": { "description": "Shown when persisting the model preference fails." },
+
+  "settingsBackendTitle": "Inference Backend",
+  "@settingsBackendTitle": { "description": "Title of the backend selection setting tile." },
+
+  "settingsBackendDialogTitle": "Choose inference backend",
+  "@settingsBackendDialogTitle": { "description": "Title of the backend picker dialog." },
+
+  "settingsBackendOptionGpu": "GPU (faster, requires compatible device)",
+  "@settingsBackendOptionGpu": { "description": "Label for the GPU backend option." },
+
+  "settingsBackendOptionCpu": "CPU (slower, works everywhere)",
+  "@settingsBackendOptionCpu": { "description": "Label for the CPU backend option." },
+
+  "settingsBackendChangeFailureSnackbar": "Couldn't change backend. Please try again.",
+  "@settingsBackendChangeFailureSnackbar": { "description": "Shown when persisting the backend preference fails." },
+
+  "settingsRestartRequiredTitle": "Restart required",
+  "@settingsRestartRequiredTitle": { "description": "Title of the restart dialog shown after changing model or backend." },
+
+  "settingsRestartRequiredMessage": "The app needs to restart to apply this change.",
+  "@settingsRestartRequiredMessage": { "description": "Body of the restart dialog." },
+
+  "settingsRestartRequiredButton": "Restart now",
+  "@settingsRestartRequiredButton": { "description": "Button label to restart the app." },
+
+  "chatTimeJustNow": "just now",
+  "@chatTimeJustNow": { "description": "Relative time label for less than a minute ago." },
+
+  "chatTimeMinutesAgo": "{minutes}m ago",
+  "@chatTimeMinutesAgo": {
+    "description": "Relative time label for minutes ago.",
+    "placeholders": { "minutes": { "type": "int", "example": "5" } }
+  },
+
+  "chatTimeHoursAgo": "{hours}h ago",
+  "@chatTimeHoursAgo": {
+    "description": "Relative time label for hours ago.",
+    "placeholders": { "hours": { "type": "int", "example": "3" } }
+  },
+
+  "chatModelErrorBanner": "Model error: {error}",
+  "@chatModelErrorBanner": {
+    "description": "Error banner shown when model fails to load.",
+    "placeholders": { "error": { "type": "String", "example": "Failed to create engine" } }
+  },
+
+  "chatModelErrorRetry": "Retry",
+  "@chatModelErrorRetry": { "description": "Retry button on model error banner." },
+
+  "cancel": "Cancel",
+  "@cancel": { "description": "Generic cancel button label." },
+
+  "delete": "Delete",
+  "@delete": { "description": "Generic delete button label." },
 
   "homeTabChat": "Chat",
   "@homeTabChat": { "description": "Bottom navigation label for the chat tab." },

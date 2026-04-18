@@ -228,27 +228,27 @@ ThemePreferenceNotifier.setPreference(pink)
 
 ## Testing
 
-New tests under `test/features/theme/`, mirroring the existing layout
-under `test/features/l10n/`:
+New tests span `test/features/theme/` (mirroring the existing layout
+under `test/features/l10n/`) and `test/core/` for the theme builders:
 
-- **`theme_preference_test.dart`** — `toStorageValue` / `fromStorageValue`
-  round-trip for every enum value, plus fallback cases: `null`, `""`,
-  `"unknown"` → `AppTheme.dark`.
-- **`theme_preference_storage_test.dart`** — uses
-  `SharedPreferences.setMockInitialValues`. Verifies `read` returns the
-  right theme, `write` persists, read-after-write cycle, and corrupted
-  value returns `AppTheme.dark`.
-- **`theme_preference_notifier_test.dart`** — `ProviderContainer` with a
-  mocked `themePreferenceStorageProvider`. Verifies initial state,
-  `setPreference(matrix)` updates state and calls storage, storage
-  failure surfaces as `AsyncValue.error`.
-- **`theme_picker_tile_test.dart`** — widget test. Pumps with a
-  `ProviderScope` override, taps the tile, selects an option in the
-  dialog, asserts the subtitle updates and the notifier was called. Also
-  covers the failure snackbar path.
-
-`ThemeData` values themselves are not unit-tested: verifying Material 3
-output adds no value.
+- **`test/features/theme/domain/app_theme_test.dart`** — `toStorageValue`
+  / `fromStorageValue` round-trip for every enum value, plus fallback
+  cases: `null`, `""`, `"unknown"` → `AppTheme.dark`.
+- **`test/features/theme/data/theme_preference_storage_test.dart`** —
+  uses `SharedPreferences.setMockInitialValues`. Verifies `read` returns
+  the right theme, `write` persists, read-after-write cycle, and
+  unknown stored value returns `AppTheme.dark`.
+- **`test/features/theme/providers_test.dart`** — `ProviderContainer`
+  with `SharedPreferences.setMockInitialValues`. Verifies initial load
+  (empty + stored), `setPreference` updates state and persists, and the
+  derived `themeDataProvider` rebuilds when the preference changes.
+- **`test/features/theme/presentation/theme_picker_tile_test.dart`** —
+  widget test. Pumps inside a `ProviderScope`, asserts the subtitle
+  reflects the stored theme, and confirms tapping an option updates the
+  subtitle and persists the new key to `SharedPreferences`.
+- **`test/core/theme_test.dart`** — covers `buildThemeData` for every
+  `AppTheme`, including brightness and the Matrix-specific palette
+  (scaffold, primary, secondary, surface, error fields).
 
 `flutter analyze` and `flutter test` must be green before commit, per
 [CLAUDE.md](../../../CLAUDE.md).

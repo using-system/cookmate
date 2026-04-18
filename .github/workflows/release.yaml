@@ -116,3 +116,36 @@ jobs:
           name: ${{ needs.version.outputs.new_tag }}
           generate_release_notes: true
           files: artifacts/cookmate-*.apk
+
+  distribute-firebase:
+    name: Distribute to Firebase App Distribution
+    needs: [version, build-android, release]
+    if: needs.version.outputs.new_tag != ''
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ needs.version.outputs.new_tag }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Download APK artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cookmate-apk
+          path: artifacts
+      - name: Fetch GitHub Release notes
+        id: notes
+        run: |
+          {
+            echo "body<<COOKMATE_RELEASE_NOTES_EOF"
+            gh release view "$TAG" --json body --jq .body
+            echo "COOKMATE_RELEASE_NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
+      - name: Upload APK to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@bd494989dd4bec0343f78adee87fe66e48279ad6 # v1.7.1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          groups: testers
+          file: artifacts/cookmate-${{ needs.version.outputs.new_tag }}.apk
+          releaseNotes: ${{ steps.notes.outputs.body }}

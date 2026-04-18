@@ -55,4 +55,41 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Run tests
-        run: flutter test
+        run: |
+          mkdir -p test-reports
+          flutter test --reporter=expanded --file-reporter=json:test-reports/flutter-test.json
+      - name: Write test summary
+        if: always()
+        env:
+          REPORT: test-reports/flutter-test.json
+        run: |
+          set -euo pipefail
+          if [[ ! -f "$REPORT" ]]; then
+            echo "No test report was produced." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          passed=$(jq -s  '[.[] | select(.type=="testDone" and (.hidden // false) == false and .result=="success")] | length' "$REPORT")
+          failed=$(jq -s  '[.[] | select(.type=="testDone" and .result=="failure")] | length' "$REPORT")
+          errored=$(jq -s '[.[] | select(.type=="testDone" and .result=="error")]   | length' "$REPORT")
+          skipped=$(jq -s '[.[] | select(.type=="testDone" and .skipped==true)]     | length' "$REPORT")
+          total=$((passed + failed + errored + skipped))
+          {
+            echo "## Flutter test results"
+            echo ""
+            echo "| Total | Passed | Failed | Errored | Skipped |"
+            echo "|------:|-------:|-------:|--------:|--------:|"
+            echo "| $total | $passed | $failed | $errored | $skipped |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if (( failed + errored > 0 )); then
+            {
+              echo ""
+              echo "### Failures"
+              echo ""
+            } >> "$GITHUB_STEP_SUMMARY"
+            jq -r -s '
+              (map(select(.type=="testStart")) | map({ (.test.id|tostring): .test.name }) | add) as $names
+              | map(select(.type=="testDone" and (.result=="failure" or .result=="error")))
+              | .[]
+              | "- **\($names[(.testID|tostring)] // "unknown")** — \(.result)"
+            ' "$REPORT" >> "$GITHUB_STEP_SUMMARY"
+          fi

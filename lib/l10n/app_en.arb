@@ -4,24 +4,6 @@
   "appTitle": "Cookmate",
   "@appTitle": { "description": "Application display name. Same in all locales." },
 
-  "loginTitle": "Cookmate",
-  "@loginTitle": { "description": "Large title shown on the login screen." },
-
-  "loginSubtitle": "Log in with your Cookidoo account.",
-  "@loginSubtitle": { "description": "Short instruction under the login title." },
-
-  "loginEmailLabel": "Cookidoo email",
-  "@loginEmailLabel": { "description": "Label for the email input on the login screen." },
-
-  "loginPasswordLabel": "Password",
-  "@loginPasswordLabel": { "description": "Label for the password input on the login screen." },
-
-  "loginSubmitButton": "Log in",
-  "@loginSubmitButton": { "description": "Submit button on the login screen." },
-
-  "loginFailureSnackbar": "Couldn't log in. Please try again in a moment.",
-  "@loginFailureSnackbar": { "description": "Shown when saving credentials fails." },
-
   "chatTitle": "Chat",
   "@chatTitle": { "description": "AppBar title on the chat screen." },
 
@@ -30,12 +12,6 @@
 
   "settingsTitle": "Settings",
   "@settingsTitle": { "description": "AppBar title on the settings screen." },
-
-  "settingsLogoutButton": "Log out",
-  "@settingsLogoutButton": { "description": "Logout button label on the settings screen." },
-
-  "settingsLogoutFailureSnackbar": "Couldn't log out. Please try again in a moment.",
-  "@settingsLogoutFailureSnackbar": { "description": "Shown when clearing credentials fails." },
 
   "settingsLanguageTitle": "Language",
   "@settingsLanguageTitle": { "description": "Title of the language setting tile." },

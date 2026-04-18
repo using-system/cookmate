@@ -1,13 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/shared_preferences_provider.dart';
 import 'data/locale_preference_storage.dart';
 import 'domain/locale_preference.dart';
-
-final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) {
-  return SharedPreferences.getInstance();
-});
 
 final localePreferenceStorageProvider =
     FutureProvider<LocalePreferenceStorage>((ref) async {
@@ -29,7 +25,7 @@ class LocalePreferenceNotifier extends AsyncNotifier<LocalePreference> {
       await storage.write(preference);
       state = AsyncValue.data(preference);
     } catch (error, stack) {
-      state = AsyncValue.error(error, stack);
+      state = AsyncValue<LocalePreference>.error(error, stack).copyWithPrevious(state);
       rethrow;
     }
   }

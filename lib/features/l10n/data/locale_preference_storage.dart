@@ -20,6 +20,9 @@ class LocalePreferenceStorage {
   }
 
   Future<void> write(LocalePreference preference) async {
-    await _prefs.setString(_key, preference.toStorageValue());
+    final didWrite = await _prefs.setString(_key, preference.toStorageValue());
+    if (!didWrite) {
+      throw Exception('Failed to persist locale preference.');
+    }
   }
 }

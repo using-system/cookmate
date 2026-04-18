@@ -17,6 +17,13 @@
   "settingsLanguageDialogTitle": "Sprache auswählen",
   "settingsLanguageOptionSystem": "System folgen",
   "settingsLanguageChangeFailureSnackbar": "Sprache konnte nicht geändert werden. Bitte versuche es erneut.",
+  "settingsThemeTitle": "Design",
+  "settingsThemeDialogTitle": "Design auswählen",
+  "settingsThemeOptionDark": "Dunkel",
+  "settingsThemeOptionStandard": "Standard",
+  "settingsThemeOptionPink": "Pink",
+  "settingsThemeOptionMatrix": "Matrix",
+  "settingsThemeChangeFailureSnackbar": "Design konnte nicht geändert werden. Bitte versuche es erneut.",
   "homeTabChat": "Chat",
   "homeTabSettings": "Einstellungen"
 }

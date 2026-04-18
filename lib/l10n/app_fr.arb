@@ -17,6 +17,13 @@
   "settingsLanguageDialogTitle": "Choisir la langue",
   "settingsLanguageOptionSystem": "Suivre le système",
   "settingsLanguageChangeFailureSnackbar": "Impossible de changer la langue. Réessayez.",
+  "settingsThemeTitle": "Thème",
+  "settingsThemeDialogTitle": "Choisir le thème",
+  "settingsThemeOptionDark": "Sombre",
+  "settingsThemeOptionStandard": "Standard",
+  "settingsThemeOptionPink": "Rose",
+  "settingsThemeOptionMatrix": "Matrix",
+  "settingsThemeChangeFailureSnackbar": "Impossible de changer de thème. Réessayez.",
   "homeTabChat": "Chat",
   "homeTabSettings": "Réglages"
 }

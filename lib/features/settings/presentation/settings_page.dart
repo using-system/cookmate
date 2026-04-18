@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../auth/providers.dart';
 import '../../l10n/presentation/language_picker_tile.dart';
+import '../../theme/presentation/theme_picker_tile.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -27,6 +28,8 @@ class SettingsPage extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
         children: [
+          const ThemePickerTile(),
+          const Divider(height: 1),
           const LanguagePickerTile(),
           const Divider(height: 1),
           const SizedBox(height: 24),

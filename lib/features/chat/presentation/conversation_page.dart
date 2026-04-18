@@ -153,8 +153,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   }
 
   Future<void> _autoNameIfNeeded(String firstUserMessage) async {
-    final repo = await ref.read(chatRepositoryProvider.future);
-    final conversations = await repo.getConversations();
+    final conversations =
+        ref.read(conversationsProvider).valueOrNull ?? [];
     final conv = conversations
         .where((c) => c.id == widget.conversationId)
         .firstOrNull;
@@ -163,15 +163,25 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     final l10n = AppLocalizations.of(context);
     if (conv.title != l10n.chatNewConversation) return;
 
-    // Use the same chat to generate a short title.
+    // Use a separate short-lived session to avoid polluting the chat context.
     try {
-      await _chat!.addQueryChunk(Message.text(
+      final pref = await ref.read(chatBackendPreferenceProvider.future);
+      final backend = pref == ChatBackendPreference.gpu
+          ? PreferredBackend.gpu
+          : PreferredBackend.cpu;
+      final model = await FlutterGemma.getActiveModel(
+        maxTokens: 64,
+        preferredBackend: backend,
+      );
+      final session = await model.createSession(temperature: 0.3, topK: 1);
+      await session.addQueryChunk(Message.text(
         text:
             'Summarize this conversation in 3-5 words as a title. Reply with ONLY the title, nothing else: $firstUserMessage',
         isUser: true,
       ));
-      final response = await _chat!.generateChatResponse();
-      final title = response is TextResponse ? response.token : '';
+      final title = await session.getResponse();
+      await session.close();
+
       final cleaned =
           title.trim().replaceAll(RegExp('["\' ]+\$|^["\' ]+'), '');
       if (cleaned.isNotEmpty) {

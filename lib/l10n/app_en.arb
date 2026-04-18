@@ -4,11 +4,38 @@
   "appTitle": "Cookmate",
   "@appTitle": { "description": "Application display name. Same in all locales." },
 
-  "chatTitle": "Chat",
-  "@chatTitle": { "description": "AppBar title on the chat screen." },
+  "chatConversationsTitle": "Conversations",
+  "@chatConversationsTitle": { "description": "AppBar title on the conversations list screen." },
 
-  "chatPlaceholder": "Chat (coming soon)",
-  "@chatPlaceholder": { "description": "Placeholder body shown on the chat screen." },
+  "chatNewConversation": "New conversation",
+  "@chatNewConversation": { "description": "Default title for a newly created conversation." },
+
+  "chatDeleteConversation": "Delete conversation",
+  "@chatDeleteConversation": { "description": "Label for the delete conversation action." },
+
+  "chatDeleteConfirmation": "Delete this conversation?",
+  "@chatDeleteConfirmation": { "description": "Confirmation prompt before deleting a conversation." },
+
+  "chatInputHint": "Type a message\u2026",
+  "@chatInputHint": { "description": "Hint text in the message input field." },
+
+  "chatEmptyState": "No conversations yet. Tap + to start!",
+  "@chatEmptyState": { "description": "Shown when the conversation list is empty." },
+
+  "chatModelDownloadTitle": "Downloading AI model\u2026",
+  "@chatModelDownloadTitle": { "description": "Title shown during model download." },
+
+  "chatModelDownloadProgress": "{progress}% complete",
+  "@chatModelDownloadProgress": {
+    "description": "Download progress indicator.",
+    "placeholders": { "progress": { "type": "int", "example": "42" } }
+  },
+
+  "chatModelDownloadError": "Download failed. Check your connection and try again.",
+  "@chatModelDownloadError": { "description": "Error shown when model download fails." },
+
+  "chatModelDownloadRetry": "Retry",
+  "@chatModelDownloadRetry": { "description": "Retry button label on download error." },
 
   "settingsTitle": "Settings",
   "@settingsTitle": { "description": "AppBar title on the settings screen." },
@@ -51,6 +78,27 @@
 
   "settingsThemeChangeFailureSnackbar": "Couldn't change theme. Please try again.",
   "@settingsThemeChangeFailureSnackbar": { "description": "Shown when persisting the new theme fails." },
+
+  "settingsModelTitle": "AI Model",
+  "@settingsModelTitle": { "description": "Title of the model selection setting tile." },
+
+  "settingsModelDialogTitle": "Choose AI model",
+  "@settingsModelDialogTitle": { "description": "Title of the model picker dialog." },
+
+  "settingsModelOptionE2B": "Gemma 4 E2B (lighter, faster)",
+  "@settingsModelOptionE2B": { "description": "Label for the Gemma 4 E2B model option." },
+
+  "settingsModelOptionE4B": "Gemma 4 E4B (smarter, heavier)",
+  "@settingsModelOptionE4B": { "description": "Label for the Gemma 4 E4B model option." },
+
+  "settingsModelChangeFailureSnackbar": "Couldn't change model. Please try again.",
+  "@settingsModelChangeFailureSnackbar": { "description": "Shown when persisting the model preference fails." },
+
+  "cancel": "Cancel",
+  "@cancel": { "description": "Generic cancel button label." },
+
+  "delete": "Delete",
+  "@delete": { "description": "Generic delete button label." },
 
   "homeTabChat": "Chat",
   "@homeTabChat": { "description": "Bottom navigation label for the chat tab." },

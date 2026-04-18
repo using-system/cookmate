@@ -1,8 +1,6 @@
 import 'package:cookmate/features/chat/data/chat_database.dart';
 import 'package:cookmate/features/chat/data/chat_repository.dart';
-import 'package:cookmate/features/chat/domain/conversation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {

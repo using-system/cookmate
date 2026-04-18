@@ -1,6 +1,6 @@
 # Cookmate — Claude Code Guide
 
-Cookmate is a Flutter mobile app (Android + iOS) intended to become an AI chat assistant for Thermomix recipes. Current state: bootstrap shell with login + two-tab home, plus full FR/EN/ES/DE internationalization. No Cookidoo API and no on-device LLM yet.
+Cookmate is a Flutter mobile app (Android + iOS) intended to become an AI chat assistant for Thermomix recipes. The app covers login against Cookidoo credentials, a two-tab home (chat + settings), and full FR/EN/ES/DE internationalization.
 
 ## Tech stack
 
@@ -82,13 +82,3 @@ No automated tests at this stage. When introducing tests:
 - Commits and PR titles follow [Conventional Commits](https://www.conventionalcommits.org/): `<type>(<scope>): <description>` in lowercase imperative, no trailing period. Use `feat`, `fix`, `refactor`, `docs`, `chore`, `ci`, etc. Scope is usually the feature name (`l10n`, `auth`, `ios`).
 - Branch names mirror the commit type: `feat/<slug>`, `fix/<slug>`, `docs/<slug>`, etc. Never commit directly on `main`.
 - Design docs live in [docs/superpowers/specs/](docs/superpowers/specs/). Implementation plans live in [docs/superpowers/plans/](docs/superpowers/plans/). Both use `YYYY-MM-DD-<topic>-design.md` / `YYYY-MM-DD-<topic>.md` naming.
-
-## Non-goals for the current bootstrap
-
-These items are intentionally out of scope until dedicated plans land:
-
-- Real Cookidoo HTTP authentication and API client.
-- On-device LLM integration (chat tab is a placeholder).
-- Automated tests (unit / widget / integration).
-- CI pipeline, release signing, analytics, crash reporting.
-- RTL languages, locale pluralization rules, translation of dynamic content.

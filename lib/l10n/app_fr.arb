@@ -23,7 +23,7 @@
   "settingsThemeOptionStandard": "Standard",
   "settingsThemeOptionPink": "Rose",
   "settingsThemeOptionMatrix": "Matrix",
-  "settingsThemeChangeFailureSnackbar": "Impossible de changer de thème. Veuillez réessayer.",
+  "settingsThemeChangeFailureSnackbar": "Impossible de changer de thème. Réessayez.",
   "homeTabChat": "Chat",
   "homeTabSettings": "Réglages"
 }

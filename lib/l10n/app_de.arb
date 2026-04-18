@@ -23,7 +23,7 @@
   "settingsThemeOptionStandard": "Standard",
   "settingsThemeOptionPink": "Pink",
   "settingsThemeOptionMatrix": "Matrix",
-  "settingsThemeChangeFailureSnackbar": "Design konnte nicht geändert werden. Bitte erneut versuchen.",
+  "settingsThemeChangeFailureSnackbar": "Design konnte nicht geändert werden. Bitte versuche es erneut.",
   "homeTabChat": "Chat",
   "homeTabSettings": "Einstellungen"
 }

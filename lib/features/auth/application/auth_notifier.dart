@@ -7,8 +7,12 @@ class AuthNotifier extends AsyncNotifier<bool> {
   @override
   Future<bool> build() async {
     final repository = ref.read(authRepositoryProvider);
-    final credentials = await repository.loadCredentials();
-    return credentials != null;
+    try {
+      final credentials = await repository.loadCredentials();
+      return credentials != null;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> login({required String email, required String password}) async {
@@ -23,11 +27,12 @@ class AuthNotifier extends AsyncNotifier<bool> {
   }
 
   Future<void> logout() async {
-    state = const AsyncValue.loading();
+    final previous = state;
+    state = const AsyncValue<bool>.loading().copyWithPrevious(previous);
     state = await AsyncValue.guard(() async {
       final repository = ref.read(authRepositoryProvider);
       await repository.clearCredentials();
       return false;
-    });
+    }).then((next) => next.copyWithPrevious(previous));
   }
 }

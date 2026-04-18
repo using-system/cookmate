@@ -20,6 +20,9 @@ class ThemePreferenceStorage {
   }
 
   Future<void> write(AppTheme theme) async {
-    await _prefs.setString(_key, theme.toStorageValue());
+    final didWrite = await _prefs.setString(_key, theme.toStorageValue());
+    if (!didWrite) {
+      throw Exception('Failed to persist theme preference.');
+    }
   }
 }

@@ -51,71 +51,45 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
   }
 
-  Future<PreferredBackend> _resolveBackend() async {
-    final pref = await ref.read(chatBackendPreferenceProvider.future);
-    return pref == ChatBackendPreference.gpu
-        ? PreferredBackend.gpu
-        : PreferredBackend.cpu;
-  }
+  Future<void> _createChat() async {
+    try {
+      final pref = await ref.read(chatBackendPreferenceProvider.future);
+      final backend = pref == ChatBackendPreference.gpu
+          ? PreferredBackend.gpu
+          : PreferredBackend.cpu;
 
-  Future<void> _createChat({int retries = 2}) async {
-    for (var attempt = 0; attempt <= retries; attempt++) {
-      try {
-        final backend = await _resolveBackend();
-        final model = await FlutterGemma.getActiveModel(
-          maxTokens: 2048,
-          preferredBackend: backend,
+      final model = await FlutterGemma.getActiveModel(
+        maxTokens: 2048,
+        preferredBackend: backend,
+      );
+      _chat = await model.createChat(
+        temperature: 0.8,
+        topK: 40,
+        systemInstruction: _systemPrompt,
+      );
+
+      // Replay stored history so InferenceChat has full context.
+      final messages =
+          await ref.read(messagesProvider(widget.conversationId).future);
+      for (final msg in messages) {
+        await _chat!.addQueryChunk(
+          Message.text(text: msg.content, isUser: msg.role == 'user'),
         );
-        _chat = await model.createChat(
-          temperature: 0.8,
-          topK: 40,
-          systemInstruction: _systemPrompt,
-        );
-        await _rehydrateHistory();
-        if (mounted) {
-          setState(() => _chatError = null);
-        }
-        return;
-      } catch (e, stack) {
-        debugPrint('Failed to create chat (attempt ${attempt + 1}): $e');
-        if (attempt < retries) {
-          await Future<void>.delayed(const Duration(seconds: 2));
-          if (!mounted) return;
-        } else {
-          debugPrint('$stack');
-          if (mounted) {
-            setState(() => _chatError = e.toString());
-          }
-        }
+      }
+
+      if (mounted) {
+        setState(() => _chatError = null);
+      }
+    } catch (e, stack) {
+      debugPrint('Failed to create chat: $e\n$stack');
+      if (mounted) {
+        setState(() => _chatError = e.toString());
       }
     }
   }
 
-  Future<void> _rehydrateHistory() async {
-    if (_chat == null) return;
-    final messages =
-        await ref.read(messagesProvider(widget.conversationId).future);
-    for (final msg in messages) {
-      await _chat!.addQueryChunk(
-        Message.text(text: msg.content, isUser: msg.role == 'user'),
-      );
-    }
-  }
-
-  Future<bool> _shouldAutoName() async {
-    final repo = await ref.read(chatRepositoryProvider.future);
-    final conversations = await repo.getConversations();
-    final conv = conversations
-        .where((c) => c.id == widget.conversationId)
-        .firstOrNull;
-    if (conv == null) return false;
-    if (!mounted) return false;
-    final l10n = AppLocalizations.of(context);
-    return conv.title == l10n.chatNewConversation;
-  }
-
   Future<void> _handleSend(String text) async {
-    if (_isGenerating) return;
+    if (_isGenerating || _chat == null) return;
 
     setState(() {
       _isGenerating = true;
@@ -123,23 +97,48 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     });
 
     try {
+      // Persist user message to DB.
       await ref
           .read(messagesProvider(widget.conversationId).notifier)
           .addUserMessage(text);
       _scrollToBottom();
 
-      if (_chat == null) return;
+      // Send to InferenceChat and stream the response.
+      await _chat!.addQueryChunk(Message.text(text: text, isUser: true));
 
-      final response = await _generateResponse(text);
+      final buffer = StringBuffer();
+      var lastUpdate = DateTime.now();
+      const throttle = Duration(milliseconds: 50);
 
-      if (response.isNotEmpty) {
-        await ref
-            .read(messagesProvider(widget.conversationId).notifier)
-            .addAssistantMessage(response);
+      await for (final response in _chat!.generateChatResponseAsync()) {
+        if (response is TextResponse) {
+          buffer.write(response.token);
+          final now = DateTime.now();
+          if (mounted && now.difference(lastUpdate) >= throttle) {
+            lastUpdate = now;
+            setState(() => _streamingContent = buffer.toString());
+            _scrollToBottom();
+          }
+        }
       }
 
-      if (await _shouldAutoName()) {
-        _autoName(text);
+      // Final flush.
+      if (mounted) {
+        setState(() => _streamingContent = buffer.toString());
+        _scrollToBottom();
+      }
+
+      // Persist assistant response to DB.
+      final fullResponse = buffer.toString();
+      if (fullResponse.isNotEmpty) {
+        await ref
+            .read(messagesProvider(widget.conversationId).notifier)
+            .addAssistantMessage(fullResponse);
+      }
+
+      // Auto-name if conversation still has the default title.
+      if (mounted) {
+        await _autoNameIfNeeded(text);
       }
     } catch (e, stack) {
       debugPrint('Send failed: $e\n$stack');
@@ -153,60 +152,28 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
   }
 
-  Future<String> _generateResponse(String text) async {
+  Future<void> _autoNameIfNeeded(String firstUserMessage) async {
+    final repo = await ref.read(chatRepositoryProvider.future);
+    final conversations = await repo.getConversations();
+    final conv = conversations
+        .where((c) => c.id == widget.conversationId)
+        .firstOrNull;
+    if (conv == null || !mounted) return;
+
+    final l10n = AppLocalizations.of(context);
+    if (conv.title != l10n.chatNewConversation) return;
+
+    // Use the same chat to generate a short title.
     try {
-      return await _streamResponse(text);
-    } catch (e) {
-      debugPrint('First attempt failed, recreating chat: $e');
-      await _createChat();
-      if (_chat == null) rethrow;
-      return await _streamResponse(text);
-    }
-  }
-
-  Future<String> _streamResponse(String text) async {
-    await _chat!.addQueryChunk(Message.text(text: text, isUser: true));
-
-    final buffer = StringBuffer();
-    var lastUpdate = DateTime.now();
-    const throttle = Duration(milliseconds: 50);
-
-    await for (final response in _chat!.generateChatResponseAsync()) {
-      if (response is TextResponse) {
-        buffer.write(response.token);
-        final now = DateTime.now();
-        if (mounted && now.difference(lastUpdate) >= throttle) {
-          lastUpdate = now;
-          setState(() => _streamingContent = buffer.toString());
-          _scrollToBottom();
-        }
-      }
-    }
-    // Final flush to ensure all tokens are displayed.
-    if (mounted) {
-      setState(() => _streamingContent = buffer.toString());
-      _scrollToBottom();
-    }
-    return buffer.toString();
-  }
-
-  Future<void> _autoName(String firstUserMessage) async {
-    try {
-      final backend = await _resolveBackend();
-      final model = await FlutterGemma.getActiveModel(
-        maxTokens: 64,
-        preferredBackend: backend,
-      );
-      final session = await model.createSession(temperature: 0.3, topK: 1);
-      await session.addQueryChunk(Message.text(
+      await _chat!.addQueryChunk(Message.text(
         text:
-            'Summarize this conversation in 3-5 words as a title: $firstUserMessage',
+            'Summarize this conversation in 3-5 words as a title. Reply with ONLY the title, nothing else: $firstUserMessage',
         isUser: true,
       ));
-      final title = await session.getResponse();
-      await session.close();
-
-      final cleaned = title.trim().replaceAll(RegExp('["\' ]+\$|^["\' ]+'), '');
+      final response = await _chat!.generateChatResponse();
+      final title = response is TextResponse ? response.token : '';
+      final cleaned =
+          title.trim().replaceAll(RegExp('["\' ]+\$|^["\' ]+'), '');
       if (cleaned.isNotEmpty) {
         await ref
             .read(conversationsProvider.notifier)

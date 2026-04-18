@@ -38,7 +38,7 @@ No real authentication, no Cookidoo API call, and no AI feature is in scope here
 - `go_router` — declarative routing with auth-based redirect guard.
 - `flutter_secure_storage` — encrypted credential storage.
 - Material 3, light/dark theme following the system setting.
-- Minimum platforms: Android API 21, iOS 12.
+- Minimum platforms: Android API 24 (Flutter stable default; `encryptedSharedPreferences: true` requires API 23+), iOS 13 (Flutter stable default; `flutter_secure_storage` supports iOS 9+).
 
 ## App Identity
 

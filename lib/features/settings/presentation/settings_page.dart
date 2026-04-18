@@ -11,6 +11,14 @@ class SettingsPage extends ConsumerWidget {
     final auth = ref.watch(authStateProvider);
     final isBusy = auth.isLoading;
 
+    ref.listen(authStateProvider, (previous, next) {
+      if (next.hasError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur : ${next.error}')),
+        );
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(title: const Text('Réglages')),
       body: Center(

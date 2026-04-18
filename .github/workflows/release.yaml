@@ -136,9 +136,20 @@ jobs:
       - name: Fetch GitHub Release notes
         id: notes
         run: |
+          release_body=""
+          for attempt in 1 2 3 4 5; do
+            if release_body="$(gh release view "$TAG" --json body --jq .body)"; then
+              break
+            fi
+            if [ "$attempt" -eq 5 ]; then
+              echo "Failed to fetch GitHub release notes for $TAG after 5 attempts." >&2
+              exit 1
+            fi
+            sleep $((attempt * 2))
+          done
           {
             echo "body<<COOKMATE_RELEASE_NOTES_EOF"
-            gh release view "$TAG" --json body --jq .body
+            printf '%s\n' "$release_body"
             echo "COOKMATE_RELEASE_NOTES_EOF"
           } >> "$GITHUB_OUTPUT"
       - name: Upload APK to Firebase App Distribution

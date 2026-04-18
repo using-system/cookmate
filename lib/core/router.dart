@@ -9,17 +9,19 @@ import '../features/home/presentation/home_shell.dart';
 import '../features/settings/presentation/settings_page.dart';
 
 class _RouterRefreshNotifier extends ChangeNotifier {
-  _RouterRefreshNotifier(Ref ref) {
-    ref.listen(authStateProvider, (_, next) => notifyListeners());
-  }
+  void refresh() => notifyListeners();
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final refresh = _RouterRefreshNotifier(ref);
+  final notifier = _RouterRefreshNotifier();
+  final subscription = ref.listen<AsyncValue<bool>>(
+    authStateProvider,
+    (_, next) => notifier.refresh(),
+  );
 
-  return GoRouter(
+  final router = GoRouter(
     initialLocation: '/login',
-    refreshListenable: refresh,
+    refreshListenable: notifier,
     redirect: (context, state) {
       final auth = ref.read(authStateProvider);
       if (auth.isLoading) return null;
@@ -60,4 +62,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+
+  ref.onDispose(() {
+    subscription.close();
+    notifier.dispose();
+    router.dispose();
+  });
+
+  return router;
 });

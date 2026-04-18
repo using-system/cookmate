@@ -16,6 +16,10 @@ Widget _wrap(Widget child, {Locale locale = const Locale('en')}) {
   );
 }
 
+AppLocalizations _l10n(WidgetTester tester) {
+  return AppLocalizations.of(tester.element(find.byType(Scaffold)));
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -27,8 +31,12 @@ void main() {
       await tester.pumpWidget(_wrap(const LanguagePickerTile()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Language'), findsOneWidget);
-      expect(find.text('Follow system (English)'), findsOneWidget);
+      final l10n = _l10n(tester);
+      expect(find.text(l10n.settingsLanguageTitle), findsOneWidget);
+      expect(
+        find.text(l10n.settingsLanguageFollowSystem('English')),
+        findsOneWidget,
+      );
     },
   );
 

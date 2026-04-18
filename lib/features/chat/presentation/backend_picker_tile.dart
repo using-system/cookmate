@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/chat_backend_preference.dart';
 import '../providers.dart';
+import 'restart_dialog.dart';
 
 class BackendPickerTile extends ConsumerWidget {
   const BackendPickerTile({super.key});
@@ -60,6 +61,9 @@ class BackendPickerTile extends ConsumerWidget {
       await ref
           .read(chatBackendPreferenceProvider.notifier)
           .setPreference(selected);
+      if (context.mounted) {
+        await showRestartDialog(context);
+      }
     } catch (error, stack) {
       debugPrint('Failed to change backend: $error\n$stack');
       messenger.showSnackBar(

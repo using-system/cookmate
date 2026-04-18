@@ -109,6 +109,15 @@
   "settingsBackendChangeFailureSnackbar": "Couldn't change backend. Please try again.",
   "@settingsBackendChangeFailureSnackbar": { "description": "Shown when persisting the backend preference fails." },
 
+  "settingsRestartRequiredTitle": "Restart required",
+  "@settingsRestartRequiredTitle": { "description": "Title of the restart dialog shown after changing model or backend." },
+
+  "settingsRestartRequiredMessage": "The app needs to restart to apply this change.",
+  "@settingsRestartRequiredMessage": { "description": "Body of the restart dialog." },
+
+  "settingsRestartRequiredButton": "Restart now",
+  "@settingsRestartRequiredButton": { "description": "Button label to restart the app." },
+
   "cancel": "Cancel",
   "@cancel": { "description": "Generic cancel button label." },
 

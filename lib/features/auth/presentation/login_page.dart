@@ -1,3 +1,4 @@
+import 'package:cookmate/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -30,6 +31,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final auth = ref.watch(authStateProvider);
     final isBusy = auth.isLoading;
 
@@ -37,11 +39,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       if (next.hasError) {
         debugPrint('Login failed: ${next.error}');
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Impossible de se connecter. Réessayez dans un instant.',
-            ),
-          ),
+          SnackBar(content: Text(l10n.loginFailureSnackbar)),
         );
       }
     });
@@ -55,21 +53,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Cookmate',
+                  l10n.loginTitle,
                   style: Theme.of(context).textTheme.displaySmall,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Connectez-vous avec votre compte Cookidoo.',
+                  l10n.loginSubtitle,
                   style: Theme.of(context).textTheme.bodyMedium,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
                 TextField(
                   controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email Cookidoo',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.loginEmailLabel,
+                    border: const OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.emailAddress,
                   autocorrect: false,
@@ -78,9 +76,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Mot de passe',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.loginPasswordLabel,
+                    border: const OutlineInputBorder(),
                   ),
                   obscureText: true,
                   keyboardType: TextInputType.visiblePassword,
@@ -109,7 +107,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text('Se connecter'),
+                            : Text(l10n.loginSubmitButton),
                       ),
                     );
                   },

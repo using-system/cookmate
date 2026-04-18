@@ -2,10 +2,9 @@
 
 AI-powered mobile assistant for your Thermomix.
 
-Cookmate is a Flutter mobile app (Android + iOS) that will become a fully autonomous
-chat assistant for Thermomix recipes, backed by your Cookidoo account and an
-on-device Gemma model. This repository currently contains the bootstrap shell
-(login with Cookidoo credentials, empty Chat and Settings tabs).
+Cookmate is a Flutter mobile app (Android + iOS) — a fully autonomous chat
+assistant for Thermomix recipes, backed by your Cookidoo account and an
+on-device Gemma model.
 
 ## Development prerequisites
 

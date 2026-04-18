@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint-pr:
+    name: Lint PR title
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Validate PR title against Conventional Commits
+        uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: 3.41.7
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: 3.41.7
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Run tests
+        run: |
+          mkdir -p test-reports
+          flutter test --reporter=expanded --file-reporter=json:test-reports/flutter-test.json
+      - name: Write test summary
+        if: always()
+        env:
+          REPORT: test-reports/flutter-test.json
+        run: |
+          set -euo pipefail
+          if [[ ! -f "$REPORT" ]]; then
+            echo "No test report was produced." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          passed=$(jq -s  '[.[] | select(.type=="testDone" and (.hidden // false) == false and .result=="success")] | length' "$REPORT")
+          failed=$(jq -s  '[.[] | select(.type=="testDone" and .result=="failure")] | length' "$REPORT")
+          errored=$(jq -s '[.[] | select(.type=="testDone" and .result=="error")]   | length' "$REPORT")
+          skipped=$(jq -s '[.[] | select(.type=="testDone" and .skipped==true)]     | length' "$REPORT")
+          total=$((passed + failed + errored + skipped))
+          {
+            echo "## Flutter test results"
+            echo ""
+            echo "| Total | Passed | Failed | Errored | Skipped |"
+            echo "|------:|-------:|-------:|--------:|--------:|"
+            echo "| $total | $passed | $failed | $errored | $skipped |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if (( failed + errored > 0 )); then
+            {
+              echo ""
+              echo "### Failures"
+              echo ""
+            } >> "$GITHUB_STEP_SUMMARY"
+            jq -r -s '
+              (map(select(.type=="testStart")) | map({ (.test.id|tostring): .test.name }) | add) as $names
+              | map(select(.type=="testDone" and (.result=="failure" or .result=="error")))
+              | .[]
+              | "- **\($names[(.testID|tostring)] // "unknown")** — \(.result)"
+            ' "$REPORT" >> "$GITHUB_STEP_SUMMARY"
+          fi

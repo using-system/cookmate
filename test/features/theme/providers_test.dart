@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  ProviderContainer _container() {
+  ProviderContainer createContainer() {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     return container;
@@ -18,7 +18,7 @@ void main() {
   group('themePreferenceProvider', () {
     test('builds with AppTheme.dark when nothing is stored', () async {
       SharedPreferences.setMockInitialValues(<String, Object>{});
-      final container = _container();
+      final container = createContainer();
 
       final value = await container.read(themePreferenceProvider.future);
 
@@ -29,7 +29,7 @@ void main() {
       SharedPreferences.setMockInitialValues(<String, Object>{
         'theme_preference': 'matrix',
       });
-      final container = _container();
+      final container = createContainer();
 
       final value = await container.read(themePreferenceProvider.future);
 
@@ -38,7 +38,7 @@ void main() {
 
     test('setPreference updates state and persists', () async {
       SharedPreferences.setMockInitialValues(<String, Object>{});
-      final container = _container();
+      final container = createContainer();
       await container.read(themePreferenceProvider.future);
 
       await container
@@ -58,7 +58,7 @@ void main() {
   group('themeDataProvider', () {
     test('returns the default theme while preference is loading', () {
       SharedPreferences.setMockInitialValues(<String, Object>{});
-      final container = _container();
+      final container = createContainer();
 
       final data = container.read(themeDataProvider);
 
@@ -73,7 +73,7 @@ void main() {
       SharedPreferences.setMockInitialValues(<String, Object>{
         'theme_preference': 'standard',
       });
-      final container = _container();
+      final container = createContainer();
       await container.read(themePreferenceProvider.future);
 
       final data = container.read(themeDataProvider);
@@ -87,7 +87,7 @@ void main() {
 
     test('rebuilds when preference changes', () async {
       SharedPreferences.setMockInitialValues(<String, Object>{});
-      final container = _container();
+      final container = createContainer();
       await container.read(themePreferenceProvider.future);
 
       await container

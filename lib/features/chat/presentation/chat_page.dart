@@ -69,8 +69,14 @@ class ChatPage extends ConsumerWidget {
                     ),
                   );
                 },
-                onDismissed: (_) {
-                  ref.read(conversationsProvider.notifier).delete(conv.id);
+                onDismissed: (_) async {
+                  try {
+                    await ref
+                        .read(conversationsProvider.notifier)
+                        .delete(conv.id);
+                  } catch (_) {
+                    ref.invalidate(conversationsProvider);
+                  }
                 },
                 child: ListTile(
                   title: Text(

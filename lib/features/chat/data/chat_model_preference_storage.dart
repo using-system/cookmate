@@ -34,6 +34,10 @@ class ChatModelPreferenceStorage {
   }
 
   Future<void> writeInstalled(ChatModelPreference model) async {
-    await _prefs.setString(_installedKey, model.toStorageValue());
+    final didWrite =
+        await _prefs.setString(_installedKey, model.toStorageValue());
+    if (!didWrite) {
+      throw Exception('Failed to persist installed chat model preference.');
+    }
   }
 }

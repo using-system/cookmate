@@ -142,15 +142,14 @@ When the user changes model in Settings (E2B ↔ E4B):
 ```
 chatDatabaseProvider            → FutureProvider<ChatDatabase>
 chatRepositoryProvider          → FutureProvider<ChatRepository>
-conversationsProvider           → StreamProvider<List<Conversation>>
-messagesProvider(convId)        → StreamProvider.family<List<ChatMessage>, String>
-chatModelPreferenceProvider     → AsyncNotifierProvider<..., ChatModelPreference>
-inferenceModelProvider          → FutureProvider<InferenceModel>
-activeChatProvider(convId)      → AsyncNotifierProvider.family<..., InferenceChat, String>
+conversationsProvider           → AsyncNotifierProvider<ConversationsNotifier, List<Conversation>>
+messagesProvider(convId)        → AsyncNotifierProvider.family<MessagesNotifier, List<ChatMessage>, String>
+chatModelPreferenceProvider     → AsyncNotifierProvider<ChatModelPreferenceNotifier, ChatModelPreference>
+chatBackendPreferenceProvider   → AsyncNotifierProvider<ChatBackendPreferenceNotifier, ChatBackendPreference>
 ```
 
 Provider dependency chain:
-`chatModelPreferenceProvider` → `inferenceModelProvider` → `activeChatProvider(id)`
+`sharedPreferencesProvider` → `chatModelPreferenceStorageProvider` → `chatModelPreferenceProvider`
 
 ## Inference Configuration
 

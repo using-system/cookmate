@@ -71,6 +71,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           topK: 40,
           systemInstruction: _systemPrompt,
         );
+        await _rehydrateHistory();
         if (mounted) {
           setState(() => _chatError = null);
         }
@@ -87,6 +88,17 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           }
         }
       }
+    }
+  }
+
+  Future<void> _rehydrateHistory() async {
+    if (_chat == null) return;
+    final messages =
+        await ref.read(messagesProvider(widget.conversationId).future);
+    for (final msg in messages) {
+      await _chat!.addQueryChunk(
+        Message.text(text: msg.content, isUser: msg.role == 'user'),
+      );
     }
   }
 

@@ -55,6 +55,27 @@
   "settingsLanguageChangeFailureSnackbar": "Couldn't change language. Please try again.",
   "@settingsLanguageChangeFailureSnackbar": { "description": "Shown when persisting the new locale fails." },
 
+  "settingsThemeTitle": "Theme",
+  "@settingsThemeTitle": { "description": "Title of the theme setting tile." },
+
+  "settingsThemeDialogTitle": "Choose theme",
+  "@settingsThemeDialogTitle": { "description": "Title of the theme picker dialog." },
+
+  "settingsThemeOptionDark": "Dark",
+  "@settingsThemeOptionDark": { "description": "Label for the Dark theme option in the picker." },
+
+  "settingsThemeOptionStandard": "Standard",
+  "@settingsThemeOptionStandard": { "description": "Label for the Standard theme option in the picker." },
+
+  "settingsThemeOptionPink": "Pink",
+  "@settingsThemeOptionPink": { "description": "Label for the Pink theme option in the picker." },
+
+  "settingsThemeOptionMatrix": "Matrix",
+  "@settingsThemeOptionMatrix": { "description": "Label for the Matrix theme option in the picker. Proper name — keep identical in all locales." },
+
+  "settingsThemeChangeFailureSnackbar": "Couldn't change theme. Please try again.",
+  "@settingsThemeChangeFailureSnackbar": { "description": "Shown when persisting the new theme fails." },
+
   "homeTabChat": "Chat",
   "@homeTabChat": { "description": "Bottom navigation label for the chat tab." },
 

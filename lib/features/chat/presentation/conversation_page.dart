@@ -105,24 +105,12 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
 
     try {
-      await _chat!.addQueryChunk(Message.text(text: text, isUser: true));
+      final response = await _generateResponse(text);
 
-      final buffer = StringBuffer();
-      await for (final response in _chat!.generateChatResponseAsync()) {
-        if (response is TextResponse) {
-          buffer.write(response.token);
-          if (mounted) {
-            setState(() => _streamingContent = buffer.toString());
-            _scrollToBottom();
-          }
-        }
-      }
-
-      final fullResponse = buffer.toString();
-      if (fullResponse.isNotEmpty) {
+      if (response.isNotEmpty) {
         await ref
             .read(messagesProvider(widget.conversationId).notifier)
-            .addAssistantMessage(fullResponse);
+            .addAssistantMessage(response);
       }
 
       if (_isFirstExchange) {
@@ -139,6 +127,34 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         });
       }
     }
+  }
+
+  Future<String> _generateResponse(String text) async {
+    try {
+      return await _streamResponse(text);
+    } catch (e) {
+      // Session may have been invalidated — recreate chat and retry once.
+      debugPrint('First attempt failed, recreating chat: $e');
+      await _createChat();
+      if (_chat == null) rethrow;
+      return await _streamResponse(text);
+    }
+  }
+
+  Future<String> _streamResponse(String text) async {
+    await _chat!.addQueryChunk(Message.text(text: text, isUser: true));
+
+    final buffer = StringBuffer();
+    await for (final response in _chat!.generateChatResponseAsync()) {
+      if (response is TextResponse) {
+        buffer.write(response.token);
+        if (mounted) {
+          setState(() => _streamingContent = buffer.toString());
+          _scrollToBottom();
+        }
+      }
+    }
+    return buffer.toString();
   }
 
   Future<void> _autoName(String firstUserMessage) async {

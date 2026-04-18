@@ -35,8 +35,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     ref.listen(authStateProvider, (previous, next) {
       if (next.hasError) {
+        debugPrint('Login failed: ${next.error}');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : ${next.error}')),
+          const SnackBar(
+            content: Text(
+              'Impossible de se connecter. Réessayez dans un instant.',
+            ),
+          ),
         );
       }
     });
@@ -78,6 +83,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     border: OutlineInputBorder(),
                   ),
                   obscureText: true,
+                  keyboardType: TextInputType.visiblePassword,
+                  autocorrect: false,
+                  enableSuggestions: false,
                 ),
                 const SizedBox(height: 24),
                 AnimatedBuilder(

@@ -13,8 +13,13 @@ class SettingsPage extends ConsumerWidget {
 
     ref.listen(authStateProvider, (previous, next) {
       if (next.hasError) {
+        debugPrint('Logout failed: ${next.error}');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : ${next.error}')),
+          const SnackBar(
+            content: Text(
+              'Impossible de se déconnecter. Réessayez dans un instant.',
+            ),
+          ),
         );
       }
     });

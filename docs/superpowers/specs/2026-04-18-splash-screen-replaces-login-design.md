@@ -40,7 +40,7 @@ Files:
 
 - `lib/features/splash/presentation/splash_page.dart`
 
-The splash page is a `ConsumerStatefulWidget` that:
+The splash page is a `StatefulWidget` (no Riverpod dependency) that:
 
 1. Starts an `AnimationController` (900 ms, `Curves.easeOutCubic`) on `initState`.
 2. Starts a `Timer(Duration(seconds: 5))` on `initState`.
@@ -74,7 +74,7 @@ Code:
 Settings page (`lib/features/settings/presentation/settings_page.dart`):
 
 - Remove the `ConsumerWidget` dependency on `authStateProvider`, the `ref.listen`, the logout button and its `isBusy` state.
-- Keep it as a `ConsumerWidget` since i18n and locale picker already use Riverpod downstream. Body becomes a `ListView` with `ThemePickerTile`, divider, `LanguagePickerTile`.
+- Downgrade it to a plain `StatelessWidget`; the picker tiles are `ConsumerWidget`s themselves and wire their own providers internally. Body becomes a `ListView` with `ThemePickerTile`, divider, `LanguagePickerTile`.
 
 ### Internationalisation
 

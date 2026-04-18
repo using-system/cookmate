@@ -25,5 +25,7 @@
   "settingsThemeOptionMatrix": "Matrix",
   "settingsThemeChangeFailureSnackbar": "Design konnte nicht geändert werden. Bitte versuche es erneut.",
   "homeTabChat": "Chat",
-  "homeTabSettings": "Einstellungen"
+  "homeTabSettings": "Einstellungen",
+  "splashTitle": "CookMate",
+  "splashDescription": "Erstelle deine Thermomix-Rezepte mit dem CookMate-Assistenten."
 }

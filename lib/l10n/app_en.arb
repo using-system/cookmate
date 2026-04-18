@@ -80,5 +80,11 @@
   "@homeTabChat": { "description": "Bottom navigation label for the chat tab." },
 
   "homeTabSettings": "Settings",
-  "@homeTabSettings": { "description": "Bottom navigation label for the settings tab." }
+  "@homeTabSettings": { "description": "Bottom navigation label for the settings tab." },
+
+  "splashTitle": "CookMate",
+  "@splashTitle": { "description": "Title displayed on the splash screen. Proper noun — keep identical in all locales." },
+
+  "splashDescription": "Create your Thermomix recipes with the CookMate assistant.",
+  "@splashDescription": { "description": "Short tagline displayed below the title on the splash screen." }
 }

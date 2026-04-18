@@ -56,10 +56,10 @@ class LanguagePickerTile extends ConsumerWidget {
               value: const SystemLocalePreference(),
               groupValue: current,
             ),
-            for (final entry in _languageNames.entries)
+            for (final code in LocalePreference.supportedLanguageCodes)
               _OptionTile(
-                label: entry.value,
-                value: ForcedLocalePreference(Locale(entry.key)),
+                label: _languageNames[code] ?? code,
+                value: ForcedLocalePreference(Locale(code)),
                 groupValue: current,
               ),
           ],

@@ -113,6 +113,10 @@ coverage/
 # Symbols
 app.*.symbols
 
+# Generated gen_l10n output (regenerated on `flutter pub get`).
+/lib/l10n/app_localizations.dart
+/lib/l10n/app_localizations_*.dart
+
 # Exceptions to above rules.
 !**/ios/**/default.mode1v3
 !**/ios/**/default.mode2v3

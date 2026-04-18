@@ -1,6 +1,6 @@
 # Cookmate — Claude Code Guide
 
-Cookmate is a Flutter mobile app (Android + iOS) intended to become an AI chat assistant for Thermomix recipes. The app covers login against Cookidoo credentials, a two-tab home (chat + settings), and full FR/EN/ES/DE internationalization.
+Cookmate is a Flutter mobile app (Android + iOS) — an AI chat assistant for Thermomix recipes, backed by Cookidoo and an on-device LLM.
 
 ## Tech stack
 

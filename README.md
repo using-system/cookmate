@@ -45,6 +45,25 @@ flutter run
 
 Pick your target device when prompted (`flutter devices` lists what is available).
 
+### Launch an emulator or simulator
+
+**iOS simulator** (ships with Xcode):
+
+```bash
+open -a Simulator
+```
+
+**Android emulator** — list existing AVDs, or create one via Android Studio
+(*Tools → Device Manager → Create Device*):
+
+```bash
+flutter emulators                       # list available emulators
+flutter emulators --launch <emulator-id> # start one
+```
+
+Once the simulator or emulator is running, `flutter devices` shows its id and
+`flutter run -d <device-id>` targets it explicitly.
+
 ## Install on a device (non-developer path)
 
 Cookmate is not yet published on the App Store or Google Play. Until a release is

@@ -33,7 +33,7 @@ void main() {
     test('returns SystemLocalePreference for an unsupported language code',
         () {
       expect(
-        LocalePreference.fromStorageValue('jp'),
+        LocalePreference.fromStorageValue('ja'),
         const SystemLocalePreference(),
       );
     });

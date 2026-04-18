@@ -76,6 +76,7 @@ class _SplashPageState extends State<SplashPage>
                         'assets/icon/cookmate.png',
                         width: 160,
                         height: 160,
+                        excludeFromSemantics: true,
                       ),
                     ),
                   ),

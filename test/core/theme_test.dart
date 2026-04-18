@@ -32,8 +32,12 @@ void main() {
       expect(data.scaffoldBackgroundColor, const Color(0xFF000000));
       expect(data.colorScheme.primary, const Color(0xFF00FF41));
       expect(data.colorScheme.onPrimary, const Color(0xFF000000));
+      expect(data.colorScheme.secondary, const Color(0xFF39FF14));
+      expect(data.colorScheme.onSecondary, const Color(0xFF000000));
       expect(data.colorScheme.surface, const Color(0xFF0A0F0A));
       expect(data.colorScheme.onSurface, const Color(0xFF39FF14));
+      expect(data.colorScheme.error, const Color(0xFFFF5555));
+      expect(data.colorScheme.onError, const Color(0xFF000000));
     });
   });
 }

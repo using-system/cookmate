@@ -40,8 +40,12 @@ ThemeData _buildMatrix() {
   ).copyWith(
     primary: const Color(0xFF00FF41),
     onPrimary: const Color(0xFF000000),
+    secondary: const Color(0xFF39FF14),
+    onSecondary: const Color(0xFF000000),
     surface: const Color(0xFF0A0F0A),
     onSurface: const Color(0xFF39FF14),
+    error: const Color(0xFFFF5555),
+    onError: const Color(0xFF000000),
   );
   return ThemeData(
     colorScheme: scheme,

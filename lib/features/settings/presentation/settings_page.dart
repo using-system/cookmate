@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../auth/providers.dart';
+import '../../l10n/presentation/language_picker_tile.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -24,19 +25,26 @@ class SettingsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
-      body: Center(
-        child: FilledButton.tonal(
-          onPressed: isBusy
-              ? null
-              : () => ref.read(authStateProvider.notifier).logout(),
-          child: isBusy
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(l10n.settingsLogoutButton),
-        ),
+      body: ListView(
+        children: [
+          const LanguagePickerTile(),
+          const Divider(height: 1),
+          const SizedBox(height: 24),
+          Center(
+            child: FilledButton.tonal(
+              onPressed: isBusy
+                  ? null
+                  : () => ref.read(authStateProvider.notifier).logout(),
+              child: isBusy
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(l10n.settingsLogoutButton),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -41,10 +41,14 @@ android {
     signingConfigs {
         if (hasReleaseSigning) {
             create("release") {
-                storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
+                fun requireProperty(name: String): String = requireNotNull(
+                    keystoreProperties.getProperty(name)?.takeIf { it.isNotBlank() }
+                ) { "key.properties is missing or blank for '$name'" }
+
+                storeFile = rootProject.file(requireProperty("storeFile"))
+                storePassword = requireProperty("storePassword")
+                keyAlias = requireProperty("keyAlias")
+                keyPassword = requireProperty("keyPassword")
             }
         }
     }

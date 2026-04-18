@@ -38,12 +38,11 @@ void main() {
     await tester.pumpWidget(_wrap(router));
     await tester.pump();
 
+    final l10n = AppLocalizations.of(tester.element(find.byType(SplashPage)));
+
     expect(find.byType(Image), findsOneWidget);
-    expect(find.text('CookMate'), findsOneWidget);
-    expect(
-      find.text('Create your Thermomix recipes with the CookMate assistant.'),
-      findsOneWidget,
-    );
+    expect(find.text(l10n.splashTitle), findsOneWidget);
+    expect(find.text(l10n.splashDescription), findsOneWidget);
   });
 
   testWidgets('stays on splash before 5 seconds elapse', (tester) async {

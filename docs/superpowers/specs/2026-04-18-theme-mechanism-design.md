@@ -81,7 +81,7 @@ the design forward-compatible.)
 
 Four layers, mirroring `lib/features/l10n/`:
 
-### Domain — `lib/features/theme/domain/theme_preference.dart`
+### Domain — `lib/features/theme/domain/app_theme.dart`
 
 ```dart
 enum AppTheme {

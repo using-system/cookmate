@@ -34,16 +34,14 @@ ThemeData _buildPink() => ThemeData(
     );
 
 ThemeData _buildMatrix() {
-  const scheme = ColorScheme(
+  final scheme = ColorScheme.fromSeed(
+    seedColor: const Color(0xFF00FF41),
     brightness: Brightness.dark,
-    primary: Color(0xFF00FF41),
-    onPrimary: Color(0xFF000000),
-    secondary: Color(0xFF39FF14),
-    onSecondary: Color(0xFF000000),
-    surface: Color(0xFF0A0F0A),
-    onSurface: Color(0xFF39FF14),
-    error: Color(0xFFFF5555),
-    onError: Color(0xFF000000),
+  ).copyWith(
+    primary: const Color(0xFF00FF41),
+    onPrimary: const Color(0xFF000000),
+    surface: const Color(0xFF0A0F0A),
+    onSurface: const Color(0xFF39FF14),
   );
   return ThemeData(
     colorScheme: scheme,

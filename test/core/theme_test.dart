@@ -25,12 +25,15 @@ void main() {
       expect(buildThemeData(AppTheme.pink).brightness, Brightness.light);
     });
 
-    test('Matrix is dark with pure black scaffold and phosphor primary', () {
+    test('Matrix is dark with pure black scaffold and phosphor palette', () {
       final data = buildThemeData(AppTheme.matrix);
 
       expect(data.brightness, Brightness.dark);
       expect(data.scaffoldBackgroundColor, const Color(0xFF000000));
       expect(data.colorScheme.primary, const Color(0xFF00FF41));
+      expect(data.colorScheme.onPrimary, const Color(0xFF000000));
+      expect(data.colorScheme.surface, const Color(0xFF0A0F0A));
+      expect(data.colorScheme.onSurface, const Color(0xFF39FF14));
     });
   });
 }

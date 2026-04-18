@@ -1,42 +1,18 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../features/auth/presentation/login_page.dart';
-import '../features/auth/providers.dart';
 import '../features/chat/presentation/chat_page.dart';
 import '../features/home/presentation/home_shell.dart';
 import '../features/settings/presentation/settings_page.dart';
-
-class _RouterRefreshNotifier extends ChangeNotifier {
-  void refresh() => notifyListeners();
-}
+import '../features/splash/presentation/splash_page.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final notifier = _RouterRefreshNotifier();
-  final subscription = ref.listen<AsyncValue<bool>>(
-    authStateProvider,
-    (_, next) => notifier.refresh(),
-  );
-
   final router = GoRouter(
-    initialLocation: '/login',
-    refreshListenable: notifier,
-    redirect: (context, state) {
-      final auth = ref.read(authStateProvider);
-      if (auth.isLoading) return null;
-
-      final isAuthenticated = auth.valueOrNull ?? false;
-      final goingToLogin = state.matchedLocation == '/login';
-
-      if (!isAuthenticated && !goingToLogin) return '/login';
-      if (isAuthenticated && goingToLogin) return '/home/chat';
-      return null;
-    },
+    initialLocation: '/splash',
     routes: [
       GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginPage(),
+        path: '/splash',
+        builder: (context, state) => const SplashPage(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
@@ -63,11 +39,6 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 
-  ref.onDispose(() {
-    subscription.close();
-    notifier.dispose();
-    router.dispose();
-  });
-
+  ref.onDispose(router.dispose);
   return router;
 });

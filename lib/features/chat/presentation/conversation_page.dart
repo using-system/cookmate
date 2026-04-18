@@ -23,6 +23,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   String _streamingContent = '';
   bool _modelReady = false;
   bool _isFirstExchange = true;
+  String? _chatError;
 
   static const _systemPrompt =
       'You are CookMate, a friendly kitchen assistant specialized in Thermomix recipes. '
@@ -50,20 +51,31 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   }
 
   Future<void> _createChat() async {
-    final model = await FlutterGemma.getActiveModel(
-      maxTokens: 2048,
-      preferredBackend: PreferredBackend.gpu,
-    );
-    _chat = await model.createChat(
-      temperature: 0.8,
-      topK: 40,
-      systemInstruction: _systemPrompt,
-    );
+    try {
+      final model = await FlutterGemma.getActiveModel(
+        maxTokens: 2048,
+        preferredBackend: PreferredBackend.cpu,
+      );
+      _chat = await model.createChat(
+        temperature: 0.8,
+        topK: 40,
+        systemInstruction: _systemPrompt,
+      );
+      if (mounted) {
+        setState(() => _chatError = null);
+      }
+    } catch (e, stack) {
+      debugPrint('Failed to create chat: $e\n$stack');
+      if (mounted) {
+        setState(() => _chatError = e.toString());
+      }
+    }
   }
 
   Future<void> _handleSend(String text) async {
-    if (_chat == null || _isGenerating) return;
+    if (_isGenerating) return;
 
+    // Always show the user message immediately.
     setState(() {
       _isGenerating = true;
       _streamingContent = '';
@@ -74,34 +86,48 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         .addUserMessage(text);
     _scrollToBottom();
 
-    await _chat!.addQueryChunk(Message.text(text: text, isUser: true));
+    if (_chat == null) {
+      // Model not loaded — save user message but can't generate a response.
+      if (mounted) {
+        setState(() => _isGenerating = false);
+      }
+      return;
+    }
 
-    final buffer = StringBuffer();
-    await for (final response in _chat!.generateChatResponseAsync()) {
-      if (response is TextResponse) {
-        buffer.write(response.token);
-        if (mounted) {
-          setState(() => _streamingContent = buffer.toString());
-          _scrollToBottom();
+    try {
+      await _chat!.addQueryChunk(Message.text(text: text, isUser: true));
+
+      final buffer = StringBuffer();
+      await for (final response in _chat!.generateChatResponseAsync()) {
+        if (response is TextResponse) {
+          buffer.write(response.token);
+          if (mounted) {
+            setState(() => _streamingContent = buffer.toString());
+            _scrollToBottom();
+          }
         }
       }
-    }
 
-    final fullResponse = buffer.toString();
-    await ref
-        .read(messagesProvider(widget.conversationId).notifier)
-        .addAssistantMessage(fullResponse);
+      final fullResponse = buffer.toString();
+      if (fullResponse.isNotEmpty) {
+        await ref
+            .read(messagesProvider(widget.conversationId).notifier)
+            .addAssistantMessage(fullResponse);
+      }
 
-    if (mounted) {
-      setState(() {
-        _isGenerating = false;
-        _streamingContent = '';
-      });
-    }
-
-    if (_isFirstExchange) {
-      _isFirstExchange = false;
-      _autoName(text);
+      if (_isFirstExchange) {
+        _isFirstExchange = false;
+        _autoName(text);
+      }
+    } catch (e, stack) {
+      debugPrint('Inference failed: $e\n$stack');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGenerating = false;
+          _streamingContent = '';
+        });
+      }
     }
   }
 
@@ -109,7 +135,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     try {
       final model = await FlutterGemma.getActiveModel(
         maxTokens: 64,
-        preferredBackend: PreferredBackend.gpu,
+        preferredBackend: PreferredBackend.cpu,
       );
       final session = await model.createSession(temperature: 0.3, topK: 1);
       await session.addQueryChunk(Message.text(
@@ -172,6 +198,16 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       appBar: AppBar(title: Text(title)),
       body: Column(
         children: [
+          if (_chatError != null)
+            MaterialBanner(
+              content: Text('Model error: $_chatError'),
+              actions: [
+                TextButton(
+                  onPressed: _createChat,
+                  child: const Text('RETRY'),
+                ),
+              ],
+            ),
           Expanded(
             child: messagesAsync.when(
               loading: () =>
@@ -180,6 +216,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               data: (messages) {
                 final totalItems =
                     messages.length + (_isGenerating ? 1 : 0);
+                if (totalItems == 0) {
+                  return const SizedBox.shrink();
+                }
                 return ListView.builder(
                   controller: _scrollController,
                   padding: const EdgeInsets.symmetric(vertical: 8),

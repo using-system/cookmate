@@ -1,13 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/shared_preferences_provider.dart';
 import 'data/locale_preference_storage.dart';
 import 'domain/locale_preference.dart';
-
-final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) {
-  return SharedPreferences.getInstance();
-});
 
 final localePreferenceStorageProvider =
     FutureProvider<LocalePreferenceStorage>((ref) async {

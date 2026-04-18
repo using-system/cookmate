@@ -127,20 +127,26 @@ changes via a `Listenable` adapter):
 
 ## UI
 
-- `LoginPage`: centered form, app title, email field, password field (obscured),
-  "Se connecter" button. Button is disabled while either field is empty. No spinner /
-  error handling needed (the call is local and synchronous from the user's perspective).
+- `LoginPage`: centered form, app title, email field, password field (obscured,
+  autocorrect and suggestions disabled), "Se connecter" button. The button is
+  disabled while either field is empty and while the credential save is in flight;
+  a compact spinner replaces the label during that brief save. Save failures are
+  surfaced with a generic `SnackBar` ("Impossible de se connecter. Réessayez dans
+  un instant.").
 - `HomeShell`: `Scaffold` with a `BottomNavigationBar` driven by `go_router`'s
   `StatefulShellRoute` so each tab keeps its own navigation state.
 - `ChatPage`: empty `Center(child: Text('Chat'))` placeholder.
-- `SettingsPage`: a single "Se déconnecter" button. After logout, the redirect rule sends
-  the user back to `/login` automatically.
+- `SettingsPage`: a single "Se déconnecter" button with the same spinner-while-busy
+  and generic-SnackBar-on-failure pattern as the login button. After a successful
+  logout the redirect rule sends the user back to `/login` automatically.
 
 ## Error Handling
 
-Intentionally minimal. The only failure mode at this stage is `flutter_secure_storage`
-throwing on read/write, which is treated as "not authenticated" on read and surfaced as
-a `SnackBar` on write/clear. No retry logic, no telemetry.
+Intentionally minimal. The only failure mode at this stage is
+`flutter_secure_storage` throwing on read/write, which is treated as
+"not authenticated" on read and surfaced as a generic `SnackBar` on login/logout
+write or clear operations. The raw exception is sent to `debugPrint` for local
+diagnosis; no retry logic, no telemetry sink, no user-facing error detail.
 
 ## Out of Scope (Explicit Reminders)
 

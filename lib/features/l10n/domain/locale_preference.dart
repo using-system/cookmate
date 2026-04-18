@@ -23,6 +23,12 @@ class SystemLocalePreference extends LocalePreference {
 
   @override
   String toStorageValue() => 'system';
+
+  @override
+  bool operator ==(Object other) => other is SystemLocalePreference;
+
+  @override
+  int get hashCode => (SystemLocalePreference).hashCode;
 }
 
 class ForcedLocalePreference extends LocalePreference {
@@ -32,4 +38,13 @@ class ForcedLocalePreference extends LocalePreference {
 
   @override
   String toStorageValue() => locale.languageCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is ForcedLocalePreference &&
+      other.locale.languageCode == locale.languageCode;
+
+  @override
+  int get hashCode =>
+      Object.hash(ForcedLocalePreference, locale.languageCode);
 }

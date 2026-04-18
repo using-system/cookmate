@@ -22,10 +22,10 @@ class LanguagePickerTile extends ConsumerWidget {
     final preference =
         preferenceAsync.valueOrNull ?? const SystemLocalePreference();
 
+    final resolvedLanguageCode = Localizations.localeOf(context).languageCode;
     final subtitle = switch (preference) {
       SystemLocalePreference() => l10n.settingsLanguageFollowSystem(
-          _languageNames[Localizations.localeOf(context).languageCode] ??
-              Localizations.localeOf(context).languageCode,
+          _languageNames[resolvedLanguageCode] ?? resolvedLanguageCode,
         ),
       ForcedLocalePreference(:final locale) =>
         _languageNames[locale.languageCode] ?? locale.languageCode,

@@ -14,7 +14,7 @@ import 'domain/chat_message.dart';
 
 final chatDatabaseProvider = FutureProvider<ChatDatabase>((ref) async {
   final db = await ChatDatabase.open();
-  ref.onDispose(db.close);
+  ref.onDispose(() => db.close());
   return db;
 });
 

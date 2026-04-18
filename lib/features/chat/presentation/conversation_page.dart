@@ -296,7 +296,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           ),
           ChatInputBar(
             onSubmit: _handleSend,
-            enabled: !_isGenerating,
+            enabled: !_isGenerating && _chat != null,
           ),
         ],
       ),

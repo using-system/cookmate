@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../domain/cookidoo_credentials.dart';
@@ -5,25 +7,29 @@ import '../domain/cookidoo_credentials.dart';
 class CredentialsStorage {
   CredentialsStorage(this._storage);
 
-  static const _emailKey = 'cookidoo_email';
-  static const _passwordKey = 'cookidoo_password';
+  static const _credentialsKey = 'cookidoo_credentials';
 
   final FlutterSecureStorage _storage;
 
   Future<CookidooCredentials?> read() async {
-    final email = await _storage.read(key: _emailKey);
-    final password = await _storage.read(key: _passwordKey);
+    final raw = await _storage.read(key: _credentialsKey);
+    if (raw == null) return null;
+    final map = jsonDecode(raw) as Map<String, dynamic>;
+    final email = map['email'] as String?;
+    final password = map['password'] as String?;
     if (email == null || password == null) return null;
     return CookidooCredentials(email: email, password: password);
   }
 
   Future<void> write(CookidooCredentials credentials) async {
-    await _storage.write(key: _emailKey, value: credentials.email);
-    await _storage.write(key: _passwordKey, value: credentials.password);
+    final payload = jsonEncode({
+      'email': credentials.email,
+      'password': credentials.password,
+    });
+    await _storage.write(key: _credentialsKey, value: payload);
   }
 
   Future<void> clear() async {
-    await _storage.delete(key: _emailKey);
-    await _storage.delete(key: _passwordKey);
+    await _storage.delete(key: _credentialsKey);
   }
 }

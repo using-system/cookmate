@@ -84,13 +84,12 @@ class CookidooCredentials {
 }
 ```
 
-Persisted in `flutter_secure_storage` under two keys:
-
-- `cookidoo_email`
-- `cookidoo_password`
+Persisted in `flutter_secure_storage` as a single JSON-serialized value under the
+key `cookidoo_credentials`. A single write avoids partial-state races (e.g. app
+killed mid-write leaving the email stored without the password).
 
 The wrapper exposes `read() -> CookidooCredentials?`, `write(creds)`, and `clear()`.
-Returning `null` from `read()` when either key is missing is what drives the
+Returning `null` from `read()` when the key is absent is what drives the
 "not logged in" state.
 
 ## Authentication Flow

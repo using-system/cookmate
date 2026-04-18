@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/shared_preferences_provider.dart';
+import 'data/chat_backend_preference_storage.dart';
 import 'data/chat_database.dart';
 import 'data/chat_model_preference_storage.dart';
 import 'data/chat_repository.dart';
+import 'domain/chat_backend_preference.dart';
 import 'domain/chat_model_preference.dart';
 import 'domain/conversation.dart';
 import 'domain/chat_message.dart';
@@ -128,9 +130,41 @@ final isPreferredModelInstalledProvider = FutureProvider<bool>((ref) async {
   return installed == preferred;
 });
 
-/// Mark the given model as the one currently installed on disk.
-final markModelInstalledProvider =
-    FutureProvider.family<void, ChatModelPreference>((ref, model) async {
-  final storage = await ref.read(chatModelPreferenceStorageProvider.future);
-  await storage.writeInstalled(model);
+// ── Backend preference ──
+
+final chatBackendPreferenceStorageProvider =
+    FutureProvider<ChatBackendPreferenceStorage>((ref) async {
+  final prefs = await ref.watch(sharedPreferencesProvider.future);
+  return ChatBackendPreferenceStorage(prefs);
 });
+
+class ChatBackendPreferenceNotifier
+    extends AsyncNotifier<ChatBackendPreference> {
+  @override
+  Future<ChatBackendPreference> build() async {
+    final storage =
+        await ref.watch(chatBackendPreferenceStorageProvider.future);
+    return storage.read();
+  }
+
+  Future<void> setPreference(ChatBackendPreference backend) async {
+    final storage =
+        await ref.read(chatBackendPreferenceStorageProvider.future);
+    state = const AsyncValue<ChatBackendPreference>.loading()
+        .copyWithPrevious(state);
+    try {
+      await storage.write(backend);
+      state = AsyncValue.data(backend);
+    } catch (error, stack) {
+      state = AsyncValue<ChatBackendPreference>.error(error, stack)
+          .copyWithPrevious(state);
+      rethrow;
+    }
+  }
+}
+
+final chatBackendPreferenceProvider =
+    AsyncNotifierProvider<ChatBackendPreferenceNotifier,
+        ChatBackendPreference>(
+  ChatBackendPreferenceNotifier.new,
+);

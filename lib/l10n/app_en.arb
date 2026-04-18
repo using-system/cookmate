@@ -94,6 +94,21 @@
   "settingsModelChangeFailureSnackbar": "Couldn't change model. Please try again.",
   "@settingsModelChangeFailureSnackbar": { "description": "Shown when persisting the model preference fails." },
 
+  "settingsBackendTitle": "Inference Backend",
+  "@settingsBackendTitle": { "description": "Title of the backend selection setting tile." },
+
+  "settingsBackendDialogTitle": "Choose inference backend",
+  "@settingsBackendDialogTitle": { "description": "Title of the backend picker dialog." },
+
+  "settingsBackendOptionGpu": "GPU (faster, requires compatible device)",
+  "@settingsBackendOptionGpu": { "description": "Label for the GPU backend option." },
+
+  "settingsBackendOptionCpu": "CPU (slower, works everywhere)",
+  "@settingsBackendOptionCpu": { "description": "Label for the CPU backend option." },
+
+  "settingsBackendChangeFailureSnackbar": "Couldn't change backend. Please try again.",
+  "@settingsBackendChangeFailureSnackbar": { "description": "Shown when persisting the backend preference fails." },
+
   "cancel": "Cancel",
   "@cancel": { "description": "Generic cancel button label." },
 

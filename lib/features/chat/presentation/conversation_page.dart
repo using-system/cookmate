@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../domain/chat_backend_preference.dart';
 import '../providers.dart';
 import 'model_download_page.dart';
 import 'widgets/chat_input_bar.dart';
@@ -50,11 +51,20 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
   }
 
+  PreferredBackend _resolveBackend() {
+    final pref = ref.read(chatBackendPreferenceProvider).valueOrNull ??
+        ChatBackendPreference.defaultBackend;
+    return pref == ChatBackendPreference.gpu
+        ? PreferredBackend.gpu
+        : PreferredBackend.cpu;
+  }
+
   Future<void> _createChat() async {
     try {
+      final backend = _resolveBackend();
       final model = await FlutterGemma.getActiveModel(
         maxTokens: 2048,
-        preferredBackend: PreferredBackend.gpu,
+        preferredBackend: backend,
       );
       _chat = await model.createChat(
         temperature: 0.8,
@@ -133,9 +143,10 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
   Future<void> _autoName(String firstUserMessage) async {
     try {
+      final backend = _resolveBackend();
       final model = await FlutterGemma.getActiveModel(
         maxTokens: 64,
-        preferredBackend: PreferredBackend.gpu,
+        preferredBackend: backend,
       );
       final session = await model.createSession(temperature: 0.3, topK: 1);
       await session.addQueryChunk(Message.text(

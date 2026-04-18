@@ -1,17 +1,9 @@
 {
   "@@locale": "de",
   "appTitle": "Cookmate",
-  "loginTitle": "Cookmate",
-  "loginSubtitle": "Melde dich mit deinem Cookidoo-Konto an.",
-  "loginEmailLabel": "Cookidoo-E-Mail",
-  "loginPasswordLabel": "Passwort",
-  "loginSubmitButton": "Anmelden",
-  "loginFailureSnackbar": "Anmeldung fehlgeschlagen. Bitte versuche es gleich noch einmal.",
   "chatTitle": "Chat",
   "chatPlaceholder": "Chat (demnächst)",
   "settingsTitle": "Einstellungen",
-  "settingsLogoutButton": "Abmelden",
-  "settingsLogoutFailureSnackbar": "Abmeldung fehlgeschlagen. Bitte versuche es gleich noch einmal.",
   "settingsLanguageTitle": "Sprache",
   "settingsLanguageFollowSystem": "System folgen ({language})",
   "settingsLanguageDialogTitle": "Sprache auswählen",
@@ -25,5 +17,7 @@
   "settingsThemeOptionMatrix": "Matrix",
   "settingsThemeChangeFailureSnackbar": "Design konnte nicht geändert werden. Bitte versuche es erneut.",
   "homeTabChat": "Chat",
-  "homeTabSettings": "Einstellungen"
+  "homeTabSettings": "Einstellungen",
+  "splashTitle": "CookMate",
+  "splashDescription": "Erstelle deine Thermomix-Rezepte mit dem CookMate-Assistenten."
 }

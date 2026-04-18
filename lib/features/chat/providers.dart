@@ -119,3 +119,18 @@ final chatModelPreferenceProvider =
     AsyncNotifierProvider<ChatModelPreferenceNotifier, ChatModelPreference>(
   ChatModelPreferenceNotifier.new,
 );
+
+/// Whether the currently installed model matches the user's preference.
+final isPreferredModelInstalledProvider = FutureProvider<bool>((ref) async {
+  final storage = await ref.watch(chatModelPreferenceStorageProvider.future);
+  final preferred = storage.read();
+  final installed = storage.readInstalled();
+  return installed == preferred;
+});
+
+/// Mark the given model as the one currently installed on disk.
+final markModelInstalledProvider =
+    FutureProvider.family<void, ChatModelPreference>((ref, model) async {
+  final storage = await ref.read(chatModelPreferenceStorageProvider.future);
+  await storage.writeInstalled(model);
+});

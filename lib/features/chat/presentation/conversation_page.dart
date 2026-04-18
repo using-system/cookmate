@@ -37,11 +37,14 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   }
 
   Future<void> _initModel() async {
-    final installed = FlutterGemma.hasActiveModel();
+    final hasModel = FlutterGemma.hasActiveModel();
+    final isCorrectModel =
+        await ref.read(isPreferredModelInstalledProvider.future);
+    final ready = hasModel && isCorrectModel;
     if (mounted) {
-      setState(() => _modelReady = installed);
+      setState(() => _modelReady = ready);
     }
-    if (installed) {
+    if (ready) {
       await _createChat();
     }
   }

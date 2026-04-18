@@ -51,6 +51,10 @@ class _ModelDownloadPageState extends ConsumerState<ModelDownloadPage> {
         }
       }).install();
 
+      final storage =
+          await ref.read(chatModelPreferenceStorageProvider.future);
+      await storage.writeInstalled(model);
+
       if (mounted) {
         widget.onComplete();
       }

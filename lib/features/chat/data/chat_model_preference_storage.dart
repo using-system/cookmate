@@ -7,6 +7,7 @@ class ChatModelPreferenceStorage {
   ChatModelPreferenceStorage(this._prefs);
 
   static const _key = 'chat_model_preference';
+  static const _installedKey = 'chat_model_installed';
 
   final SharedPreferences _prefs;
 
@@ -24,5 +25,15 @@ class ChatModelPreferenceStorage {
     if (!didWrite) {
       throw Exception('Failed to persist chat model preference.');
     }
+  }
+
+  ChatModelPreference? readInstalled() {
+    final raw = _prefs.getString(_installedKey);
+    if (raw == null) return null;
+    return ChatModelPreference.fromStorageValue(raw);
+  }
+
+  Future<void> writeInstalled(ChatModelPreference model) async {
+    await _prefs.setString(_installedKey, model.toStorageValue());
   }
 }

@@ -22,18 +22,21 @@ class CookmateApp extends ConsumerWidget {
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      localeResolutionCallback: (deviceLocale, supportedLocales) {
-        if (deviceLocale == null) {
-          return const Locale('en');
-        }
-        for (final supported in supportedLocales) {
-          if (supported.languageCode == deviceLocale.languageCode) {
-            return supported;
-          }
-        }
-        return const Locale('en');
-      },
+      localeResolutionCallback: resolveLocale,
       routerConfig: router,
     );
   }
+}
+
+@visibleForTesting
+Locale resolveLocale(Locale? deviceLocale, Iterable<Locale> supportedLocales) {
+  if (deviceLocale == null) {
+    return const Locale('en');
+  }
+  for (final supported in supportedLocales) {
+    if (supported.languageCode == deviceLocale.languageCode) {
+      return supported;
+    }
+  }
+  return const Locale('en');
 }

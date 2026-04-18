@@ -1,8 +1,6 @@
-# MediaPipe proto classes referenced by the framework at runtime.
-# R8 cannot see these through its static analysis, so they must be kept.
--dontwarn com.google.mediapipe.proto.**
+# MediaPipe proto classes referenced at runtime via reflection.
 -keep class com.google.mediapipe.proto.** { *; }
 
-# LiteRT / TensorFlow Lite native bindings
--dontwarn com.google.ai.edge.**
--keep class com.google.ai.edge.** { *; }
+# LiteRT-LM native bindings used by flutter_gemma.
+-dontwarn com.google.ai.edge.litertlm.**
+-keep class com.google.ai.edge.litertlm.** { *; }

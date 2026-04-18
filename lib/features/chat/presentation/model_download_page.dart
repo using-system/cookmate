@@ -54,7 +54,8 @@ class _ModelDownloadPageState extends ConsumerState<ModelDownloadPage> {
       if (mounted) {
         widget.onComplete();
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('Model download failed: $e\n$stack');
       if (mounted) {
         setState(() {
           _error = e.toString();
@@ -87,6 +88,12 @@ class _ModelDownloadPageState extends ConsumerState<ModelDownloadPage> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: Theme.of(context).colorScheme.error),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 16),
                 FilledButton(

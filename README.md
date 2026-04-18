@@ -1,10 +1,10 @@
-# Cookmate
+# CookMate
 
-AI-powered mobile assistant for your Thermomix.
+Create your Thermomix recipes with the CookMate assistant.
 
-Cookmate is a Flutter mobile app (Android + iOS) — a fully autonomous chat
-assistant for Thermomix recipes, backed by your Cookidoo account and an
-on-device Gemma model.
+CookMate is a Flutter mobile app (Android + iOS) — an AI chat assistant
+that helps you discover and craft recipes for your Thermomix, powered by
+an on-device Gemma model.
 
 ## Development prerequisites
 

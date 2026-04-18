@@ -68,7 +68,7 @@ class _SplashPageState extends State<SplashPage>
               children: [
                 AnimatedBuilder(
                   animation: _controller,
-                  builder: (_, child) => Opacity(
+                  builder: (_, _) => Opacity(
                     opacity: _logoOpacity.value,
                     child: Transform.scale(
                       scale: _logoScale.value,
@@ -83,7 +83,7 @@ class _SplashPageState extends State<SplashPage>
                 const SizedBox(height: 24),
                 AnimatedBuilder(
                   animation: _textOpacity,
-                  builder: (_, child) => Opacity(
+                  builder: (_, _) => Opacity(
                     opacity: _textOpacity.value,
                     child: Column(
                       children: [

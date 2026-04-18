@@ -92,12 +92,6 @@ class _ModelDownloadPageState extends ConsumerState<ModelDownloadPage> {
                   style: TextStyle(
                       color: Theme.of(context).colorScheme.error),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  _error!,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
                 const SizedBox(height: 16),
                 FilledButton(
                   onPressed: _startDownload,

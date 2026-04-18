@@ -167,14 +167,24 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     await _chat!.addQueryChunk(Message.text(text: text, isUser: true));
 
     final buffer = StringBuffer();
+    var lastUpdate = DateTime.now();
+    const throttle = Duration(milliseconds: 50);
+
     await for (final response in _chat!.generateChatResponseAsync()) {
       if (response is TextResponse) {
         buffer.write(response.token);
-        if (mounted) {
+        final now = DateTime.now();
+        if (mounted && now.difference(lastUpdate) >= throttle) {
+          lastUpdate = now;
           setState(() => _streamingContent = buffer.toString());
           _scrollToBottom();
         }
       }
+    }
+    // Final flush to ensure all tokens are displayed.
+    if (mounted) {
+      setState(() => _streamingContent = buffer.toString());
+      _scrollToBottom();
     }
     return buffer.toString();
   }

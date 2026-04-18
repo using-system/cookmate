@@ -30,7 +30,10 @@ class ChatModelPreferenceStorage {
   ChatModelPreference? readInstalled() {
     final raw = _prefs.getString(_installedKey);
     if (raw == null) return null;
-    return ChatModelPreference.fromStorageValue(raw);
+    for (final model in ChatModelPreference.values) {
+      if (model.name == raw) return model;
+    }
+    return null;
   }
 
   Future<void> writeInstalled(ChatModelPreference model) async {

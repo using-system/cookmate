@@ -202,7 +202,6 @@ New ARB keys added to all 4 locales (en, fr, de, es). Existing `chatTitle` and
 | `settingsModelDialogTitle` | Choose AI model |
 | `settingsModelOptionE2B` | Gemma 4 E2B (lighter, faster) |
 | `settingsModelOptionE4B` | Gemma 4 E4B (smarter, heavier) |
-| `chatGeneratingTitle` | Naming conversation… |
 | `cancel` | Cancel |
 | `delete` | Delete |
 

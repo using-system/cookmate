@@ -101,11 +101,12 @@ There is no remote authentication yet. "Logged in" is a local concept defined as
 1. App start: `authStateProvider` reads secure storage once at startup and exposes
    `AsyncValue<bool>` (loading → true/false).
 2. Login page: user fills email + password and taps "Se connecter".
-   - `AuthRepository.login(creds)` writes both keys to secure storage.
-   - `authStateProvider` is invalidated/refreshed → becomes `true`.
-   - Router redirects to `/home`.
-3. Settings page: tapping "Se déconnecter" calls `AuthRepository.logout()` which clears
-   both keys, refreshes `authStateProvider` → `false`, router redirects to `/login`.
+   - `AuthRepository.saveCredentials(creds)` writes both keys to secure storage.
+   - `authStateProvider` is refreshed → becomes `true`.
+   - Router redirects to `/home/chat`.
+3. Settings page: tapping "Se déconnecter" calls `AuthRepository.clearCredentials()`
+   which clears both keys, refreshes `authStateProvider` → `false`, router redirects
+   to `/login`.
 
 ### Routing & Guard
 
@@ -119,8 +120,9 @@ There is no remote authentication yet. "Logged in" is a local concept defined as
 Redirect rules (executed on every navigation, also re-fired when `authStateProvider`
 changes via a `Listenable` adapter):
 
-- While `authStateProvider` is loading → no redirect (a minimal loading screen is shown by
-  the router's `builder`).
+- While `authStateProvider` is loading → no redirect. The initial location is
+  `/login`, so the user briefly sees the login screen until the auth state resolves.
+  A dedicated splash/loading screen is not in scope for this bootstrap.
 - If not authenticated and target is not `/login` → redirect to `/login`.
 - If authenticated and target is `/login` → redirect to `/home/chat`.
 

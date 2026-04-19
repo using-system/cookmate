@@ -180,9 +180,11 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       _visionAvailable = vision;
 
       // Replay stored history so InferenceChat has full context.
+      // Skip audio messages (empty content) to avoid replaying blank turns.
       final repo = await ref.read(chatRepositoryProvider.future);
       final messages = await repo.getMessages(widget.conversationId);
       for (final msg in messages) {
+        if (msg.content.isEmpty) continue;
         await _chat!.addQueryChunk(
           gemma.Message.text(text: msg.content, isUser: msg.role == 'user'),
         );
@@ -260,7 +262,24 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
 
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: source);
+    final XFile? picked;
+    try {
+      picked = await picker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text(AppLocalizations.of(context).chatMediaPermissionDenied)),
+        );
+      }
+      return;
+    }
     if (picked == null || !mounted) return;
     if (_isGenerating || _chat == null) return;
 
@@ -520,11 +539,13 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           );
     }
 
-    // Clean up stream state to avoid unbounded memory growth.
-    _streamStates.remove(streamId);
+    // Keep the final StreamState (completed/error) so the builder doesn't
+    // fall back to StreamStateLoading on rebuilds.  The map is bounded by
+    // the number of messages in the conversation which is already in memory.
   }
 
   void _showAttachmentSheet() {
+    if (_isGenerating || _isRecording) return;
     final l10n = AppLocalizations.of(context);
     showModalBottomSheet<void>(
       context: context,

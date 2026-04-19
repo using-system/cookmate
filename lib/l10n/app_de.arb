@@ -51,5 +51,13 @@
   "homeTabChat": "Chat",
   "homeTabSettings": "Einstellungen",
   "splashTitle": "CookMate",
-  "splashDescription": "Erstelle deine Thermomix-Rezepte mit dem CookMate-Assistenten."
+  "splashDescription": "Erstelle deine Thermomix-Rezepte mit dem CookMate-Assistenten.",
+
+  "chatAttachPhoto": "Foto",
+  "chatAttachGallery": "Galerie",
+  "chatAttachAudio": "Audio aufnehmen",
+  "chatRecordingInProgress": "Aufnahme\u2026",
+  "chatImageCaption": "Bild",
+  "chatAudioCaption": "Sprachnachricht",
+  "chatMediaPermissionDenied": "Zugriff verweigert. Bitte in den Einstellungen erlauben."
 }

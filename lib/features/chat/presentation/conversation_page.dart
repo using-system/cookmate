@@ -626,15 +626,14 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
                 _handleImageSend(ImageSource.gallery);
               },
             ),
-            if (_audioAvailable)
-              ListTile(
-                leading: const Icon(Icons.mic),
-                title: Text(l10n.chatAttachAudio),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  _toggleRecording();
-                },
-              ),
+            ListTile(
+              leading: const Icon(Icons.mic),
+              title: Text(l10n.chatAttachAudio),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _toggleRecording();
+              },
+            ),
           ],
         ),
       ),

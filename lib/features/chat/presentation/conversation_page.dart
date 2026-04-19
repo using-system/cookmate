@@ -682,6 +682,15 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         ? l10n.settingsReasoningSubtitleOn
         : l10n.settingsReasoningSubtitleOff;
 
+    const languageNames = {
+      'fr': 'Français',
+      'en': 'English',
+      'es': 'Español',
+      'de': 'Deutsch',
+    };
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final languageLabel = languageNames[languageCode] ?? languageCode;
+
     final tmLabel = switch (recipeConfig.tmVersion) {
       TmVersion.tm5 => l10n.settingsTmVersionOptionTm5,
       TmVersion.tm6 => l10n.settingsTmVersionOptionTm6,
@@ -747,6 +756,11 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
                           subtitle: Text(recipeConfig.dietaryRestrictions.isEmpty
                               ? l10n.settingsDietaryRestrictionsNone
                               : recipeConfig.dietaryRestrictions),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.language),
+                          title: Text(l10n.chatRecipeInfoLanguage),
+                          subtitle: Text(languageLabel),
                         ),
                       ],
                     ),

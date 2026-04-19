@@ -120,5 +120,6 @@
   "chatRecipeInfoUnitSystem": "Système d'unités",
   "chatRecipeInfoPortions": "Portions",
   "chatRecipeInfoLevel": "Niveau",
-  "chatRecipeInfoDietaryRestrictions": "Restrictions alimentaires"
+  "chatRecipeInfoDietaryRestrictions": "Restrictions alimentaires",
+  "chatRecipeInfoLanguage": "Langue"
 }

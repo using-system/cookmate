@@ -380,5 +380,8 @@
   "@chatRecipeInfoLevel": { "description": "Label for level in recipe info tab." },
 
   "chatRecipeInfoDietaryRestrictions": "Dietary restrictions",
-  "@chatRecipeInfoDietaryRestrictions": { "description": "Label for dietary restrictions in recipe info tab." }
+  "@chatRecipeInfoDietaryRestrictions": { "description": "Label for dietary restrictions in recipe info tab." },
+
+  "chatRecipeInfoLanguage": "Language",
+  "@chatRecipeInfoLanguage": { "description": "Label for language in recipe info tab." }
 }

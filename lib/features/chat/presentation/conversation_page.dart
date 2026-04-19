@@ -143,6 +143,10 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   Future<void> _createChat() async {
     try {
       final pref = await ref.read(chatBackendPreferenceProvider.future);
+      final reasoning =
+          await ref.read(chatReasoningPreferenceProvider.future);
+      final expertConfig =
+          await ref.read(chatExpertConfigProvider.future);
       final backend = pref == ChatBackendPreference.gpu
           ? PreferredBackend.gpu
           : PreferredBackend.cpu;
@@ -162,16 +166,17 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       for (final cfg in configs) {
         try {
           final model = await FlutterGemma.getActiveModel(
-            maxTokens: 2048,
+            maxTokens: expertConfig.maxTokens,
             preferredBackend: backend,
             supportImage: cfg.supportImage,
             supportAudio: cfg.supportAudio,
           );
           _chat = await model.createChat(
-            temperature: 0.8,
-            topK: 40,
+            temperature: expertConfig.temperature,
+            topK: expertConfig.topK,
+            topP: expertConfig.topP,
             systemInstruction: _systemPrompt,
-            isThinking: true,
+            isThinking: reasoning,
             supportImage: cfg.supportImage,
             supportAudio: cfg.supportAudio,
           );

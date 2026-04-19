@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:cookmate/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_core/flutter_chat_core.dart';
@@ -43,7 +41,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   bool _visionAvailable = false;
   bool _audioAvailable = false;
   String? _pendingAudioPath;
-  Uint8List? _pendingAudioBytes;
 
   static const _systemPrompt =
       'You are CookMate, a friendly kitchen assistant specialized in Thermomix recipes. '
@@ -52,9 +49,12 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       'Keep responses concise and practical.';
 
   void _clearPendingAudio() {
+    final path = _pendingAudioPath;
+    if (path != null) {
+      File(path).delete().catchError((_) => File(path));
+    }
     setState(() {
       _pendingAudioPath = null;
-      _pendingAudioBytes = null;
     });
   }
 
@@ -226,7 +226,19 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     if (_isGenerating || _chat == null) return;
     setState(() => _isGenerating = true);
 
-    if (_pendingAudioBytes != null) {
+    if (_pendingAudioPath != null) {
+      if (!_audioAvailable) {
+        _clearPendingAudio();
+        setState(() => _isGenerating = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(
+                    AppLocalizations.of(context).chatMediaPermissionDenied)),
+          );
+        }
+        return;
+      }
       _doSendAudioWithText(text);
     } else {
       if (text.trim().isEmpty) {
@@ -276,10 +288,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
   Future<void> _doSendAudioWithText(String text) async {
     final audioPath = _pendingAudioPath!;
-    final audioBytes = _pendingAudioBytes!;
-    _clearPendingAudio();
 
     try {
+      final audioBytes = await File(audioPath).readAsBytes();
       final msgId = _uuid.v4();
       final now = DateTime.now();
 
@@ -310,6 +321,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       );
 
       await _streamAiResponse();
+
+      // Clear pending audio only after successful send.
+      setState(() => _pendingAudioPath = null);
 
       if (mounted) {
         final needsRename = await _autoNameIfNeeded(
@@ -415,15 +429,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
       if (path == null || !mounted) return;
 
-      try {
-        final audioBytes = await File(path).readAsBytes();
-        setState(() {
-          _pendingAudioPath = path;
-          _pendingAudioBytes = audioBytes;
-        });
-      } catch (e, stack) {
-        debugPrint('Failed to read recorded audio: $e\n$stack');
-      }
+      setState(() => _pendingAudioPath = path);
     } else {
       _audioRecorder ??= AudioRecorder();
       final hasPermission = await _audioRecorder!.hasPermission();

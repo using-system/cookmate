@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cookmate/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -39,12 +40,23 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   String? _chatError;
   bool _isRecording = false;
   AudioRecorder? _audioRecorder;
+  bool _visionAvailable = false;
+  bool _audioAvailable = false;
+  String? _pendingAudioPath;
+  Uint8List? _pendingAudioBytes;
 
   static const _systemPrompt =
       'You are CookMate, a friendly kitchen assistant specialized in Thermomix recipes. '
       'Help users create, adapt, and improve their Thermomix recipes. '
       'Answer in the same language the user writes in. '
       'Keep responses concise and practical.';
+
+  void _clearPendingAudio() {
+    setState(() {
+      _pendingAudioPath = null;
+      _pendingAudioBytes = null;
+    });
+  }
 
   @override
   void initState() {
@@ -122,8 +134,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
   }
 
-  bool _visionAvailable = false;
-
   Future<void> _createChat() async {
     try {
       final pref = await ref.read(chatBackendPreferenceProvider.future);
@@ -131,27 +141,20 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           ? PreferredBackend.gpu
           : PreferredBackend.cpu;
 
-      // Close the previous chat session before replacing it, so the native
-      // session doesn't leak resources or hold stale context.
       await _chat?.close();
       _chat = null;
 
-      // Always close the existing model singleton before creating a new
-      // one.  flutter_gemma caches the model by name and ignores parameter
-      // changes (backend, maxTokens, supportImage).  Without this, switching
-      // CPU↔GPU or toggling vision has no effect.
       final existingModel = FlutterGemmaPlugin.instance.initializedModel;
       await existingModel?.close();
 
-      // Try with vision first; fall back without if the platform lacks
-      // LlmVisionInferenceCalculator (e.g. iOS simulator).
-      // On physical iOS devices vision works fine.
       var vision = true;
+      var audio = true;
       try {
         final model = await FlutterGemma.getActiveModel(
           maxTokens: 2048,
           preferredBackend: backend,
           supportImage: true,
+          supportAudio: true,
         );
         _chat = await model.createChat(
           temperature: 0.8,
@@ -159,28 +162,46 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           systemInstruction: _systemPrompt,
           isThinking: true,
           supportImage: true,
+          supportAudio: true,
         );
       } catch (_) {
-        vision = false;
-        // Vision failed — close the model again and retry without it.
+        audio = false;
         final staleModel = FlutterGemmaPlugin.instance.initializedModel;
         await staleModel?.close();
 
-        final model = await FlutterGemma.getActiveModel(
-          maxTokens: 2048,
-          preferredBackend: backend,
-        );
-        _chat = await model.createChat(
-          temperature: 0.8,
-          topK: 40,
-          systemInstruction: _systemPrompt,
-          isThinking: true,
-        );
+        try {
+          final model = await FlutterGemma.getActiveModel(
+            maxTokens: 2048,
+            preferredBackend: backend,
+            supportImage: true,
+          );
+          _chat = await model.createChat(
+            temperature: 0.8,
+            topK: 40,
+            systemInstruction: _systemPrompt,
+            isThinking: true,
+            supportImage: true,
+          );
+        } catch (_) {
+          vision = false;
+          final staleModel2 = FlutterGemmaPlugin.instance.initializedModel;
+          await staleModel2?.close();
+
+          final model = await FlutterGemma.getActiveModel(
+            maxTokens: 2048,
+            preferredBackend: backend,
+          );
+          _chat = await model.createChat(
+            temperature: 0.8,
+            topK: 40,
+            systemInstruction: _systemPrompt,
+            isThinking: true,
+          );
+        }
       }
       _visionAvailable = vision;
+      _audioAvailable = audio;
 
-      // Replay stored history so InferenceChat has full context.
-      // Skip audio messages (empty content) to avoid replaying blank turns.
       final repo = await ref.read(chatRepositoryProvider.future);
       final messages = await repo.getMessages(widget.conversationId);
       for (final msg in messages) {
@@ -204,11 +225,19 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   void _handleSend(String text) {
     if (_isGenerating || _chat == null) return;
     setState(() => _isGenerating = true);
-    _doSendText(text);
+
+    if (_pendingAudioBytes != null) {
+      _doSendAudioWithText(text);
+    } else {
+      if (text.trim().isEmpty) {
+        setState(() => _isGenerating = false);
+        return;
+      }
+      _doSendText(text);
+    }
   }
 
   Future<void> _doSendText(String text) async {
-
     try {
       final msgId = _uuid.v4();
       final now = DateTime.now();
@@ -221,21 +250,15 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       );
       await _chatController.insertMessage(userMsg);
 
-      // Persist user message (fire-and-forget).
       ref.read(chatRepositoryProvider.future).then(
             (repo) => repo.addUserMessage(widget.conversationId, text),
+            onError: (e, s) => debugPrint('Persist failed: $e\n$s'),
           );
 
-      // Send to InferenceChat.
       await _chat!.addQueryChunk(gemma.Message.text(text: text, isUser: true));
 
-      // Stream the AI response.
       await _streamAiResponse();
 
-      // Auto-name if conversation still has the default title.
-      // _autoNameIfNeeded calls getActiveModel(maxTokens: 64) which
-      // reinitializes the native engine and invalidates our session.
-      // We must recreate _chat afterwards.
       if (mounted) {
         final needsRename = await _autoNameIfNeeded(text);
         if (needsRename) {
@@ -244,6 +267,58 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       }
     } catch (e, stack) {
       debugPrint('Send failed: $e\n$stack');
+    } finally {
+      if (mounted) {
+        setState(() => _isGenerating = false);
+      }
+    }
+  }
+
+  Future<void> _doSendAudioWithText(String text) async {
+    final audioPath = _pendingAudioPath!;
+    final audioBytes = _pendingAudioBytes!;
+    _clearPendingAudio();
+
+    try {
+      final msgId = _uuid.v4();
+      final now = DateTime.now();
+
+      final audioMsg = Message.audio(
+        id: msgId,
+        authorId: 'user',
+        createdAt: now,
+        sentAt: now,
+        source: audioPath,
+        duration: Duration.zero,
+      );
+      await _chatController.insertMessage(audioMsg);
+
+      ref.read(chatRepositoryProvider.future).then(
+            (repo) => repo.addAudioMessage(widget.conversationId, audioPath),
+            onError: (e, s) => debugPrint('Persist failed: $e\n$s'),
+          );
+
+      final l10n = AppLocalizations.of(context);
+      final prompt = text.trim().isNotEmpty ? text.trim() : l10n.chatAudioPrompt;
+
+      await _chat!.addQueryChunk(
+        gemma.Message.withAudio(
+          text: prompt,
+          audioBytes: audioBytes,
+          isUser: true,
+        ),
+      );
+
+      await _streamAiResponse();
+
+      if (mounted) {
+        final needsRename = await _autoNameIfNeeded(
+          text.trim().isNotEmpty ? text.trim() : l10n.chatAudioCaption,
+        );
+        if (needsRename) await _createChat();
+      }
+    } catch (e, stack) {
+      debugPrint('Audio send failed: $e\n$stack');
     } finally {
       if (mounted) {
         setState(() => _isGenerating = false);
@@ -306,6 +381,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       ref.read(chatRepositoryProvider.future).then(
             (repo) => repo.addImageMessage(
                 widget.conversationId, l10n.chatImageCaption, filePath),
+            onError: (e, s) => debugPrint('Persist failed: $e\n$s'),
           );
 
       // Send to InferenceChat with image.
@@ -334,59 +410,21 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
   Future<void> _toggleRecording() async {
     if (_isRecording) {
-      // Stop recording.
       final path = await _audioRecorder?.stop();
       setState(() => _isRecording = false);
 
-      if (path == null || !mounted || _isGenerating || _chat == null) return;
-
-      setState(() => _isGenerating = true);
+      if (path == null || !mounted) return;
 
       try {
         final audioBytes = await File(path).readAsBytes();
-        final msgId = _uuid.v4();
-        final now = DateTime.now();
-
-        final audioMsg = Message.audio(
-          id: msgId,
-          authorId: 'user',
-          createdAt: now,
-          sentAt: now,
-          source: path,
-          duration: Duration.zero,
-        );
-        await _chatController.insertMessage(audioMsg);
-
-        // Persist (fire-and-forget).
-        ref.read(chatRepositoryProvider.future).then(
-              (repo) => repo.addAudioMessage(widget.conversationId, path),
-            );
-
-        // Send to InferenceChat with audio.
-        final l10n = AppLocalizations.of(context);
-        await _chat!.addQueryChunk(
-          gemma.Message.withAudio(
-            text: l10n.chatAudioPrompt,
-            audioBytes: audioBytes,
-            isUser: true,
-          ),
-        );
-
-        await _streamAiResponse();
-
-        if (mounted) {
-          final needsRename = await _autoNameIfNeeded(l10n.chatAudioCaption);
-          if (needsRename) await _createChat();
-        }
+        setState(() {
+          _pendingAudioPath = path;
+          _pendingAudioBytes = audioBytes;
+        });
       } catch (e, stack) {
-        debugPrint('Audio send failed: $e\n$stack');
-      } finally {
-        if (mounted) {
-          setState(() => _isGenerating = false);
-        }
+        debugPrint('Failed to read recorded audio: $e\n$stack');
       }
     } else {
-      // Start recording.
       _audioRecorder ??= AudioRecorder();
       final hasPermission = await _audioRecorder!.hasPermission();
       if (!hasPermission) {
@@ -401,15 +439,20 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       }
       if (!mounted) return;
 
-      // Save to app documents dir (not temp) so persisted mediaPath survives
-      // OS temp cleanup across app restarts.
       final docsDir = await getApplicationDocumentsDirectory();
       final audioDir = Directory('${docsDir.path}/audio');
       if (!audioDir.existsSync()) audioDir.createSync(recursive: true);
       final path =
-          '${audioDir.path}/cookmate_audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+          '${audioDir.path}/cookmate_audio_${DateTime.now().millisecondsSinceEpoch}.wav';
 
-      await _audioRecorder!.start(const RecordConfig(), path: path);
+      await _audioRecorder!.start(
+        const RecordConfig(
+          encoder: AudioEncoder.wav,
+          sampleRate: 16000,
+          numChannels: 1,
+        ),
+        path: path,
+      );
       setState(() => _isRecording = true);
     }
   }
@@ -536,6 +579,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       ref.read(chatRepositoryProvider.future).then(
             (repo) =>
                 repo.addAssistantMessage(widget.conversationId, fullResponse),
+            onError: (e, s) => debugPrint('Persist failed: $e\n$s'),
           );
     }
 
@@ -569,14 +613,15 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
                 _handleImageSend(ImageSource.gallery);
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.mic),
-              title: Text(l10n.chatAttachAudio),
-              onTap: () {
-                Navigator.of(ctx).pop();
-                _toggleRecording();
-              },
-            ),
+            if (_audioAvailable)
+              ListTile(
+                leading: const Icon(Icons.mic),
+                title: Text(l10n.chatAttachAudio),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _toggleRecording();
+                },
+              ),
           ],
         ),
       ),
@@ -764,6 +809,52 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               onMessageSend: _handleSend,
               onAttachmentTap: _showAttachmentSheet,
               builders: Builders(
+                composerBuilder: (context) => Composer(
+                  topWidget: _pendingAudioPath != null
+                      ? Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.mic,
+                                size: 18,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  l10n.chatAudioAttached,
+                                  style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: _clearPendingAudio,
+                                icon: Icon(
+                                  Icons.close,
+                                  size: 18,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
+                              ),
+                            ],
+                          ),
+                        )
+                      : null,
+                  sendButtonVisibilityMode: _pendingAudioPath != null
+                      ? SendButtonVisibilityMode.always
+                      : SendButtonVisibilityMode.disabled,
+                  allowEmptyMessage: _pendingAudioPath != null,
+                ),
                 chatAnimatedListBuilder: (context, itemBuilder) =>
                     ChatAnimatedListReversed(itemBuilder: itemBuilder),
                 textStreamMessageBuilder: (

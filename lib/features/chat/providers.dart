@@ -2,12 +2,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/shared_preferences_provider.dart';
 import 'data/chat_backend_preference_storage.dart';
+import 'data/expert_config_storage.dart';
+import 'data/reasoning_preference_storage.dart';
 import 'data/chat_database.dart';
 import 'data/chat_model_preference_storage.dart';
 import 'data/chat_model_service.dart';
 import 'data/chat_repository.dart';
 import 'domain/chat_backend_preference.dart';
 import 'domain/chat_model_preference.dart';
+import 'domain/expert_config.dart';
 import 'domain/conversation.dart';
 
 // ── Database & Repository ──
@@ -139,6 +142,78 @@ final chatBackendPreferenceProvider =
     AsyncNotifierProvider<ChatBackendPreferenceNotifier,
         ChatBackendPreference>(
   ChatBackendPreferenceNotifier.new,
+);
+
+// ── Reasoning preference ──
+
+final chatReasoningPreferenceStorageProvider =
+    FutureProvider<ReasoningPreferenceStorage>((ref) async {
+  final prefs = await ref.watch(sharedPreferencesProvider.future);
+  return ReasoningPreferenceStorage(prefs);
+});
+
+class ChatReasoningPreferenceNotifier extends AsyncNotifier<bool> {
+  @override
+  Future<bool> build() async {
+    final storage =
+        await ref.watch(chatReasoningPreferenceStorageProvider.future);
+    return storage.read();
+  }
+
+  Future<void> setPreference(bool enabled) async {
+    final storage =
+        await ref.read(chatReasoningPreferenceStorageProvider.future);
+    state = const AsyncValue<bool>.loading().copyWithPrevious(state);
+    try {
+      await storage.write(enabled);
+      state = AsyncValue.data(enabled);
+    } catch (error, stack) {
+      state =
+          AsyncValue<bool>.error(error, stack).copyWithPrevious(state);
+      rethrow;
+    }
+  }
+}
+
+final chatReasoningPreferenceProvider =
+    AsyncNotifierProvider<ChatReasoningPreferenceNotifier, bool>(
+  ChatReasoningPreferenceNotifier.new,
+);
+
+// ── Expert config ──
+
+final chatExpertConfigStorageProvider =
+    FutureProvider<ExpertConfigStorage>((ref) async {
+  final prefs = await ref.watch(sharedPreferencesProvider.future);
+  return ExpertConfigStorage(prefs);
+});
+
+class ChatExpertConfigNotifier extends AsyncNotifier<ExpertConfig> {
+  @override
+  Future<ExpertConfig> build() async {
+    final storage =
+        await ref.watch(chatExpertConfigStorageProvider.future);
+    return storage.read();
+  }
+
+  Future<void> setConfig(ExpertConfig config) async {
+    final storage =
+        await ref.read(chatExpertConfigStorageProvider.future);
+    state = const AsyncValue<ExpertConfig>.loading().copyWithPrevious(state);
+    try {
+      await storage.write(config);
+      state = AsyncValue.data(config);
+    } catch (error, stack) {
+      state = AsyncValue<ExpertConfig>.error(error, stack)
+          .copyWithPrevious(state);
+      rethrow;
+    }
+  }
+}
+
+final chatExpertConfigProvider =
+    AsyncNotifierProvider<ChatExpertConfigNotifier, ExpertConfig>(
+  ChatExpertConfigNotifier.new,
 );
 
 // ── Model service ──

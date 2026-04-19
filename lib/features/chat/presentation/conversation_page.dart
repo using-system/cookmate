@@ -131,7 +131,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           : PreferredBackend.cpu;
 
       // Try with vision first; fall back without if the platform lacks
-      // LlmVisionInferenceCalculator (e.g. current iOS builds).
+      // LlmVisionInferenceCalculator (e.g. iOS simulator).
+      // On physical iOS devices vision works fine.
       var vision = true;
       try {
         final model = await FlutterGemma.getActiveModel(
@@ -148,6 +149,11 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         );
       } catch (_) {
         vision = false;
+        // Close the model singleton so getActiveModel creates a fresh
+        // instance without supportImage baked in.
+        final staleModel = FlutterGemmaPlugin.instance.initializedModel;
+        await staleModel?.close();
+
         final model = await FlutterGemma.getActiveModel(
           maxTokens: 2048,
           preferredBackend: backend,

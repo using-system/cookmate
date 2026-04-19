@@ -18,8 +18,10 @@ class ExpertPickerTile extends ConsumerWidget {
       leading: const Icon(Icons.tune_outlined),
       title: Text(l10n.settingsExpertTitle),
       subtitle: Text(
-        'Tokens: ${config.maxTokens} · '
-        'Temp: ${config.temperature.toStringAsFixed(2)}',
+        l10n.settingsExpertSubtitle(
+          config.maxTokens,
+          config.temperature.toStringAsFixed(2),
+        ),
       ),
       onTap: () => _openDialog(context, ref, config),
     );
@@ -142,7 +144,7 @@ class _ExpertDialogState extends State<_ExpertDialog> {
               temperature: _temperature,
             ),
           ),
-          child: const Text('OK'),
+          child: Text(l10n.ok),
         ),
       ],
     );

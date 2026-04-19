@@ -142,6 +142,15 @@
   "settingsExpertTemperature": "Temperature",
   "@settingsExpertTemperature": { "description": "Label for the temperature field in expert settings." },
 
+  "settingsExpertSubtitle": "Tokens: {maxTokens} · Temp: {temperature}",
+  "@settingsExpertSubtitle": {
+    "description": "Subtitle summary for the expert settings tile.",
+    "placeholders": {
+      "maxTokens": { "type": "int", "example": "8000" },
+      "temperature": { "type": "String", "example": "1.00" }
+    }
+  },
+
   "settingsExpertChangeFailureSnackbar": "Couldn't save expert settings. Please try again.",
   "@settingsExpertChangeFailureSnackbar": { "description": "Shown when persisting the expert generation parameters fails." },
 
@@ -192,6 +201,9 @@
 
   "delete": "Delete",
   "@delete": { "description": "Generic delete button label." },
+
+  "ok": "OK",
+  "@ok": { "description": "Generic OK button label." },
 
   "homeTabChat": "Chat",
   "@homeTabChat": { "description": "Bottom navigation label for the chat tab." },

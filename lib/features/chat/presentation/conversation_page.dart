@@ -4,6 +4,7 @@ import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/chat_backend_preference.dart';
+import '../domain/chat_model_preference.dart';
 import '../providers.dart';
 import 'model_download_page.dart';
 import 'widgets/chat_input_bar.dart';
@@ -194,6 +195,52 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
   }
 
+  Future<void> _showAiInfoDialog(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final model = await ref.read(chatModelPreferenceProvider.future);
+    final backend = await ref.read(chatBackendPreferenceProvider.future);
+
+    if (!mounted) return;
+
+    final modelLabel = switch (model) {
+      ChatModelPreference.gemma4E2B => l10n.settingsModelOptionE2B,
+      ChatModelPreference.gemma4E4B => l10n.settingsModelOptionE4B,
+    };
+    final backendLabel = switch (backend) {
+      ChatBackendPreference.gpu => l10n.settingsBackendOptionGpu,
+      ChatBackendPreference.cpu => l10n.settingsBackendOptionCpu,
+    };
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(l10n.chatAiInfoTitle),
+        children: [
+          ListTile(
+            leading: const Icon(Icons.smart_toy_outlined),
+            title: Text(l10n.chatAiInfoModel),
+            subtitle: Text(modelLabel),
+          ),
+          ListTile(
+            leading: const Icon(Icons.memory_outlined),
+            title: Text(l10n.chatAiInfoAccelerator),
+            subtitle: Text(backendLabel),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(l10n.chatAiInfoClose),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   bool _scrollScheduled = false;
 
   void _scrollToBottom() {
@@ -236,7 +283,15 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         '';
 
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(
+        title: Text(title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () => _showAiInfoDialog(context),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           if (_chatError != null)

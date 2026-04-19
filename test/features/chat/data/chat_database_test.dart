@@ -36,6 +36,8 @@ void main() {
             role TEXT NOT NULL,
             content TEXT NOT NULL,
             created_at INTEGER NOT NULL,
+            type TEXT NOT NULL DEFAULT 'text',
+            media_path TEXT,
             FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
           )
         ''');

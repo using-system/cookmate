@@ -151,6 +151,9 @@
   "chatAiInfoClose": "Close",
   "@chatAiInfoClose": { "description": "Close button in the AI info overlay." },
 
+  "chatThinkingLabel": "Thinking…",
+  "@chatThinkingLabel": { "description": "Label shown while the AI model is in thinking mode." },
+
   "cancel": "Cancel",
   "@cancel": { "description": "Generic cancel button label." },
 

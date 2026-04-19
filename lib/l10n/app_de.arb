@@ -45,6 +45,7 @@
   "chatAiInfoModel": "Modell",
   "chatAiInfoAccelerator": "Beschleuniger",
   "chatAiInfoClose": "Schließen",
+  "chatThinkingLabel": "Denkt nach…",
   "cancel": "Abbrechen",
   "delete": "Löschen",
   "homeTabChat": "Chat",

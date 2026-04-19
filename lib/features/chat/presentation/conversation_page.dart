@@ -18,6 +18,7 @@ import '../domain/chat_message.dart' as domain;
 import '../domain/chat_model_preference.dart';
 import '../providers.dart';
 import '../../recipe/domain/recipe_level.dart';
+import '../../recipe/domain/system_prompt_builder.dart';
 import '../../recipe/domain/tm_version.dart';
 import '../../recipe/domain/unit_system.dart';
 import '../../recipe/providers.dart';
@@ -46,11 +47,12 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   String? _pendingAudioPath;
   String? _pendingImagePath;
 
-  static const _systemPrompt =
-      'You are CookMate, a friendly kitchen assistant specialized in Thermomix recipes. '
-      'Help users create, adapt, and improve their Thermomix recipes. '
-      'Answer in the same language the user writes in. '
-      'Keep responses concise and practical.';
+  static const _languageNames = {
+    'fr': 'Français',
+    'en': 'English',
+    'es': 'Español',
+    'de': 'Deutsch',
+  };
 
   void _clearPendingAudio() {
     final path = _pendingAudioPath;
@@ -151,9 +153,20 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           await ref.read(chatReasoningPreferenceProvider.future);
       final expertConfig =
           await ref.read(chatExpertConfigProvider.future);
+      final recipeConfig =
+          await ref.read(recipeConfigProvider.future);
       final backend = pref == ChatBackendPreference.gpu
           ? PreferredBackend.gpu
           : PreferredBackend.cpu;
+
+      final languageCode = mounted
+          ? Localizations.localeOf(context).languageCode
+          : 'en';
+      final languageName = _languageNames[languageCode] ?? languageCode;
+      final systemPrompt = buildSystemPrompt(
+        config: recipeConfig,
+        languageName: languageName,
+      );
 
       await _chat?.close();
       _chat = null;
@@ -179,7 +192,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             temperature: expertConfig.temperature,
             topK: expertConfig.topK,
             topP: expertConfig.topP,
-            systemInstruction: _systemPrompt,
+            systemInstruction: systemPrompt,
             isThinking: reasoning,
             supportImage: cfg.supportImage,
             supportAudio: cfg.supportAudio,
@@ -682,14 +695,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         ? l10n.settingsReasoningSubtitleOn
         : l10n.settingsReasoningSubtitleOff;
 
-    const languageNames = {
-      'fr': 'Français',
-      'en': 'English',
-      'es': 'Español',
-      'de': 'Deutsch',
-    };
     final languageCode = Localizations.localeOf(context).languageCode;
-    final languageLabel = languageNames[languageCode] ?? languageCode;
+    final languageLabel = _languageNames[languageCode] ?? languageCode;
 
     final tmLabel = switch (recipeConfig.tmVersion) {
       TmVersion.tm5 => l10n.settingsTmVersionOptionTm5,

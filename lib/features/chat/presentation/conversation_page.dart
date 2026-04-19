@@ -1,7 +1,7 @@
 import 'dart:io';
-
 import 'package:cookmate/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:flutter_chat_core/flutter_chat_core.dart';
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_gemma/flutter_gemma.dart' hide Message;
@@ -39,12 +39,30 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   String? _chatError;
   bool _isRecording = false;
   AudioRecorder? _audioRecorder;
+  String? _pendingAudioPath;
+  String? _pendingImagePath;
 
   static const _systemPrompt =
       'You are CookMate, a friendly kitchen assistant specialized in Thermomix recipes. '
       'Help users create, adapt, and improve their Thermomix recipes. '
       'Answer in the same language the user writes in. '
       'Keep responses concise and practical.';
+
+  void _clearPendingAudio() {
+    final path = _pendingAudioPath;
+    if (path != null) {
+      File(path).delete().catchError((_) => File(path));
+    }
+    setState(() {
+      _pendingAudioPath = null;
+    });
+  }
+
+  void _clearPendingImage() {
+    setState(() {
+      _pendingImagePath = null;
+    });
+  }
 
   @override
   void initState() {
@@ -122,8 +140,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
   }
 
-  bool _visionAvailable = false;
-
   Future<void> _createChat() async {
     try {
       final pref = await ref.read(chatBackendPreferenceProvider.future);
@@ -131,56 +147,45 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           ? PreferredBackend.gpu
           : PreferredBackend.cpu;
 
-      // Close the previous chat session before replacing it, so the native
-      // session doesn't leak resources or hold stale context.
       await _chat?.close();
       _chat = null;
 
-      // Always close the existing model singleton before creating a new
-      // one.  flutter_gemma caches the model by name and ignores parameter
-      // changes (backend, maxTokens, supportImage).  Without this, switching
-      // CPU↔GPU or toggling vision has no effect.
       final existingModel = FlutterGemmaPlugin.instance.initializedModel;
       await existingModel?.close();
 
-      // Try with vision first; fall back without if the platform lacks
-      // LlmVisionInferenceCalculator (e.g. iOS simulator).
-      // On physical iOS devices vision works fine.
-      var vision = true;
-      try {
-        final model = await FlutterGemma.getActiveModel(
-          maxTokens: 2048,
-          preferredBackend: backend,
-          supportImage: true,
-        );
-        _chat = await model.createChat(
-          temperature: 0.8,
-          topK: 40,
-          systemInstruction: _systemPrompt,
-          isThinking: true,
-          supportImage: true,
-        );
-      } catch (_) {
-        vision = false;
-        // Vision failed — close the model again and retry without it.
-        final staleModel = FlutterGemmaPlugin.instance.initializedModel;
-        await staleModel?.close();
-
-        final model = await FlutterGemma.getActiveModel(
-          maxTokens: 2048,
-          preferredBackend: backend,
-        );
-        _chat = await model.createChat(
-          temperature: 0.8,
-          topK: 40,
-          systemInstruction: _systemPrompt,
-          isThinking: true,
-        );
+      // Try with vision + audio, then vision only, then text only.
+      final configs = [
+        (supportImage: true, supportAudio: true),
+        (supportImage: true, supportAudio: false),
+        (supportImage: false, supportAudio: false),
+      ];
+      for (final cfg in configs) {
+        try {
+          final model = await FlutterGemma.getActiveModel(
+            maxTokens: 2048,
+            preferredBackend: backend,
+            supportImage: cfg.supportImage,
+            supportAudio: cfg.supportAudio,
+          );
+          _chat = await model.createChat(
+            temperature: 0.8,
+            topK: 40,
+            systemInstruction: _systemPrompt,
+            isThinking: true,
+            supportImage: cfg.supportImage,
+            supportAudio: cfg.supportAudio,
+          );
+          break;
+        } catch (_) {
+          final staleModel = FlutterGemmaPlugin.instance.initializedModel;
+          await staleModel?.close();
+        }
       }
-      _visionAvailable = vision;
 
-      // Replay stored history so InferenceChat has full context.
-      // Skip audio messages (empty content) to avoid replaying blank turns.
+      if (mounted) {
+        setState(() => _chatError = null);
+      }
+
       final repo = await ref.read(chatRepositoryProvider.future);
       final messages = await repo.getMessages(widget.conversationId);
       for (final msg in messages) {
@@ -188,10 +193,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         await _chat!.addQueryChunk(
           gemma.Message.text(text: msg.content, isUser: msg.role == 'user'),
         );
-      }
-
-      if (mounted) {
-        setState(() => _chatError = null);
       }
     } catch (e, stack) {
       debugPrint('Failed to create chat: $e\n$stack');
@@ -204,11 +205,21 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   void _handleSend(String text) {
     if (_isGenerating || _chat == null) return;
     setState(() => _isGenerating = true);
-    _doSendText(text);
+
+    if (_pendingAudioPath != null) {
+      _doSendAudioWithText(text);
+    } else if (_pendingImagePath != null) {
+      _doSendImageWithText(text);
+    } else {
+      if (text.trim().isEmpty) {
+        setState(() => _isGenerating = false);
+        return;
+      }
+      _doSendText(text);
+    }
   }
 
   Future<void> _doSendText(String text) async {
-
     try {
       final msgId = _uuid.v4();
       final now = DateTime.now();
@@ -221,21 +232,15 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       );
       await _chatController.insertMessage(userMsg);
 
-      // Persist user message (fire-and-forget).
       ref.read(chatRepositoryProvider.future).then(
             (repo) => repo.addUserMessage(widget.conversationId, text),
+            onError: (e, s) => debugPrint('Persist failed: $e\n$s'),
           );
 
-      // Send to InferenceChat.
       await _chat!.addQueryChunk(gemma.Message.text(text: text, isUser: true));
 
-      // Stream the AI response.
       await _streamAiResponse();
 
-      // Auto-name if conversation still has the default title.
-      // _autoNameIfNeeded calls getActiveModel(maxTokens: 64) which
-      // reinitializes the native engine and invalidates our session.
-      // We must recreate _chat afterwards.
       if (mounted) {
         final needsRename = await _autoNameIfNeeded(text);
         if (needsRename) {
@@ -251,16 +256,62 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
   }
 
-  Future<void> _handleImageSend(ImageSource source) async {
-    if (!_visionAvailable) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).chatVisionUnavailable)),
-        );
-      }
-      return;
-    }
+  Future<void> _doSendAudioWithText(String text) async {
+    final audioPath = _pendingAudioPath!;
 
+    try {
+      final audioBytes = await File(audioPath).readAsBytes();
+      final msgId = _uuid.v4();
+      final now = DateTime.now();
+
+      final audioMsg = Message.audio(
+        id: msgId,
+        authorId: 'user',
+        createdAt: now,
+        sentAt: now,
+        source: audioPath,
+        duration: Duration.zero,
+        text: text.trim().isNotEmpty ? text.trim() : null,
+      );
+      await _chatController.insertMessage(audioMsg);
+
+      // Clear the composer chip now that the message is visible in chat.
+      setState(() => _pendingAudioPath = null);
+
+      ref.read(chatRepositoryProvider.future).then(
+            (repo) => repo.addAudioMessage(widget.conversationId, audioPath),
+            onError: (e, s) => debugPrint('Persist failed: $e\n$s'),
+          );
+
+      final l10n = AppLocalizations.of(context);
+      final prompt = text.trim().isNotEmpty ? text.trim() : l10n.chatAudioPrompt;
+
+      await _chat!.addQueryChunk(
+        gemma.Message.withAudio(
+          text: prompt,
+          audioBytes: audioBytes,
+          isUser: true,
+        ),
+      );
+
+      await _streamAiResponse();
+
+      if (mounted) {
+        final needsRename = await _autoNameIfNeeded(
+          text.trim().isNotEmpty ? text.trim() : l10n.chatAudioCaption,
+        );
+        if (needsRename) await _createChat();
+      }
+    } catch (e, stack) {
+      debugPrint('Audio send failed: $e\n$stack');
+    } finally {
+      if (mounted) {
+        setState(() => _isGenerating = false);
+      }
+    }
+  }
+
+  Future<void> _handleImagePick(ImageSource source) async {
     final picker = ImagePicker();
     final XFile? picked;
     try {
@@ -281,13 +332,15 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       return;
     }
     if (picked == null || !mounted) return;
-    if (_isGenerating || _chat == null) return;
 
-    setState(() => _isGenerating = true);
+    setState(() => _pendingImagePath = picked!.path);
+  }
+
+  Future<void> _doSendImageWithText(String text) async {
+    final imagePath = _pendingImagePath!;
 
     try {
-      final filePath = picked.path;
-      final imageBytes = await File(filePath).readAsBytes();
+      final imageBytes = await File(imagePath).readAsBytes();
       final msgId = _uuid.v4();
       final now = DateTime.now();
 
@@ -296,22 +349,28 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         authorId: 'user',
         createdAt: now,
         sentAt: now,
-        source: filePath,
+        source: imagePath,
+        text: text.trim().isNotEmpty ? text.trim() : null,
       );
       await _chatController.insertMessage(imageMsg);
+
+      setState(() => _pendingImagePath = null);
 
       final l10n = AppLocalizations.of(context);
 
       // Persist (fire-and-forget).
       ref.read(chatRepositoryProvider.future).then(
             (repo) => repo.addImageMessage(
-                widget.conversationId, l10n.chatImageCaption, filePath),
+                widget.conversationId, l10n.chatImageCaption, imagePath),
+            onError: (e, s) => debugPrint('Persist failed: $e\n$s'),
           );
+
+      final prompt = text.trim().isNotEmpty ? text.trim() : l10n.chatImagePrompt;
 
       // Send to InferenceChat with image.
       await _chat!.addQueryChunk(
         gemma.Message.withImage(
-          text: l10n.chatImagePrompt,
+          text: prompt,
           imageBytes: imageBytes,
           isUser: true,
         ),
@@ -320,7 +379,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       await _streamAiResponse();
 
       if (mounted) {
-        final needsRename = await _autoNameIfNeeded(l10n.chatImageCaption);
+        final needsRename = await _autoNameIfNeeded(
+          text.trim().isNotEmpty ? text.trim() : l10n.chatImageCaption,
+        );
         if (needsRename) await _createChat();
       }
     } catch (e, stack) {
@@ -334,59 +395,13 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
   Future<void> _toggleRecording() async {
     if (_isRecording) {
-      // Stop recording.
       final path = await _audioRecorder?.stop();
       setState(() => _isRecording = false);
 
-      if (path == null || !mounted || _isGenerating || _chat == null) return;
+      if (path == null || !mounted) return;
 
-      setState(() => _isGenerating = true);
-
-      try {
-        final audioBytes = await File(path).readAsBytes();
-        final msgId = _uuid.v4();
-        final now = DateTime.now();
-
-        final audioMsg = Message.audio(
-          id: msgId,
-          authorId: 'user',
-          createdAt: now,
-          sentAt: now,
-          source: path,
-          duration: Duration.zero,
-        );
-        await _chatController.insertMessage(audioMsg);
-
-        // Persist (fire-and-forget).
-        ref.read(chatRepositoryProvider.future).then(
-              (repo) => repo.addAudioMessage(widget.conversationId, path),
-            );
-
-        // Send to InferenceChat with audio.
-        final l10n = AppLocalizations.of(context);
-        await _chat!.addQueryChunk(
-          gemma.Message.withAudio(
-            text: l10n.chatAudioPrompt,
-            audioBytes: audioBytes,
-            isUser: true,
-          ),
-        );
-
-        await _streamAiResponse();
-
-        if (mounted) {
-          final needsRename = await _autoNameIfNeeded(l10n.chatAudioCaption);
-          if (needsRename) await _createChat();
-        }
-      } catch (e, stack) {
-        debugPrint('Audio send failed: $e\n$stack');
-      } finally {
-        if (mounted) {
-          setState(() => _isGenerating = false);
-        }
-      }
+      setState(() => _pendingAudioPath = path);
     } else {
-      // Start recording.
       _audioRecorder ??= AudioRecorder();
       final hasPermission = await _audioRecorder!.hasPermission();
       if (!hasPermission) {
@@ -401,15 +416,20 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       }
       if (!mounted) return;
 
-      // Save to app documents dir (not temp) so persisted mediaPath survives
-      // OS temp cleanup across app restarts.
       final docsDir = await getApplicationDocumentsDirectory();
       final audioDir = Directory('${docsDir.path}/audio');
       if (!audioDir.existsSync()) audioDir.createSync(recursive: true);
       final path =
-          '${audioDir.path}/cookmate_audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+          '${audioDir.path}/cookmate_audio_${DateTime.now().millisecondsSinceEpoch}.wav';
 
-      await _audioRecorder!.start(const RecordConfig(), path: path);
+      await _audioRecorder!.start(
+        const RecordConfig(
+          encoder: AudioEncoder.wav,
+          sampleRate: 16000,
+          numChannels: 1,
+        ),
+        path: path,
+      );
       setState(() => _isRecording = true);
     }
   }
@@ -536,6 +556,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       ref.read(chatRepositoryProvider.future).then(
             (repo) =>
                 repo.addAssistantMessage(widget.conversationId, fullResponse),
+            onError: (e, s) => debugPrint('Persist failed: $e\n$s'),
           );
     }
 
@@ -549,6 +570,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     final l10n = AppLocalizations.of(context);
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -558,7 +580,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               title: Text(l10n.chatAttachPhoto),
               onTap: () {
                 Navigator.of(ctx).pop();
-                _handleImageSend(ImageSource.camera);
+                _handleImagePick(ImageSource.camera);
               },
             ),
             ListTile(
@@ -566,7 +588,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               title: Text(l10n.chatAttachGallery),
               onTap: () {
                 Navigator.of(ctx).pop();
-                _handleImageSend(ImageSource.gallery);
+                _handleImagePick(ImageSource.gallery);
               },
             ),
             ListTile(
@@ -764,6 +786,127 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               onMessageSend: _handleSend,
               onAttachmentTap: _showAttachmentSheet,
               builders: Builders(
+                composerBuilder: (context) {
+                  final hasPending =
+                      _pendingAudioPath != null || _pendingImagePath != null;
+                  Widget? topWidget;
+                  if (_pendingImagePath != null) {
+                    topWidget = Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      child: Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              File(_pendingImagePath!),
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              l10n.chatImageAttached,
+                              style: TextStyle(
+                                color:
+                                    Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _clearPendingImage,
+                            icon: Icon(
+                              Icons.close,
+                              size: 18,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                            constraints: const BoxConstraints(),
+                            padding: EdgeInsets.zero,
+                          ),
+                        ],
+                      ),
+                    );
+                  } else if (_pendingAudioPath != null) {
+                    topWidget = Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.mic,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              l10n.chatAudioAttached,
+                              style: TextStyle(
+                                color:
+                                    Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _clearPendingAudio,
+                            icon: Icon(
+                              Icons.close,
+                              size: 18,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                            constraints: const BoxConstraints(),
+                            padding: EdgeInsets.zero,
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return Composer(
+                    topWidget: topWidget,
+                    sendButtonVisibilityMode: hasPending
+                        ? SendButtonVisibilityMode.always
+                        : SendButtonVisibilityMode.disabled,
+                    allowEmptyMessage: hasPending,
+                  );
+                },
+                imageMessageBuilder: (
+                  context,
+                  message,
+                  index, {
+                  required bool isSentByMe,
+                  MessageGroupStatus? groupStatus,
+                }) {
+                  return _ImageBubble(
+                    source: message.source,
+                    text: message.text,
+                    isSentByMe: isSentByMe,
+                  );
+                },
+                audioMessageBuilder: (
+                  context,
+                  message,
+                  index, {
+                  required bool isSentByMe,
+                  MessageGroupStatus? groupStatus,
+                }) {
+                  return _AudioBubble(
+                    source: message.source,
+                    text: message.text,
+                    isSentByMe: isSentByMe,
+                  );
+                },
                 chatAnimatedListBuilder: (context, itemBuilder) =>
                     ChatAnimatedListReversed(itemBuilder: itemBuilder),
                 textStreamMessageBuilder: (
@@ -802,6 +945,193 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ImageBubble extends StatelessWidget {
+  const _ImageBubble({
+    required this.source,
+    this.text,
+    required this.isSentByMe,
+  });
+
+  final String source;
+  final String? text;
+  final bool isSentByMe;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width * 0.75,
+      ),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: isSentByMe
+            ? colorScheme.primaryContainer
+            : colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: () => _showFullScreen(context),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 200),
+              child: Image.file(
+                File(source),
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, e, s) => const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Icon(Icons.broken_image, size: 48),
+                ),
+              ),
+            ),
+          ),
+          if (text != null && text!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Text(
+                text!,
+                style: TextStyle(
+                  color: isSentByMe
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.onSurface,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showFullScreen(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            iconTheme: const IconThemeData(color: Colors.white),
+          ),
+          body: Center(
+            child: InteractiveViewer(
+              child: Image.file(File(source)),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AudioBubble extends StatefulWidget {
+  const _AudioBubble({
+    required this.source,
+    this.text,
+    required this.isSentByMe,
+  });
+
+  final String source;
+  final String? text;
+  final bool isSentByMe;
+
+  @override
+  State<_AudioBubble> createState() => _AudioBubbleState();
+}
+
+class _AudioBubbleState extends State<_AudioBubble> {
+  final AudioPlayer _player = AudioPlayer();
+  bool _isPlaying = false;
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  Future<void> _togglePlayback() async {
+    if (_isPlaying) {
+      await _player.pause();
+      setState(() => _isPlaying = false);
+    } else {
+      if (_player.processingState == ProcessingState.completed ||
+          _player.processingState == ProcessingState.idle) {
+        await _player.setFilePath(widget.source);
+      }
+      _player.playerStateStream.listen((state) {
+        if (state.processingState == ProcessingState.completed && mounted) {
+          setState(() => _isPlaying = false);
+        }
+      });
+      await _player.play();
+      setState(() => _isPlaying = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width * 0.75,
+      ),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: widget.isSentByMe
+            ? colorScheme.primaryContainer
+            : colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: _togglePlayback,
+                icon: Icon(
+                  _isPlaying ? Icons.pause_circle : Icons.play_circle,
+                  color: widget.isSentByMe
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.onSurfaceVariant,
+                ),
+                constraints: const BoxConstraints(),
+                padding: EdgeInsets.zero,
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.graphic_eq,
+                color: widget.isSentByMe
+                    ? colorScheme.onPrimaryContainer.withAlpha(150)
+                    : colorScheme.onSurfaceVariant.withAlpha(150),
+              ),
+            ],
+          ),
+          if (widget.text != null && widget.text!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              widget.text!,
+              style: TextStyle(
+                color: widget.isSentByMe
+                    ? colorScheme.onPrimaryContainer
+                    : colorScheme.onSurface,
+              ),
+            ),
+          ],
         ],
       ),
     );

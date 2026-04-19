@@ -33,6 +33,7 @@
 
 - image_picker (camera capture + gallery selection)
 - record (live audio recording)
+- just_audio (audio playback in chat bubbles)
 
 ## Internationalization
 

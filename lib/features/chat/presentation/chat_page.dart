@@ -51,7 +51,7 @@ class ChatPage extends ConsumerWidget {
                   ),
                 ),
                 confirmDismiss: (_) async {
-                  return await showDialog<bool>(
+                  final confirmed = await showDialog<bool>(
                     context: context,
                     builder: (ctx) => AlertDialog(
                       title: Text(l10n.chatDeleteConversation),
@@ -68,15 +68,16 @@ class ChatPage extends ConsumerWidget {
                       ],
                     ),
                   );
-                },
-                onDismissed: (_) async {
-                  try {
-                    await ref
-                        .read(conversationsProvider.notifier)
-                        .delete(conv.id);
-                  } catch (_) {
-                    ref.invalidate(conversationsProvider);
+                  if (confirmed == true) {
+                    try {
+                      await ref
+                          .read(conversationsProvider.notifier)
+                          .delete(conv.id);
+                    } catch (_) {
+                      ref.invalidate(conversationsProvider);
+                    }
                   }
+                  return false;
                 },
                 child: ListTile(
                   title: Text(

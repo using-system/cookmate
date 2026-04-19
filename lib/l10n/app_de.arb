@@ -59,6 +59,8 @@
   "chatRecordingInProgress": "Aufnahme\u2026",
   "chatImageCaption": "Bild",
   "chatAudioCaption": "Sprachnachricht",
+  "chatAudioAttached": "Audio angehängt",
+  "chatImageAttached": "Bild angehängt",
   "chatMediaPermissionDenied": "Zugriff verweigert. Bitte in den Einstellungen erlauben.",
   "chatVisionUnavailable": "Bildanalyse ist auf diesem Gerät nicht verfügbar.",
   "chatImagePrompt": "Beschreibe dieses Bild und hilf mir mit diesem Rezept.",

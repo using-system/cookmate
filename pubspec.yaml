@@ -47,6 +47,7 @@ dependencies:
   flyer_chat_text_stream_message: ^2.3.0
   image_picker: ^1.2.1
   record: ^6.2.0
+  just_audio: ^0.10.5
 
 dev_dependencies:
   flutter_test:

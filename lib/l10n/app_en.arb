@@ -40,6 +40,12 @@
   "settingsTitle": "Settings",
   "@settingsTitle": { "description": "AppBar title on the settings screen." },
 
+  "settingsSectionAi": "AI",
+  "@settingsSectionAi": { "description": "Section header for AI-related settings." },
+
+  "settingsSectionGeneral": "General",
+  "@settingsSectionGeneral": { "description": "Section header for general settings." },
+
   "settingsLanguageTitle": "Language",
   "@settingsLanguageTitle": { "description": "Title of the language setting tile." },
 
@@ -79,7 +85,7 @@
   "settingsThemeChangeFailureSnackbar": "Couldn't change theme. Please try again.",
   "@settingsThemeChangeFailureSnackbar": { "description": "Shown when persisting the new theme fails." },
 
-  "settingsModelTitle": "AI Model",
+  "settingsModelTitle": "Model",
   "@settingsModelTitle": { "description": "Title of the model selection setting tile." },
 
   "settingsModelDialogTitle": "Choose AI model",
@@ -94,7 +100,7 @@
   "settingsModelChangeFailureSnackbar": "Couldn't change model. Please try again.",
   "@settingsModelChangeFailureSnackbar": { "description": "Shown when persisting the model preference fails." },
 
-  "settingsBackendTitle": "Inference Backend",
+  "settingsBackendTitle": "Accelerator",
   "@settingsBackendTitle": { "description": "Title of the backend selection setting tile." },
 
   "settingsBackendDialogTitle": "Choose inference backend",
@@ -108,15 +114,6 @@
 
   "settingsBackendChangeFailureSnackbar": "Couldn't change backend. Please try again.",
   "@settingsBackendChangeFailureSnackbar": { "description": "Shown when persisting the backend preference fails." },
-
-  "settingsRestartRequiredTitle": "Restart required",
-  "@settingsRestartRequiredTitle": { "description": "Title of the restart dialog shown after changing model or backend." },
-
-  "settingsRestartRequiredMessage": "The app needs to restart to apply this change.",
-  "@settingsRestartRequiredMessage": { "description": "Body of the restart dialog." },
-
-  "settingsRestartRequiredButton": "Restart now",
-  "@settingsRestartRequiredButton": { "description": "Button label to restart the app." },
 
   "chatTimeJustNow": "just now",
   "@chatTimeJustNow": { "description": "Relative time label for less than a minute ago." },
@@ -141,6 +138,18 @@
 
   "chatModelErrorRetry": "Retry",
   "@chatModelErrorRetry": { "description": "Retry button on model error banner." },
+
+  "chatAiInfoTitle": "AI Settings",
+  "@chatAiInfoTitle": { "description": "Title of the AI info overlay in conversation." },
+
+  "chatAiInfoModel": "Model",
+  "@chatAiInfoModel": { "description": "Label for the model row in AI info overlay." },
+
+  "chatAiInfoAccelerator": "Accelerator",
+  "@chatAiInfoAccelerator": { "description": "Label for the accelerator row in AI info overlay." },
+
+  "chatAiInfoClose": "Close",
+  "@chatAiInfoClose": { "description": "Close button in the AI info overlay." },
 
   "cancel": "Cancel",
   "@cancel": { "description": "Generic cancel button label." },

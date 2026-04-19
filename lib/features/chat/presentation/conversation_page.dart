@@ -310,6 +310,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       );
       await _chatController.insertMessage(audioMsg);
 
+      // Clear the composer chip now that the message is visible in chat.
+      setState(() => _pendingAudioPath = null);
+
       ref.read(chatRepositoryProvider.future).then(
             (repo) => repo.addAudioMessage(widget.conversationId, audioPath),
             onError: (e, s) => debugPrint('Persist failed: $e\n$s'),
@@ -327,9 +330,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       );
 
       await _streamAiResponse();
-
-      // Clear pending audio only after successful send.
-      setState(() => _pendingAudioPath = null);
 
       if (mounted) {
         final needsRename = await _autoNameIfNeeded(

@@ -188,8 +188,14 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       await _streamAiResponse();
 
       // Auto-name if conversation still has the default title.
+      // _autoNameIfNeeded calls getActiveModel(maxTokens: 64) which
+      // reinitializes the native engine and invalidates our session.
+      // We must recreate _chat afterwards.
       if (mounted) {
-        await _autoNameIfNeeded(text);
+        final needsRename = await _autoNameIfNeeded(text);
+        if (needsRename) {
+          await _createChat();
+        }
       }
     } catch (e, stack) {
       debugPrint('Send failed: $e\n$stack');
@@ -466,16 +472,18 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     );
   }
 
-  Future<void> _autoNameIfNeeded(String firstUserMessage) async {
+  /// Returns `true` if it called [FlutterGemma.getActiveModel] (which
+  /// reinitializes the native engine and invalidates existing sessions).
+  Future<bool> _autoNameIfNeeded(String firstUserMessage) async {
     final conversations =
         ref.read(conversationsProvider).valueOrNull ?? [];
     final conv = conversations
         .where((c) => c.id == widget.conversationId)
         .firstOrNull;
-    if (conv == null || !mounted) return;
+    if (conv == null || !mounted) return false;
 
     final l10n = AppLocalizations.of(context);
-    if (conv.title != l10n.chatNewConversation) return;
+    if (conv.title != l10n.chatNewConversation) return false;
 
     try {
       final pref = await ref.read(chatBackendPreferenceProvider.future);
@@ -505,6 +513,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     } catch (_) {
       // Title generation is best-effort; ignore failures.
     }
+    return true;
   }
 
   Future<void> _showAiInfoDialog(BuildContext context) async {

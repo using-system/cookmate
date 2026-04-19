@@ -602,6 +602,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     final l10n = AppLocalizations.of(context);
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,

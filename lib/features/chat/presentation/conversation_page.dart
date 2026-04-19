@@ -165,7 +165,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       final languageName = _languageNames[languageCode] ?? languageCode;
       final systemPrompt = buildSystemPrompt(
         config: recipeConfig,
-        languageName: languageName,
+        language: languageName,
       );
 
       await _chat?.close();

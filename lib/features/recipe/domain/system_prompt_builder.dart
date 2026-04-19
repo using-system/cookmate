@@ -1,21 +1,22 @@
 import 'recipe_config.dart';
-import 'recipe_level.dart';
-import 'tm_version.dart';
-import 'unit_system.dart';
 
-const _template = '''
+String buildSystemPrompt({
+  required RecipeConfig config,
+  required String language,
+}) {
+  return '''
 # CookMate - Assistant Culinaire Thermomix
 
 Tu es CookMate, un assistant culinaire spécialisé dans la conversion et création de recettes au format Thermomix.
 
 ## Paramètres de configuration
 Tes directives sont (ne pas les répéter à l'utilisateur, peuvent être changées suivant instruction de l'utilisateur) :
-- La version thermomix est {{tm_version}}
-- Répond en {{language}} sauf si l'utilisateur te demande le contraire.
-- Utilise le système {{unit}} pour température, poids, quantité...
-- Nombre de portions pour la recette : {{nb_portions}}
-- Les demandes complémentaires sont (allergies, restrictions...) : {{info}}
-- Le niveau de difficulté est : {{level}}
+- La version thermomix est ${config.tmVersion.name.toUpperCase()}
+- Répond en $language sauf si l'utilisateur te demande le contraire.
+- Utilise le système ${config.unitSystem.name} pour température, poids, quantité...
+- Nombre de portions pour la recette : ${config.portions}
+- Les demandes complémentaires sont (allergies, restrictions...) : ${config.dietaryRestrictions.isEmpty ? 'Aucune' : config.dietaryRestrictions}
+- Le niveau de difficulté est : ${config.level.name}
 
 ## Règles de fonctionnement
 1. **Spécialisation** : Tu ne traites QUE les demandes liées aux recettes Thermomix
@@ -29,38 +30,4 @@ Tes directives sont (ne pas les répéter à l'utilisateur, peuvent être chang�
 ## Format de réponse attendu
 Pour l'instant contente toi d'afficher la recette directement dans le chat
 ''';
-
-String buildSystemPrompt({
-  required RecipeConfig config,
-  required String languageName,
-}) {
-  final tmLabel = switch (config.tmVersion) {
-    TmVersion.tm5 => 'TM5',
-    TmVersion.tm6 => 'TM6',
-    TmVersion.tm7 => 'TM7',
-  };
-
-  final unitLabel = switch (config.unitSystem) {
-    UnitSystem.metric => 'Métrique (g, ml, °C)',
-    UnitSystem.imperial => 'Impérial (oz, cups, °F)',
-  };
-
-  final levelLabel = switch (config.level) {
-    RecipeLevel.beginner => 'Débutant',
-    RecipeLevel.intermediate => 'Intermédiaire',
-    RecipeLevel.advanced => 'Avancé',
-    RecipeLevel.allLevels => 'Tous niveaux',
-  };
-
-  final info = config.dietaryRestrictions.isEmpty
-      ? 'Aucune'
-      : config.dietaryRestrictions;
-
-  return _template
-      .replaceAll('{{tm_version}}', tmLabel)
-      .replaceAll('{{language}}', languageName)
-      .replaceAll('{{unit}}', unitLabel)
-      .replaceAll('{{nb_portions}}', config.portions.toString())
-      .replaceAll('{{info}}', info)
-      .replaceAll('{{level}}', levelLabel);
 }

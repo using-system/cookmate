@@ -54,6 +54,10 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
   @override
   void dispose() {
+    // Close the native Gemma session so the next conversation gets a fresh one.
+    // Without this, createSession() returns the cached singleton and the new
+    // conversation inherits the previous conversation's context.
+    _chat?.close();
     _chatController.dispose();
     _audioRecorder?.dispose();
     super.dispose();
@@ -650,6 +654,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               onMessageSend: _handleSend,
               onAttachmentTap: _showAttachmentSheet,
               builders: Builders(
+                chatAnimatedListBuilder: (context, itemBuilder) =>
+                    ChatAnimatedListReversed(itemBuilder: itemBuilder),
                 textStreamMessageBuilder: (
                   context,
                   message,

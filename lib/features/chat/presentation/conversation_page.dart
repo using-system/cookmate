@@ -200,6 +200,17 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           );
         }
       }
+
+      // Update capabilities immediately so the UI reflects them
+      // before the potentially slow history replay below.
+      if (mounted) {
+        setState(() {
+          _visionAvailable = vision;
+          _audioAvailable = audio;
+          _chatError = null;
+        });
+      }
+
       final repo = await ref.read(chatRepositoryProvider.future);
       final messages = await repo.getMessages(widget.conversationId);
       for (final msg in messages) {
@@ -207,14 +218,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         await _chat!.addQueryChunk(
           gemma.Message.text(text: msg.content, isUser: msg.role == 'user'),
         );
-      }
-
-      if (mounted) {
-        setState(() {
-          _visionAvailable = vision;
-          _audioAvailable = audio;
-          _chatError = null;
-        });
       }
     } catch (e, stack) {
       debugPrint('Failed to create chat: $e\n$stack');

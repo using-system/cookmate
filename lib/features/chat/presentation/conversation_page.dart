@@ -17,6 +17,11 @@ import '../domain/chat_backend_preference.dart';
 import '../domain/chat_message.dart' as domain;
 import '../domain/chat_model_preference.dart';
 import '../providers.dart';
+import '../../recipe/domain/recipe_level.dart';
+import '../../recipe/domain/system_prompt_builder.dart';
+import '../../recipe/domain/tm_version.dart';
+import '../../recipe/domain/unit_system.dart';
+import '../../recipe/providers.dart';
 import 'model_download_page.dart';
 
 const _uuid = Uuid();
@@ -42,11 +47,12 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   String? _pendingAudioPath;
   String? _pendingImagePath;
 
-  static const _systemPrompt =
-      'You are CookMate, a friendly kitchen assistant specialized in Thermomix recipes. '
-      'Help users create, adapt, and improve their Thermomix recipes. '
-      'Answer in the same language the user writes in. '
-      'Keep responses concise and practical.';
+  static const _languageNames = {
+    'fr': 'Français',
+    'en': 'English',
+    'es': 'Español',
+    'de': 'Deutsch',
+  };
 
   void _clearPendingAudio() {
     final path = _pendingAudioPath;
@@ -147,9 +153,20 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           await ref.read(chatReasoningPreferenceProvider.future);
       final expertConfig =
           await ref.read(chatExpertConfigProvider.future);
+      final recipeConfig =
+          await ref.read(recipeConfigProvider.future);
       final backend = pref == ChatBackendPreference.gpu
           ? PreferredBackend.gpu
           : PreferredBackend.cpu;
+
+      final languageCode = mounted
+          ? Localizations.localeOf(context).languageCode
+          : 'en';
+      final languageName = _languageNames[languageCode] ?? languageCode;
+      final systemPrompt = buildSystemPrompt(
+        config: recipeConfig,
+        language: languageName,
+      );
 
       await _chat?.close();
       _chat = null;
@@ -175,7 +192,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             temperature: expertConfig.temperature,
             topK: expertConfig.topK,
             topP: expertConfig.topP,
-            systemInstruction: _systemPrompt,
+            systemInstruction: systemPrompt,
             isThinking: reasoning,
             supportImage: cfg.supportImage,
             supportAudio: cfg.supportAudio,
@@ -662,6 +679,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     final backend = await ref.read(chatBackendPreferenceProvider.future);
     final reasoning = await ref.read(chatReasoningPreferenceProvider.future);
     final expertConfig = await ref.read(chatExpertConfigProvider.future);
+    final recipeConfig = await ref.read(recipeConfigProvider.future);
 
     if (!mounted) return;
 
@@ -677,57 +695,141 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         ? l10n.settingsReasoningSubtitleOn
         : l10n.settingsReasoningSubtitleOff;
 
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final languageLabel = _languageNames[languageCode] ?? languageCode;
+
+    final tmLabel = switch (recipeConfig.tmVersion) {
+      TmVersion.tm5 => l10n.settingsTmVersionOptionTm5,
+      TmVersion.tm6 => l10n.settingsTmVersionOptionTm6,
+      TmVersion.tm7 => l10n.settingsTmVersionOptionTm7,
+    };
+    final unitLabel = switch (recipeConfig.unitSystem) {
+      UnitSystem.metric => l10n.settingsUnitSystemOptionMetric,
+      UnitSystem.imperial => l10n.settingsUnitSystemOptionImperial,
+    };
+    final levelLabel = switch (recipeConfig.level) {
+      RecipeLevel.beginner => l10n.settingsLevelOptionBeginner,
+      RecipeLevel.intermediate => l10n.settingsLevelOptionIntermediate,
+      RecipeLevel.advanced => l10n.settingsLevelOptionAdvanced,
+      RecipeLevel.allLevels => l10n.settingsLevelOptionAllLevels,
+    };
+
     await showDialog<void>(
       context: context,
-      builder: (ctx) => SimpleDialog(
-        title: Text(l10n.chatAiInfoTitle),
-        children: [
-          ListTile(
-            leading: const Icon(Icons.smart_toy_outlined),
-            title: Text(l10n.chatAiInfoModel),
-            subtitle: Text(modelLabel),
-          ),
-          ListTile(
-            leading: const Icon(Icons.memory_outlined),
-            title: Text(l10n.chatAiInfoAccelerator),
-            subtitle: Text(backendLabel),
-          ),
-          ListTile(
-            leading: const Icon(Icons.psychology_outlined),
-            title: Text(l10n.chatAiInfoReasoning),
-            subtitle: Text(reasoningLabel),
-          ),
-          ListTile(
-            leading: const Icon(Icons.tune_outlined),
-            title: Text(l10n.chatAiInfoMaxTokens),
-            subtitle: Text(expertConfig.maxTokens.toString()),
-          ),
-          ListTile(
-            leading: const Icon(Icons.thermostat_outlined),
-            title: Text(l10n.chatAiInfoTemperature),
-            subtitle: Text(expertConfig.temperature.toStringAsFixed(2)),
-          ),
-          ListTile(
-            leading: const Icon(Icons.filter_list_outlined),
-            title: Text(l10n.chatAiInfoTopK),
-            subtitle: Text(expertConfig.topK.toString()),
-          ),
-          ListTile(
-            leading: const Icon(Icons.donut_small_outlined),
-            title: Text(l10n.chatAiInfoTopP),
-            subtitle: Text(expertConfig.topP.toStringAsFixed(2)),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: Text(l10n.chatAiInfoClose),
+      builder: (ctx) => DefaultTabController(
+        length: 2,
+        child: Dialog(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TabBar(
+                tabs: [
+                  Tab(text: l10n.chatInfoTabRecipe),
+                  Tab(text: l10n.chatInfoTabAi),
+                ],
               ),
-            ),
+              SizedBox(
+                height: 340,
+                child: TabBarView(
+                  children: [
+                    ListView(
+                      shrinkWrap: true,
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.kitchen_outlined),
+                          title: Text(l10n.chatRecipeInfoTmVersion),
+                          subtitle: Text(tmLabel),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.straighten_outlined),
+                          title: Text(l10n.chatRecipeInfoUnitSystem),
+                          subtitle: Text(unitLabel),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.group_outlined),
+                          title: Text(l10n.chatRecipeInfoPortions),
+                          subtitle: Text(
+                              l10n.settingsPortionsValue(recipeConfig.portions)),
+                        ),
+                        ListTile(
+                          leading:
+                              const Icon(Icons.signal_cellular_alt_outlined),
+                          title: Text(l10n.chatRecipeInfoLevel),
+                          subtitle: Text(levelLabel),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.no_food_outlined),
+                          title: Text(l10n.chatRecipeInfoDietaryRestrictions),
+                          subtitle: Text(recipeConfig.dietaryRestrictions.isEmpty
+                              ? l10n.settingsDietaryRestrictionsNone
+                              : recipeConfig.dietaryRestrictions),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.language),
+                          title: Text(l10n.chatRecipeInfoLanguage),
+                          subtitle: Text(languageLabel),
+                        ),
+                      ],
+                    ),
+                    ListView(
+                      shrinkWrap: true,
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.smart_toy_outlined),
+                          title: Text(l10n.chatAiInfoModel),
+                          subtitle: Text(modelLabel),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.memory_outlined),
+                          title: Text(l10n.chatAiInfoAccelerator),
+                          subtitle: Text(backendLabel),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.psychology_outlined),
+                          title: Text(l10n.chatAiInfoReasoning),
+                          subtitle: Text(reasoningLabel),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.tune_outlined),
+                          title: Text(l10n.chatAiInfoMaxTokens),
+                          subtitle: Text(expertConfig.maxTokens.toString()),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.thermostat_outlined),
+                          title: Text(l10n.chatAiInfoTemperature),
+                          subtitle: Text(
+                              expertConfig.temperature.toStringAsFixed(2)),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.filter_list_outlined),
+                          title: Text(l10n.chatAiInfoTopK),
+                          subtitle: Text(expertConfig.topK.toString()),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.donut_small_outlined),
+                          title: Text(l10n.chatAiInfoTopP),
+                          subtitle: Text(
+                              expertConfig.topP.toStringAsFixed(2)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: Text(l10n.chatAiInfoClose),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

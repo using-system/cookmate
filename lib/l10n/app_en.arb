@@ -284,5 +284,104 @@
   "@chatAudioPrompt": { "description": "Prompt sent to the AI model when the user sends an audio recording." },
 
   "chatUserDisplayName": "You",
-  "@chatUserDisplayName": { "description": "Display name for the current user in the chat." }
+  "@chatUserDisplayName": { "description": "Display name for the current user in the chat." },
+
+  "settingsSectionRecipe": "Recipe",
+  "@settingsSectionRecipe": { "description": "Section header for recipe-related settings." },
+
+  "settingsTmVersionTitle": "TM Version",
+  "@settingsTmVersionTitle": { "description": "Title of the Thermomix version setting tile." },
+
+  "settingsTmVersionDialogTitle": "Choose Thermomix version",
+  "@settingsTmVersionDialogTitle": { "description": "Title of the TM version picker dialog." },
+
+  "settingsTmVersionOptionTm5": "TM5",
+  "@settingsTmVersionOptionTm5": { "description": "Label for Thermomix 5." },
+
+  "settingsTmVersionOptionTm6": "TM6",
+  "@settingsTmVersionOptionTm6": { "description": "Label for Thermomix 6." },
+
+  "settingsTmVersionOptionTm7": "TM7",
+  "@settingsTmVersionOptionTm7": { "description": "Label for Thermomix 7." },
+
+  "settingsUnitSystemTitle": "Unit system",
+  "@settingsUnitSystemTitle": { "description": "Title of the unit system setting tile." },
+
+  "settingsUnitSystemDialogTitle": "Choose unit system",
+  "@settingsUnitSystemDialogTitle": { "description": "Title of the unit system picker dialog." },
+
+  "settingsUnitSystemOptionMetric": "Metric (g, ml, °C)",
+  "@settingsUnitSystemOptionMetric": { "description": "Label for metric units." },
+
+  "settingsUnitSystemOptionImperial": "Imperial (oz, cups, °F)",
+  "@settingsUnitSystemOptionImperial": { "description": "Label for imperial units." },
+
+  "settingsPortionsTitle": "Portions",
+  "@settingsPortionsTitle": { "description": "Title of the portions setting tile." },
+
+  "settingsPortionsDialogTitle": "Choose number of portions",
+  "@settingsPortionsDialogTitle": { "description": "Title of the portions picker dialog." },
+
+  "settingsPortionsValue": "{count} portions",
+  "@settingsPortionsValue": {
+    "description": "Display value for number of portions.",
+    "placeholders": { "count": { "type": "int", "example": "4" } }
+  },
+
+  "settingsLevelTitle": "Level",
+  "@settingsLevelTitle": { "description": "Title of the recipe level setting tile." },
+
+  "settingsLevelDialogTitle": "Choose recipe level",
+  "@settingsLevelDialogTitle": { "description": "Title of the recipe level picker dialog." },
+
+  "settingsLevelOptionBeginner": "Beginner",
+  "@settingsLevelOptionBeginner": { "description": "Label for beginner level." },
+
+  "settingsLevelOptionIntermediate": "Intermediate",
+  "@settingsLevelOptionIntermediate": { "description": "Label for intermediate level." },
+
+  "settingsLevelOptionAdvanced": "Advanced",
+  "@settingsLevelOptionAdvanced": { "description": "Label for advanced level." },
+
+  "settingsLevelOptionAllLevels": "All levels",
+  "@settingsLevelOptionAllLevels": { "description": "Label for all-levels option." },
+
+  "settingsDietaryRestrictionsTitle": "Dietary restrictions",
+  "@settingsDietaryRestrictionsTitle": { "description": "Title of the dietary restrictions setting tile." },
+
+  "settingsDietaryRestrictionsDialogTitle": "Dietary restrictions",
+  "@settingsDietaryRestrictionsDialogTitle": { "description": "Title of the dietary restrictions dialog." },
+
+  "settingsDietaryRestrictionsHint": "e.g. gluten-free, vegetarian, no nuts\u2026",
+  "@settingsDietaryRestrictionsHint": { "description": "Hint text for the dietary restrictions text field." },
+
+  "settingsDietaryRestrictionsNone": "None",
+  "@settingsDietaryRestrictionsNone": { "description": "Subtitle shown when no dietary restrictions are set." },
+
+  "settingsRecipeChangeFailureSnackbar": "Couldn't save recipe settings. Please try again.",
+  "@settingsRecipeChangeFailureSnackbar": { "description": "Shown when persisting recipe settings fails." },
+
+  "chatInfoTabRecipe": "Recipe",
+  "@chatInfoTabRecipe": { "description": "Tab label for recipe settings in the conversation info dialog." },
+
+  "chatInfoTabAi": "AI",
+  "@chatInfoTabAi": { "description": "Tab label for AI settings in the conversation info dialog." },
+
+  "chatRecipeInfoTmVersion": "TM Version",
+  "@chatRecipeInfoTmVersion": { "description": "Label for TM version in recipe info tab." },
+
+  "chatRecipeInfoUnitSystem": "Unit system",
+  "@chatRecipeInfoUnitSystem": { "description": "Label for unit system in recipe info tab." },
+
+  "chatRecipeInfoPortions": "Portions",
+  "@chatRecipeInfoPortions": { "description": "Label for portions in recipe info tab." },
+
+  "chatRecipeInfoLevel": "Level",
+  "@chatRecipeInfoLevel": { "description": "Label for level in recipe info tab." },
+
+  "chatRecipeInfoDietaryRestrictions": "Dietary restrictions",
+  "@chatRecipeInfoDietaryRestrictions": { "description": "Label for dietary restrictions in recipe info tab." },
+
+  "chatRecipeInfoLanguage": "Language",
+  "@chatRecipeInfoLanguage": { "description": "Label for language in recipe info tab." }
 }

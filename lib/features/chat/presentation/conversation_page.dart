@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:cookmate/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:flutter_chat_core/flutter_chat_core.dart';
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_gemma/flutter_gemma.dart' hide Message;
@@ -199,9 +200,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           );
         }
       }
-      _visionAvailable = vision;
-      _audioAvailable = audio;
-
       final repo = await ref.read(chatRepositoryProvider.future);
       final messages = await repo.getMessages(widget.conversationId);
       for (final msg in messages) {
@@ -212,7 +210,11 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       }
 
       if (mounted) {
-        setState(() => _chatError = null);
+        setState(() {
+          _visionAvailable = vision;
+          _audioAvailable = audio;
+          _chatError = null;
+        });
       }
     } catch (e, stack) {
       debugPrint('Failed to create chat: $e\n$stack');
@@ -301,6 +303,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         sentAt: now,
         source: audioPath,
         duration: Duration.zero,
+        text: text.trim().isNotEmpty ? text.trim() : null,
       );
       await _chatController.insertMessage(audioMsg);
 
@@ -861,6 +864,19 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
                       : SendButtonVisibilityMode.disabled,
                   allowEmptyMessage: _pendingAudioPath != null,
                 ),
+                audioMessageBuilder: (
+                  context,
+                  message,
+                  index, {
+                  required bool isSentByMe,
+                  MessageGroupStatus? groupStatus,
+                }) {
+                  return _AudioBubble(
+                    source: message.source,
+                    text: message.text,
+                    isSentByMe: isSentByMe,
+                  );
+                },
                 chatAnimatedListBuilder: (context, itemBuilder) =>
                     ChatAnimatedListReversed(itemBuilder: itemBuilder),
                 textStreamMessageBuilder: (
@@ -899,6 +915,110 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AudioBubble extends StatefulWidget {
+  const _AudioBubble({
+    required this.source,
+    this.text,
+    required this.isSentByMe,
+  });
+
+  final String source;
+  final String? text;
+  final bool isSentByMe;
+
+  @override
+  State<_AudioBubble> createState() => _AudioBubbleState();
+}
+
+class _AudioBubbleState extends State<_AudioBubble> {
+  final AudioPlayer _player = AudioPlayer();
+  bool _isPlaying = false;
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  Future<void> _togglePlayback() async {
+    if (_isPlaying) {
+      await _player.pause();
+      setState(() => _isPlaying = false);
+    } else {
+      if (_player.processingState == ProcessingState.completed ||
+          _player.processingState == ProcessingState.idle) {
+        await _player.setFilePath(widget.source);
+      }
+      _player.playerStateStream.listen((state) {
+        if (state.processingState == ProcessingState.completed && mounted) {
+          setState(() => _isPlaying = false);
+        }
+      });
+      await _player.play();
+      setState(() => _isPlaying = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width * 0.75,
+      ),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: widget.isSentByMe
+            ? colorScheme.primaryContainer
+            : colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: _togglePlayback,
+                icon: Icon(
+                  _isPlaying ? Icons.pause_circle : Icons.play_circle,
+                  color: widget.isSentByMe
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.onSurfaceVariant,
+                ),
+                constraints: const BoxConstraints(),
+                padding: EdgeInsets.zero,
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.graphic_eq,
+                color: widget.isSentByMe
+                    ? colorScheme.onPrimaryContainer.withAlpha(150)
+                    : colorScheme.onSurfaceVariant.withAlpha(150),
+              ),
+            ],
+          ),
+          if (widget.text != null && widget.text!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              widget.text!,
+              style: TextStyle(
+                color: widget.isSentByMe
+                    ? colorScheme.onPrimaryContainer
+                    : colorScheme.onSurface,
+              ),
+            ),
+          ],
         ],
       ),
     );

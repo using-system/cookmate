@@ -91,6 +91,7 @@ class _ExpertDialogState extends State<_ExpertDialog> {
           children: [
             _SliderRow(
               label: l10n.settingsExpertMaxTokens,
+              info: l10n.settingsExpertMaxTokensInfo,
               value: _maxTokens.toDouble(),
               min: 4000,
               max: 30000,
@@ -100,6 +101,7 @@ class _ExpertDialogState extends State<_ExpertDialog> {
             ),
             _SliderRow(
               label: l10n.settingsExpertTopK,
+              info: l10n.settingsExpertTopKInfo,
               value: _topK.toDouble(),
               min: 5,
               max: 94,
@@ -109,6 +111,7 @@ class _ExpertDialogState extends State<_ExpertDialog> {
             ),
             _SliderRow(
               label: l10n.settingsExpertTopP,
+              info: l10n.settingsExpertTopPInfo,
               value: _topP,
               min: 0,
               max: 1,
@@ -119,6 +122,7 @@ class _ExpertDialogState extends State<_ExpertDialog> {
             ),
             _SliderRow(
               label: l10n.settingsExpertTemperature,
+              info: l10n.settingsExpertTemperatureInfo,
               value: _temperature,
               min: 0,
               max: 2,
@@ -131,6 +135,15 @@ class _ExpertDialogState extends State<_ExpertDialog> {
         ),
       ),
       actions: [
+        TextButton(
+          onPressed: () => setState(() {
+            _maxTokens = ExpertConfig.defaultMaxTokens;
+            _topK = ExpertConfig.defaultTopK;
+            _topP = ExpertConfig.defaultTopP;
+            _temperature = ExpertConfig.defaultTemperature;
+          }),
+          child: Text(l10n.settingsExpertReset),
+        ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(l10n.cancel),
@@ -154,6 +167,7 @@ class _ExpertDialogState extends State<_ExpertDialog> {
 class _SliderRow extends StatelessWidget {
   const _SliderRow({
     required this.label,
+    required this.info,
     required this.value,
     required this.min,
     required this.max,
@@ -163,12 +177,29 @@ class _SliderRow extends StatelessWidget {
   });
 
   final String label;
+  final String info;
   final double value;
   final double min;
   final double max;
   final int divisions;
   final String displayValue;
   final ValueChanged<double> onChanged;
+
+  void _showInfo(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(label),
+        content: Text(info),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(AppLocalizations.of(ctx).ok),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -177,9 +208,18 @@ class _SliderRow extends StatelessWidget {
       children: [
         const SizedBox(height: 8),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label, style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(width: 4),
+            GestureDetector(
+              onTap: () => _showInfo(context),
+              child: Icon(
+                Icons.info_outline,
+                size: 16,
+                color: Theme.of(context).colorScheme.outline,
+              ),
+            ),
+            const Spacer(),
             Text(displayValue, style: Theme.of(context).textTheme.bodySmall),
           ],
         ),

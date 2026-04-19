@@ -4,6 +4,7 @@ import '../../core/shared_preferences_provider.dart';
 import 'data/chat_backend_preference_storage.dart';
 import 'data/chat_database.dart';
 import 'data/chat_model_preference_storage.dart';
+import 'data/chat_model_service.dart';
 import 'data/chat_repository.dart';
 import 'domain/chat_backend_preference.dart';
 import 'domain/chat_model_preference.dart';
@@ -168,3 +169,16 @@ final chatBackendPreferenceProvider =
         ChatBackendPreference>(
   ChatBackendPreferenceNotifier.new,
 );
+
+// ── Model service ──
+
+final chatModelServiceProvider = FutureProvider<ChatModelService>((ref) async {
+  final modelStorage =
+      await ref.watch(chatModelPreferenceStorageProvider.future);
+  final backendStorage =
+      await ref.watch(chatBackendPreferenceStorageProvider.future);
+  return ChatModelService(
+    modelStorage: modelStorage,
+    backendStorage: backendStorage,
+  );
+});

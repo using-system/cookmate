@@ -170,5 +170,38 @@
   "@splashTitle": { "description": "Title displayed on the splash screen. Proper noun — keep identical in all locales." },
 
   "splashDescription": "Create your Thermomix recipes with the CookMate assistant.",
-  "@splashDescription": { "description": "Short tagline displayed below the title on the splash screen." }
+  "@splashDescription": { "description": "Short tagline displayed below the title on the splash screen." },
+
+  "chatAttachPhoto": "Photo",
+  "@chatAttachPhoto": { "description": "Label for the take photo action." },
+
+  "chatAttachGallery": "Gallery",
+  "@chatAttachGallery": { "description": "Label for the pick from gallery action." },
+
+  "chatAttachAudio": "Record audio",
+  "@chatAttachAudio": { "description": "Label for the record audio action." },
+
+  "chatRecordingInProgress": "Recording\u2026",
+  "@chatRecordingInProgress": { "description": "Shown while audio recording is active." },
+
+  "chatImageCaption": "Image",
+  "@chatImageCaption": { "description": "Default caption for an image message." },
+
+  "chatAudioCaption": "Audio message",
+  "@chatAudioCaption": { "description": "Default caption for an audio message." },
+
+  "chatMediaPermissionDenied": "Permission denied. Please allow access in Settings.",
+  "@chatMediaPermissionDenied": { "description": "Shown when camera or microphone permission is denied." },
+
+  "chatVisionUnavailable": "Image analysis is not available on this device.",
+  "@chatVisionUnavailable": { "description": "Shown when the on-device model does not support vision." },
+
+  "chatImagePrompt": "Describe this image and help me with this recipe.",
+  "@chatImagePrompt": { "description": "Prompt sent to the AI model when the user sends an image." },
+
+  "chatAudioPrompt": "Transcribe and respond to this audio message.",
+  "@chatAudioPrompt": { "description": "Prompt sent to the AI model when the user sends an audio recording." },
+
+  "chatUserDisplayName": "You",
+  "@chatUserDisplayName": { "description": "Display name for the current user in the chat." }
 }

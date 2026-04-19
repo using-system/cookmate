@@ -57,4 +57,34 @@ class ChatRepository {
     await _db.insertMessage(msg);
     return msg;
   }
+
+  Future<ChatMessage> addImageMessage(
+      String conversationId, String caption, String mediaPath) async {
+    final msg = ChatMessage(
+      id: _uuid.v4(),
+      conversationId: conversationId,
+      role: 'user',
+      content: caption,
+      createdAt: DateTime.now(),
+      type: 'image',
+      mediaPath: mediaPath,
+    );
+    await _db.insertMessage(msg);
+    return msg;
+  }
+
+  Future<ChatMessage> addAudioMessage(
+      String conversationId, String mediaPath) async {
+    final msg = ChatMessage(
+      id: _uuid.v4(),
+      conversationId: conversationId,
+      role: 'user',
+      content: '',
+      createdAt: DateTime.now(),
+      type: 'audio',
+      mediaPath: mediaPath,
+    );
+    await _db.insertMessage(msg);
+    return msg;
+  }
 }

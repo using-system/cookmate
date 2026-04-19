@@ -51,5 +51,17 @@
   "homeTabChat": "Chat",
   "homeTabSettings": "Ajustes",
   "splashTitle": "CookMate",
-  "splashDescription": "Crea tus recetas Thermomix con el asistente CookMate."
+  "splashDescription": "Crea tus recetas Thermomix con el asistente CookMate.",
+
+  "chatAttachPhoto": "Foto",
+  "chatAttachGallery": "Galería",
+  "chatAttachAudio": "Grabar audio",
+  "chatRecordingInProgress": "Grabando\u2026",
+  "chatImageCaption": "Imagen",
+  "chatAudioCaption": "Mensaje de audio",
+  "chatMediaPermissionDenied": "Permiso denegado. Por favor, permita el acceso en Ajustes.",
+  "chatVisionUnavailable": "El análisis de imagen no está disponible en este dispositivo.",
+  "chatImagePrompt": "Describe esta imagen y ayúdame con esta receta.",
+  "chatAudioPrompt": "Transcribe y responde a este mensaje de audio.",
+  "chatUserDisplayName": "Tú"
 }

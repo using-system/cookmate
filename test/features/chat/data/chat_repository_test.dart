@@ -35,6 +35,8 @@ void main() {
             role TEXT NOT NULL,
             content TEXT NOT NULL,
             created_at INTEGER NOT NULL,
+            type TEXT NOT NULL DEFAULT 'text',
+            media_path TEXT,
             FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
           )
         ''');
@@ -91,5 +93,36 @@ void main() {
 
     final list = await repository.getConversations();
     expect(list.first.title, 'New');
+  });
+
+  test('addImageMessage persists with type image and mediaPath', () async {
+    final conv = await repository.createConversation('Test');
+    final msg =
+        await repository.addImageMessage(conv.id, 'Photo', '/path/img.jpg');
+
+    expect(msg.type, 'image');
+    expect(msg.mediaPath, '/path/img.jpg');
+    expect(msg.content, 'Photo');
+    expect(msg.role, 'user');
+
+    final messages = await repository.getMessages(conv.id);
+    expect(messages.length, 1);
+    expect(messages.first.type, 'image');
+    expect(messages.first.mediaPath, '/path/img.jpg');
+  });
+
+  test('addAudioMessage persists with type audio and mediaPath', () async {
+    final conv = await repository.createConversation('Test');
+    final msg = await repository.addAudioMessage(conv.id, '/path/audio.m4a');
+
+    expect(msg.type, 'audio');
+    expect(msg.mediaPath, '/path/audio.m4a');
+    expect(msg.content, '');
+    expect(msg.role, 'user');
+
+    final messages = await repository.getMessages(conv.id);
+    expect(messages.length, 1);
+    expect(messages.first.type, 'audio');
+    expect(messages.first.mediaPath, '/path/audio.m4a');
   });
 }

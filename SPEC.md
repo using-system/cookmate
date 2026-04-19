@@ -20,7 +20,19 @@
 
 ## On-Device AI
 
-- flutter_gemma (Gemma 4 E2B / E4B inference)
+- flutter_gemma (Gemma 4 E2B / E4B inference, multimodal: vision + audio)
+
+## Chat UI
+
+- flutter_chat_ui (Flyer Chat v2 — message list, composer, streaming)
+- flutter_chat_core (message models, controller)
+- flyer_chat_text_message (text bubble renderer)
+- flyer_chat_text_stream_message (streaming AI response renderer)
+
+## Media Input
+
+- image_picker (camera capture + gallery selection)
+- record (live audio recording)
 
 ## Internationalization
 
@@ -40,5 +52,6 @@
 ## Utilities
 
 - path
+- path_provider
 - uuid
 - cupertino_icons

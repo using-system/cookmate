@@ -9,6 +9,7 @@ import 'package:flutter_gemma/core/message.dart' as gemma;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flyer_chat_text_stream_message/flyer_chat_text_stream_message.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:uuid/uuid.dart';
 
@@ -130,6 +131,11 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           ? PreferredBackend.gpu
           : PreferredBackend.cpu;
 
+      // Close the previous chat session before replacing it, so the native
+      // session doesn't leak resources or hold stale context.
+      await _chat?.close();
+      _chat = null;
+
       // Always close the existing model singleton before creating a new
       // one.  flutter_gemma caches the model by name and ignores parameter
       // changes (backend, maxTokens, supportImage).  Without this, switching
@@ -195,11 +201,11 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
   void _handleSend(String text) {
     if (_isGenerating || _chat == null) return;
+    setState(() => _isGenerating = true);
     _doSendText(text);
   }
 
   Future<void> _doSendText(String text) async {
-    setState(() => _isGenerating = true);
 
     try {
       final msgId = _uuid.v4();
@@ -376,9 +382,13 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       }
       if (!mounted) return;
 
-      final tempDir = Directory.systemTemp;
+      // Save to app documents dir (not temp) so persisted mediaPath survives
+      // OS temp cleanup across app restarts.
+      final docsDir = await getApplicationDocumentsDirectory();
+      final audioDir = Directory('${docsDir.path}/audio');
+      if (!audioDir.existsSync()) audioDir.createSync(recursive: true);
       final path =
-          '${tempDir.path}/cookmate_audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+          '${audioDir.path}/cookmate_audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
       await _audioRecorder!.start(const RecordConfig(), path: path);
       setState(() => _isRecording = true);
@@ -509,6 +519,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
                 repo.addAssistantMessage(widget.conversationId, fullResponse),
           );
     }
+
+    // Clean up stream state to avoid unbounded memory growth.
+    _streamStates.remove(streamId);
   }
 
   void _showAttachmentSheet() {
@@ -562,11 +575,13 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     final l10n = AppLocalizations.of(context);
     if (conv.title != l10n.chatNewConversation) return false;
 
+    var calledGetActiveModel = false;
     try {
       final pref = await ref.read(chatBackendPreferenceProvider.future);
       final backend = pref == ChatBackendPreference.gpu
           ? PreferredBackend.gpu
           : PreferredBackend.cpu;
+      calledGetActiveModel = true;
       final model = await FlutterGemma.getActiveModel(
         maxTokens: 64,
         preferredBackend: backend,
@@ -590,7 +605,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     } catch (_) {
       // Title generation is best-effort; ignore failures.
     }
-    return true;
+    return calledGetActiveModel;
   }
 
   Future<void> _showAiInfoDialog(BuildContext context) async {

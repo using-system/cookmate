@@ -52,5 +52,6 @@
 ## Utilities
 
 - path
+- path_provider
 - uuid
 - cupertino_icons

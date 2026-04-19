@@ -13,8 +13,9 @@ class ChatDatabase {
     final dbPath = join(await getDatabasesPath(), 'cookmate_chat.db');
     final db = await openDatabase(
       dbPath,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -40,9 +41,20 @@ class ChatDatabase {
         role TEXT NOT NULL,
         content TEXT NOT NULL,
         created_at INTEGER NOT NULL,
+        type TEXT NOT NULL DEFAULT 'text',
+        media_path TEXT,
         FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
       )
     ''');
+  }
+
+  static Future<void> _onUpgrade(
+      Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute(
+          "ALTER TABLE messages ADD COLUMN type TEXT NOT NULL DEFAULT 'text'");
+      await db.execute('ALTER TABLE messages ADD COLUMN media_path TEXT');
+    }
   }
 
   Future<List<Conversation>> getConversations() async {

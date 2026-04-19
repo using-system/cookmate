@@ -121,6 +121,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
   }
 
+  bool _visionAvailable = false;
+
   Future<void> _createChat() async {
     try {
       final pref = await ref.read(chatBackendPreferenceProvider.future);
@@ -128,19 +130,36 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           ? PreferredBackend.gpu
           : PreferredBackend.cpu;
 
-      final useVision = !Platform.isIOS;
-      final model = await FlutterGemma.getActiveModel(
-        maxTokens: 2048,
-        preferredBackend: backend,
-        supportImage: useVision,
-      );
-      _chat = await model.createChat(
-        temperature: 0.8,
-        topK: 40,
-        systemInstruction: _systemPrompt,
-        isThinking: true,
-        supportImage: useVision,
-      );
+      // Try with vision first; fall back without if the platform lacks
+      // LlmVisionInferenceCalculator (e.g. current iOS builds).
+      var vision = true;
+      try {
+        final model = await FlutterGemma.getActiveModel(
+          maxTokens: 2048,
+          preferredBackend: backend,
+          supportImage: true,
+        );
+        _chat = await model.createChat(
+          temperature: 0.8,
+          topK: 40,
+          systemInstruction: _systemPrompt,
+          isThinking: true,
+          supportImage: true,
+        );
+      } catch (_) {
+        vision = false;
+        final model = await FlutterGemma.getActiveModel(
+          maxTokens: 2048,
+          preferredBackend: backend,
+        );
+        _chat = await model.createChat(
+          temperature: 0.8,
+          topK: 40,
+          systemInstruction: _systemPrompt,
+          isThinking: true,
+        );
+      }
+      _visionAvailable = vision;
 
       // Replay stored history so InferenceChat has full context.
       final repo = await ref.read(chatRepositoryProvider.future);
@@ -213,7 +232,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   }
 
   Future<void> _handleImageSend(ImageSource source) async {
-    if (Platform.isIOS) {
+    if (!_visionAvailable) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context).chatMediaPermissionDenied)),

@@ -128,16 +128,18 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           ? PreferredBackend.gpu
           : PreferredBackend.cpu;
 
+      final useVision = !Platform.isIOS;
       final model = await FlutterGemma.getActiveModel(
         maxTokens: 2048,
         preferredBackend: backend,
+        supportImage: useVision,
       );
       _chat = await model.createChat(
         temperature: 0.8,
         topK: 40,
         systemInstruction: _systemPrompt,
         isThinking: true,
-        supportImage: true,
+        supportImage: useVision,
       );
 
       // Replay stored history so InferenceChat has full context.
@@ -211,6 +213,15 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   }
 
   Future<void> _handleImageSend(ImageSource source) async {
+    if (Platform.isIOS) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).chatMediaPermissionDenied)),
+        );
+      }
+      return;
+    }
+
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: source);
     if (picked == null || !mounted) return;

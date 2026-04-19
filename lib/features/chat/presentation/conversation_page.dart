@@ -130,6 +130,13 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           ? PreferredBackend.gpu
           : PreferredBackend.cpu;
 
+      // Always close the existing model singleton before creating a new
+      // one.  flutter_gemma caches the model by name and ignores parameter
+      // changes (backend, maxTokens, supportImage).  Without this, switching
+      // CPU↔GPU or toggling vision has no effect.
+      final existingModel = FlutterGemmaPlugin.instance.initializedModel;
+      await existingModel?.close();
+
       // Try with vision first; fall back without if the platform lacks
       // LlmVisionInferenceCalculator (e.g. iOS simulator).
       // On physical iOS devices vision works fine.
@@ -149,8 +156,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         );
       } catch (_) {
         vision = false;
-        // Close the model singleton so getActiveModel creates a fresh
-        // instance without supportImage baked in.
+        // Vision failed — close the model again and retry without it.
         final staleModel = FlutterGemmaPlugin.instance.initializedModel;
         await staleModel?.close();
 

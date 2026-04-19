@@ -39,8 +39,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   String? _chatError;
   bool _isRecording = false;
   AudioRecorder? _audioRecorder;
-  bool _visionAvailable = false;
-  bool _audioAvailable = false;
   String? _pendingAudioPath;
   String? _pendingImagePath;
 
@@ -155,67 +153,37 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       final existingModel = FlutterGemmaPlugin.instance.initializedModel;
       await existingModel?.close();
 
-      var vision = true;
-      var audio = true;
-      try {
-        final model = await FlutterGemma.getActiveModel(
-          maxTokens: 2048,
-          preferredBackend: backend,
-          supportImage: true,
-          supportAudio: true,
-        );
-        _chat = await model.createChat(
-          temperature: 0.8,
-          topK: 40,
-          systemInstruction: _systemPrompt,
-          isThinking: true,
-          supportImage: true,
-          supportAudio: true,
-        );
-      } catch (_) {
-        audio = false;
-        final staleModel = FlutterGemmaPlugin.instance.initializedModel;
-        await staleModel?.close();
-
+      // Try with vision + audio, then vision only, then text only.
+      final configs = [
+        (supportImage: true, supportAudio: true),
+        (supportImage: true, supportAudio: false),
+        (supportImage: false, supportAudio: false),
+      ];
+      for (final cfg in configs) {
         try {
           final model = await FlutterGemma.getActiveModel(
             maxTokens: 2048,
             preferredBackend: backend,
-            supportImage: true,
+            supportImage: cfg.supportImage,
+            supportAudio: cfg.supportAudio,
           );
           _chat = await model.createChat(
             temperature: 0.8,
             topK: 40,
             systemInstruction: _systemPrompt,
             isThinking: true,
-            supportImage: true,
+            supportImage: cfg.supportImage,
+            supportAudio: cfg.supportAudio,
           );
+          break;
         } catch (_) {
-          vision = false;
-          final staleModel2 = FlutterGemmaPlugin.instance.initializedModel;
-          await staleModel2?.close();
-
-          final model = await FlutterGemma.getActiveModel(
-            maxTokens: 2048,
-            preferredBackend: backend,
-          );
-          _chat = await model.createChat(
-            temperature: 0.8,
-            topK: 40,
-            systemInstruction: _systemPrompt,
-            isThinking: true,
-          );
+          final staleModel = FlutterGemmaPlugin.instance.initializedModel;
+          await staleModel?.close();
         }
       }
 
-      // Update capabilities immediately so the UI reflects them
-      // before the potentially slow history replay below.
       if (mounted) {
-        setState(() {
-          _visionAvailable = vision;
-          _audioAvailable = audio;
-          _chatError = null;
-        });
+        setState(() => _chatError = null);
       }
 
       final repo = await ref.read(chatRepositoryProvider.future);
@@ -1022,7 +990,7 @@ class _ImageBubble extends StatelessWidget {
                 File(source),
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Padding(
+                errorBuilder: (_, e, s) => const Padding(
                   padding: EdgeInsets.all(16),
                   child: Icon(Icons.broken_image, size: 48),
                 ),

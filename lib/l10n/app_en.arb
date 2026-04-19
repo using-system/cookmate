@@ -190,6 +190,9 @@
   "chatAudioCaption": "Audio message",
   "@chatAudioCaption": { "description": "Default caption for an audio message." },
 
+  "chatAudioAttached": "Audio attached",
+  "@chatAudioAttached": { "description": "Label shown in the composer chip when an audio recording is pending." },
+
   "chatMediaPermissionDenied": "Permission denied. Please allow access in Settings.",
   "@chatMediaPermissionDenied": { "description": "Shown when camera or microphone permission is denied." },
 

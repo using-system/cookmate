@@ -29,9 +29,17 @@ class ExpertConfigStorage {
   }
 
   Future<void> write(ExpertConfig config) async {
-    await _prefs.setInt(_keyMaxTokens, config.maxTokens);
-    await _prefs.setInt(_keyTopK, config.topK);
-    await _prefs.setDouble(_keyTopP, config.topP);
-    await _prefs.setDouble(_keyTemperature, config.temperature);
+    if (!await _prefs.setInt(_keyMaxTokens, config.maxTokens)) {
+      throw Exception('Failed to persist expert config maxTokens.');
+    }
+    if (!await _prefs.setInt(_keyTopK, config.topK)) {
+      throw Exception('Failed to persist expert config topK.');
+    }
+    if (!await _prefs.setDouble(_keyTopP, config.topP)) {
+      throw Exception('Failed to persist expert config topP.');
+    }
+    if (!await _prefs.setDouble(_keyTemperature, config.temperature)) {
+      throw Exception('Failed to persist expert config temperature.');
+    }
   }
 }

@@ -73,10 +73,10 @@ class _ExpertDialogState extends State<_ExpertDialog> {
   @override
   void initState() {
     super.initState();
-    _maxTokens = widget.initial.maxTokens;
-    _topK = widget.initial.topK;
-    _topP = widget.initial.topP;
-    _temperature = widget.initial.temperature;
+    _maxTokens = widget.initial.maxTokens.clamp(4000, 30000);
+    _topK = widget.initial.topK.clamp(5, 94);
+    _topP = widget.initial.topP.clamp(0.0, 1.0);
+    _temperature = widget.initial.temperature.clamp(0.0, 2.0);
   }
 
   @override
@@ -210,12 +210,14 @@ class _SliderRow extends StatelessWidget {
         Row(
           children: [
             Text(label, style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(width: 4),
-            GestureDetector(
-              onTap: () => _showInfo(context),
-              child: Icon(
+            IconButton(
+              onPressed: () => _showInfo(context),
+              iconSize: 16,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              visualDensity: VisualDensity.compact,
+              icon: Icon(
                 Icons.info_outline,
-                size: 16,
                 color: Theme.of(context).colorScheme.outline,
               ),
             ),

@@ -2,7 +2,9 @@ import 'package:cookmate/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 import '../../chat/presentation/backend_picker_tile.dart';
+import '../../chat/presentation/expert_picker_tile.dart';
 import '../../chat/presentation/model_picker_tile.dart';
+import '../../chat/presentation/reasoning_tile.dart';
 import '../../l10n/presentation/language_picker_tile.dart';
 import '../../theme/presentation/theme_picker_tile.dart';
 
@@ -27,6 +29,10 @@ class SettingsPage extends StatelessWidget {
           const ModelPickerTile(),
           const Divider(height: 1),
           const BackendPickerTile(),
+          const Divider(height: 1),
+          const ReasoningTile(),
+          const Divider(height: 1),
+          const ExpertPickerTile(),
           const Divider(height: 1),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),

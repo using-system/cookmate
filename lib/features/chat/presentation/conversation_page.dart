@@ -143,6 +143,10 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   Future<void> _createChat() async {
     try {
       final pref = await ref.read(chatBackendPreferenceProvider.future);
+      final reasoning =
+          await ref.read(chatReasoningPreferenceProvider.future);
+      final expertConfig =
+          await ref.read(chatExpertConfigProvider.future);
       final backend = pref == ChatBackendPreference.gpu
           ? PreferredBackend.gpu
           : PreferredBackend.cpu;
@@ -162,16 +166,17 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       for (final cfg in configs) {
         try {
           final model = await FlutterGemma.getActiveModel(
-            maxTokens: 2048,
+            maxTokens: expertConfig.maxTokens,
             preferredBackend: backend,
             supportImage: cfg.supportImage,
             supportAudio: cfg.supportAudio,
           );
           _chat = await model.createChat(
-            temperature: 0.8,
-            topK: 40,
+            temperature: expertConfig.temperature,
+            topK: expertConfig.topK,
+            topP: expertConfig.topP,
             systemInstruction: _systemPrompt,
-            isThinking: true,
+            isThinking: reasoning,
             supportImage: cfg.supportImage,
             supportAudio: cfg.supportAudio,
           );
@@ -655,6 +660,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     final l10n = AppLocalizations.of(context);
     final model = await ref.read(chatModelPreferenceProvider.future);
     final backend = await ref.read(chatBackendPreferenceProvider.future);
+    final reasoning = await ref.read(chatReasoningPreferenceProvider.future);
+    final expertConfig = await ref.read(chatExpertConfigProvider.future);
 
     if (!mounted) return;
 
@@ -666,6 +673,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       ChatBackendPreference.gpu => l10n.settingsBackendOptionGpu,
       ChatBackendPreference.cpu => l10n.settingsBackendOptionCpu,
     };
+    final reasoningLabel = reasoning
+        ? l10n.settingsReasoningSubtitleOn
+        : l10n.settingsReasoningSubtitleOff;
 
     await showDialog<void>(
       context: context,
@@ -681,6 +691,31 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             leading: const Icon(Icons.memory_outlined),
             title: Text(l10n.chatAiInfoAccelerator),
             subtitle: Text(backendLabel),
+          ),
+          ListTile(
+            leading: const Icon(Icons.psychology_outlined),
+            title: Text(l10n.chatAiInfoReasoning),
+            subtitle: Text(reasoningLabel),
+          ),
+          ListTile(
+            leading: const Icon(Icons.tune_outlined),
+            title: Text(l10n.chatAiInfoMaxTokens),
+            subtitle: Text(expertConfig.maxTokens.toString()),
+          ),
+          ListTile(
+            leading: const Icon(Icons.thermostat_outlined),
+            title: Text(l10n.chatAiInfoTemperature),
+            subtitle: Text(expertConfig.temperature.toStringAsFixed(2)),
+          ),
+          ListTile(
+            leading: const Icon(Icons.filter_list_outlined),
+            title: Text(l10n.chatAiInfoTopK),
+            subtitle: Text(expertConfig.topK.toString()),
+          ),
+          ListTile(
+            leading: const Icon(Icons.donut_small_outlined),
+            title: Text(l10n.chatAiInfoTopP),
+            subtitle: Text(expertConfig.topP.toStringAsFixed(2)),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

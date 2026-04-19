@@ -115,6 +115,63 @@
   "settingsBackendChangeFailureSnackbar": "Couldn't change backend. Please try again.",
   "@settingsBackendChangeFailureSnackbar": { "description": "Shown when persisting the backend preference fails." },
 
+  "settingsReasoningTitle": "Reasoning",
+  "@settingsReasoningTitle": { "description": "Title of the reasoning toggle setting tile." },
+
+  "settingsReasoningSubtitleOn": "Enabled",
+  "@settingsReasoningSubtitleOn": { "description": "Subtitle of the reasoning toggle when it is enabled." },
+
+  "settingsReasoningSubtitleOff": "Disabled",
+  "@settingsReasoningSubtitleOff": { "description": "Subtitle of the reasoning toggle when it is disabled." },
+
+  "settingsExpertTitle": "Expert",
+  "@settingsExpertTitle": { "description": "Title of the expert settings tile." },
+
+  "settingsExpertDialogTitle": "Expert settings",
+  "@settingsExpertDialogTitle": { "description": "Title of the expert generation parameters dialog." },
+
+  "settingsExpertMaxTokens": "Max tokens",
+  "@settingsExpertMaxTokens": { "description": "Label for the max tokens field in expert settings." },
+
+  "settingsExpertMaxTokensInfo": "Maximum number of tokens the model can generate in a single response. Higher values allow longer answers but use more memory.",
+  "@settingsExpertMaxTokensInfo": { "description": "Tooltip explaining the max tokens parameter." },
+
+  "settingsExpertTopK": "Top-K",
+  "@settingsExpertTopK": { "description": "Label for the Top-K field in expert settings." },
+
+  "settingsExpertTopKInfo": "Limits the model to picking from the K most likely next words. Lower values make responses more focused; higher values make them more creative.",
+  "@settingsExpertTopKInfo": { "description": "Tooltip explaining the Top-K parameter." },
+
+  "settingsExpertTopP": "Top-P",
+  "@settingsExpertTopP": { "description": "Label for the Top-P field in expert settings." },
+
+  "settingsExpertTopPInfo": "Nucleus sampling: the model considers only the smallest set of words whose combined probability exceeds P. Lower values give more predictable text.",
+  "@settingsExpertTopPInfo": { "description": "Tooltip explaining the Top-P parameter." },
+
+  "settingsExpertTemperature": "Temperature",
+  "@settingsExpertTemperature": { "description": "Label for the temperature field in expert settings." },
+
+  "settingsExpertTemperatureInfo": "Controls randomness. Low values (near 0) produce deterministic, focused answers. High values make the model more creative and surprising.",
+  "@settingsExpertTemperatureInfo": { "description": "Tooltip explaining the temperature parameter." },
+
+  "settingsExpertReset": "Reset",
+  "@settingsExpertReset": { "description": "Button label to reset expert settings to defaults." },
+
+  "settingsExpertSubtitle": "Tokens: {maxTokens} · Temp: {temperature}",
+  "@settingsExpertSubtitle": {
+    "description": "Subtitle summary for the expert settings tile.",
+    "placeholders": {
+      "maxTokens": { "type": "int", "example": "8000" },
+      "temperature": { "type": "String", "example": "1.00" }
+    }
+  },
+
+  "settingsExpertChangeFailureSnackbar": "Couldn't save expert settings. Please try again.",
+  "@settingsExpertChangeFailureSnackbar": { "description": "Shown when persisting the expert generation parameters fails." },
+
+  "settingsReasoningChangeFailureSnackbar": "Couldn't change reasoning setting. Please try again.",
+  "@settingsReasoningChangeFailureSnackbar": { "description": "Shown when persisting the reasoning toggle fails." },
+
   "chatTimeJustNow": "just now",
   "@chatTimeJustNow": { "description": "Relative time label for less than a minute ago." },
 
@@ -148,6 +205,21 @@
   "chatAiInfoAccelerator": "Accelerator",
   "@chatAiInfoAccelerator": { "description": "Label for the accelerator row in AI info overlay." },
 
+  "chatAiInfoReasoning": "Reasoning",
+  "@chatAiInfoReasoning": { "description": "Label for the reasoning row in AI info overlay." },
+
+  "chatAiInfoMaxTokens": "Max tokens",
+  "@chatAiInfoMaxTokens": { "description": "Label for the max tokens row in AI info overlay." },
+
+  "chatAiInfoTemperature": "Temperature",
+  "@chatAiInfoTemperature": { "description": "Label for the temperature row in AI info overlay." },
+
+  "chatAiInfoTopK": "Top-K",
+  "@chatAiInfoTopK": { "description": "Label for the Top-K row in AI info overlay." },
+
+  "chatAiInfoTopP": "Top-P",
+  "@chatAiInfoTopP": { "description": "Label for the Top-P row in AI info overlay." },
+
   "chatAiInfoClose": "Close",
   "@chatAiInfoClose": { "description": "Close button in the AI info overlay." },
 
@@ -159,6 +231,9 @@
 
   "delete": "Delete",
   "@delete": { "description": "Generic delete button label." },
+
+  "ok": "OK",
+  "@ok": { "description": "Generic OK button label." },
 
   "homeTabChat": "Chat",
   "@homeTabChat": { "description": "Bottom navigation label for the chat tab." },

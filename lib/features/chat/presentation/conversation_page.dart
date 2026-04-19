@@ -42,6 +42,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   bool _visionAvailable = false;
   bool _audioAvailable = false;
   String? _pendingAudioPath;
+  String? _pendingImagePath;
 
   static const _systemPrompt =
       'You are CookMate, a friendly kitchen assistant specialized in Thermomix recipes. '
@@ -56,6 +57,12 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
     setState(() {
       _pendingAudioPath = null;
+    });
+  }
+
+  void _clearPendingImage() {
+    setState(() {
+      _pendingImagePath = null;
     });
   }
 
@@ -232,19 +239,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     setState(() => _isGenerating = true);
 
     if (_pendingAudioPath != null) {
-      if (!_audioAvailable) {
-        _clearPendingAudio();
-        setState(() => _isGenerating = false);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(
-                    AppLocalizations.of(context).chatMediaPermissionDenied)),
-          );
-        }
-        return;
-      }
       _doSendAudioWithText(text);
+    } else if (_pendingImagePath != null) {
+      _doSendImageWithText(text);
     } else {
       if (text.trim().isEmpty) {
         setState(() => _isGenerating = false);
@@ -346,16 +343,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
   }
 
-  Future<void> _handleImageSend(ImageSource source) async {
-    if (!_visionAvailable) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).chatVisionUnavailable)),
-        );
-      }
-      return;
-    }
-
+  Future<void> _handleImagePick(ImageSource source) async {
     final picker = ImagePicker();
     final XFile? picked;
     try {
@@ -376,13 +364,15 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       return;
     }
     if (picked == null || !mounted) return;
-    if (_isGenerating || _chat == null) return;
 
-    setState(() => _isGenerating = true);
+    setState(() => _pendingImagePath = picked!.path);
+  }
+
+  Future<void> _doSendImageWithText(String text) async {
+    final imagePath = _pendingImagePath!;
 
     try {
-      final filePath = picked.path;
-      final imageBytes = await File(filePath).readAsBytes();
+      final imageBytes = await File(imagePath).readAsBytes();
       final msgId = _uuid.v4();
       final now = DateTime.now();
 
@@ -391,23 +381,28 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         authorId: 'user',
         createdAt: now,
         sentAt: now,
-        source: filePath,
+        source: imagePath,
+        text: text.trim().isNotEmpty ? text.trim() : null,
       );
       await _chatController.insertMessage(imageMsg);
+
+      setState(() => _pendingImagePath = null);
 
       final l10n = AppLocalizations.of(context);
 
       // Persist (fire-and-forget).
       ref.read(chatRepositoryProvider.future).then(
             (repo) => repo.addImageMessage(
-                widget.conversationId, l10n.chatImageCaption, filePath),
+                widget.conversationId, l10n.chatImageCaption, imagePath),
             onError: (e, s) => debugPrint('Persist failed: $e\n$s'),
           );
+
+      final prompt = text.trim().isNotEmpty ? text.trim() : l10n.chatImagePrompt;
 
       // Send to InferenceChat with image.
       await _chat!.addQueryChunk(
         gemma.Message.withImage(
-          text: l10n.chatImagePrompt,
+          text: prompt,
           imageBytes: imageBytes,
           isUser: true,
         ),
@@ -416,7 +411,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       await _streamAiResponse();
 
       if (mounted) {
-        final needsRename = await _autoNameIfNeeded(l10n.chatImageCaption);
+        final needsRename = await _autoNameIfNeeded(
+          text.trim().isNotEmpty ? text.trim() : l10n.chatImageCaption,
+        );
         if (needsRename) await _createChat();
       }
     } catch (e, stack) {
@@ -615,7 +612,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               title: Text(l10n.chatAttachPhoto),
               onTap: () {
                 Navigator.of(ctx).pop();
-                _handleImageSend(ImageSource.camera);
+                _handleImagePick(ImageSource.camera);
               },
             ),
             ListTile(
@@ -623,7 +620,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               title: Text(l10n.chatAttachGallery),
               onTap: () {
                 Navigator.of(ctx).pop();
-                _handleImageSend(ImageSource.gallery);
+                _handleImagePick(ImageSource.gallery);
               },
             ),
             ListTile(
@@ -821,52 +818,114 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               onMessageSend: _handleSend,
               onAttachmentTap: _showAttachmentSheet,
               builders: Builders(
-                composerBuilder: (context) => Composer(
-                  topWidget: _pendingAudioPath != null
-                      ? Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
+                composerBuilder: (context) {
+                  final hasPending =
+                      _pendingAudioPath != null || _pendingImagePath != null;
+                  Widget? topWidget;
+                  if (_pendingImagePath != null) {
+                    topWidget = Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      child: Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              File(_pendingImagePath!),
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                            ),
                           ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.mic,
-                                size: 18,
-                                color: Theme.of(context).colorScheme.primary,
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              l10n.chatImageAttached,
+                              style: TextStyle(
+                                color:
+                                    Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w500,
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  l10n.chatAudioAttached,
-                                  style: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: _clearPendingAudio,
-                                icon: Icon(
-                                  Icons.close,
-                                  size: 18,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                                ),
-                                constraints: const BoxConstraints(),
-                                padding: EdgeInsets.zero,
-                              ),
-                            ],
+                            ),
                           ),
-                        )
-                      : null,
-                  sendButtonVisibilityMode: _pendingAudioPath != null
-                      ? SendButtonVisibilityMode.always
-                      : SendButtonVisibilityMode.disabled,
-                  allowEmptyMessage: _pendingAudioPath != null,
-                ),
+                          IconButton(
+                            onPressed: _clearPendingImage,
+                            icon: Icon(
+                              Icons.close,
+                              size: 18,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                            constraints: const BoxConstraints(),
+                            padding: EdgeInsets.zero,
+                          ),
+                        ],
+                      ),
+                    );
+                  } else if (_pendingAudioPath != null) {
+                    topWidget = Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.mic,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              l10n.chatAudioAttached,
+                              style: TextStyle(
+                                color:
+                                    Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _clearPendingAudio,
+                            icon: Icon(
+                              Icons.close,
+                              size: 18,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                            constraints: const BoxConstraints(),
+                            padding: EdgeInsets.zero,
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return Composer(
+                    topWidget: topWidget,
+                    sendButtonVisibilityMode: hasPending
+                        ? SendButtonVisibilityMode.always
+                        : SendButtonVisibilityMode.disabled,
+                    allowEmptyMessage: hasPending,
+                  );
+                },
+                imageMessageBuilder: (
+                  context,
+                  message,
+                  index, {
+                  required bool isSentByMe,
+                  MessageGroupStatus? groupStatus,
+                }) {
+                  return _ImageBubble(
+                    source: message.source,
+                    text: message.text,
+                    isSentByMe: isSentByMe,
+                  );
+                },
                 audioMessageBuilder: (
                   context,
                   message,
@@ -919,6 +978,89 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ImageBubble extends StatelessWidget {
+  const _ImageBubble({
+    required this.source,
+    this.text,
+    required this.isSentByMe,
+  });
+
+  final String source;
+  final String? text;
+  final bool isSentByMe;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width * 0.75,
+      ),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: isSentByMe
+            ? colorScheme.primaryContainer
+            : colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: () => _showFullScreen(context),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 200),
+              child: Image.file(
+                File(source),
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Icon(Icons.broken_image, size: 48),
+                ),
+              ),
+            ),
+          ),
+          if (text != null && text!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Text(
+                text!,
+                style: TextStyle(
+                  color: isSentByMe
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.onSurface,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showFullScreen(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            iconTheme: const IconThemeData(color: Colors.white),
+          ),
+          body: Center(
+            child: InteractiveViewer(
+              child: Image.file(File(source)),
+            ),
+          ),
+        ),
       ),
     );
   }

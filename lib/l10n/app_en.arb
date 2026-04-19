@@ -193,6 +193,9 @@
   "chatAudioAttached": "Audio attached",
   "@chatAudioAttached": { "description": "Label shown in the composer chip when an audio recording is pending." },
 
+  "chatImageAttached": "Image attached",
+  "@chatImageAttached": { "description": "Label shown in the composer chip when an image is pending." },
+
   "chatMediaPermissionDenied": "Permission denied. Please allow access in Settings.",
   "@chatMediaPermissionDenied": { "description": "Shown when camera or microphone permission is denied." },
 

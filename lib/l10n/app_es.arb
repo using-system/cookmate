@@ -60,6 +60,7 @@
   "chatImageCaption": "Imagen",
   "chatAudioCaption": "Mensaje de audio",
   "chatAudioAttached": "Audio adjunto",
+  "chatImageAttached": "Imagen adjunta",
   "chatMediaPermissionDenied": "Permiso denegado. Por favor, permita el acceso en Ajustes.",
   "chatVisionUnavailable": "El análisis de imagen no está disponible en este dispositivo.",
   "chatImagePrompt": "Describe esta imagen y ayúdame con esta receta.",

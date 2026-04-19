@@ -115,6 +115,39 @@
   "settingsBackendChangeFailureSnackbar": "Couldn't change backend. Please try again.",
   "@settingsBackendChangeFailureSnackbar": { "description": "Shown when persisting the backend preference fails." },
 
+  "settingsReasoningTitle": "Reasoning",
+  "@settingsReasoningTitle": { "description": "Title of the reasoning toggle setting tile." },
+
+  "settingsReasoningSubtitleOn": "Enabled",
+  "@settingsReasoningSubtitleOn": { "description": "Subtitle of the reasoning toggle when it is enabled." },
+
+  "settingsReasoningSubtitleOff": "Disabled",
+  "@settingsReasoningSubtitleOff": { "description": "Subtitle of the reasoning toggle when it is disabled." },
+
+  "settingsExpertTitle": "Expert",
+  "@settingsExpertTitle": { "description": "Title of the expert settings tile." },
+
+  "settingsExpertDialogTitle": "Generation parameters",
+  "@settingsExpertDialogTitle": { "description": "Title of the expert generation parameters dialog." },
+
+  "settingsExpertMaxTokens": "Max tokens",
+  "@settingsExpertMaxTokens": { "description": "Label for the max tokens field in expert settings." },
+
+  "settingsExpertTopK": "Top-K",
+  "@settingsExpertTopK": { "description": "Label for the Top-K field in expert settings." },
+
+  "settingsExpertTopP": "Top-P",
+  "@settingsExpertTopP": { "description": "Label for the Top-P field in expert settings." },
+
+  "settingsExpertTemperature": "Temperature",
+  "@settingsExpertTemperature": { "description": "Label for the temperature field in expert settings." },
+
+  "settingsExpertChangeFailureSnackbar": "Couldn't save expert settings. Please try again.",
+  "@settingsExpertChangeFailureSnackbar": { "description": "Shown when persisting the expert generation parameters fails." },
+
+  "settingsReasoningChangeFailureSnackbar": "Couldn't change reasoning setting. Please try again.",
+  "@settingsReasoningChangeFailureSnackbar": { "description": "Shown when persisting the reasoning toggle fails." },
+
   "chatTimeJustNow": "just now",
   "@chatTimeJustNow": { "description": "Relative time label for less than a minute ago." },
 

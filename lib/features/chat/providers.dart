@@ -4,11 +4,11 @@ import '../../core/shared_preferences_provider.dart';
 import 'data/chat_backend_preference_storage.dart';
 import 'data/chat_database.dart';
 import 'data/chat_model_preference_storage.dart';
+import 'data/chat_model_service.dart';
 import 'data/chat_repository.dart';
 import 'domain/chat_backend_preference.dart';
 import 'domain/chat_model_preference.dart';
 import 'domain/conversation.dart';
-import 'domain/chat_message.dart';
 
 // ── Database & Repository ──
 
@@ -53,34 +53,6 @@ class ConversationsNotifier extends AsyncNotifier<List<Conversation>> {
   Future<void> rename(String id, String title) async {
     final repo = await ref.read(chatRepositoryProvider.future);
     await repo.renameConversation(id, title);
-    ref.invalidateSelf();
-  }
-}
-
-// ── Messages for a conversation ──
-
-final messagesProvider = AsyncNotifierProvider.family<MessagesNotifier,
-    List<ChatMessage>, String>(
-  MessagesNotifier.new,
-);
-
-class MessagesNotifier
-    extends FamilyAsyncNotifier<List<ChatMessage>, String> {
-  @override
-  Future<List<ChatMessage>> build(String arg) async {
-    final repo = await ref.watch(chatRepositoryProvider.future);
-    return repo.getMessages(arg);
-  }
-
-  Future<void> addUserMessage(String content) async {
-    final repo = await ref.read(chatRepositoryProvider.future);
-    await repo.addUserMessage(arg, content);
-    ref.invalidateSelf();
-  }
-
-  Future<void> addAssistantMessage(String content) async {
-    final repo = await ref.read(chatRepositoryProvider.future);
-    await repo.addAssistantMessage(arg, content);
     ref.invalidateSelf();
   }
 }
@@ -168,3 +140,16 @@ final chatBackendPreferenceProvider =
         ChatBackendPreference>(
   ChatBackendPreferenceNotifier.new,
 );
+
+// ── Model service ──
+
+final chatModelServiceProvider = FutureProvider<ChatModelService>((ref) async {
+  final modelStorage =
+      await ref.watch(chatModelPreferenceStorageProvider.future);
+  final backendStorage =
+      await ref.watch(chatBackendPreferenceStorageProvider.future);
+  return ChatModelService(
+    modelStorage: modelStorage,
+    backendStorage: backendStorage,
+  );
+});

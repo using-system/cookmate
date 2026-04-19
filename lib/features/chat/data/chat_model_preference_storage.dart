@@ -43,4 +43,11 @@ class ChatModelPreferenceStorage {
       throw Exception('Failed to persist installed chat model preference.');
     }
   }
+
+  Future<void> clearInstalled() async {
+    final didRemove = await _prefs.remove(_installedKey);
+    if (!didRemove) {
+      throw Exception('Failed to clear installed chat model preference.');
+    }
+  }
 }

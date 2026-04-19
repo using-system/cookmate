@@ -72,4 +72,11 @@ void main() {
 
     expect(s.readInstalled(), isNull);
   });
+
+  test('clearInstalled removes the installed model', () async {
+    await storage.writeInstalled(ChatModelPreference.gemma4E4B);
+    await storage.clearInstalled();
+
+    expect(storage.readInstalled(), isNull);
+  });
 }

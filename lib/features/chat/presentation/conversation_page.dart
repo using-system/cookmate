@@ -4,10 +4,12 @@ import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/chat_backend_preference.dart';
+import '../domain/chat_message.dart';
+import '../domain/chat_model_preference.dart';
 import '../providers.dart';
 import 'model_download_page.dart';
 import 'widgets/chat_input_bar.dart';
-import 'widgets/message_bubble.dart';
+import 'widgets/chat_list_widget.dart';
 
 class ConversationPage extends ConsumerStatefulWidget {
   const ConversationPage({super.key, required this.conversationId});
@@ -19,10 +21,11 @@ class ConversationPage extends ConsumerStatefulWidget {
 }
 
 class _ConversationPageState extends ConsumerState<ConversationPage> {
-  final _scrollController = ScrollController();
+  final List<ChatMessage> _messages = [];
   InferenceChat? _chat;
   bool _isGenerating = false;
-  String _streamingContent = '';
+  bool _isThinking = false;
+  String _thinkingContent = '';
   bool _modelReady = false;
   String? _chatError;
 
@@ -35,7 +38,16 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   @override
   void initState() {
     super.initState();
+    _loadMessages();
     _initModel();
+  }
+
+  Future<void> _loadMessages() async {
+    final repo = await ref.read(chatRepositoryProvider.future);
+    final messages = await repo.getMessages(widget.conversationId);
+    if (mounted) {
+      setState(() => _messages.addAll(messages));
+    }
   }
 
   Future<void> _initModel() async {
@@ -66,12 +78,11 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         temperature: 0.8,
         topK: 40,
         systemInstruction: _systemPrompt,
+        isThinking: true,
       );
 
       // Replay stored history so InferenceChat has full context.
-      final messages =
-          await ref.read(messagesProvider(widget.conversationId).future);
-      for (final msg in messages) {
+      for (final msg in _messages) {
         await _chat!.addQueryChunk(
           Message.text(text: msg.content, isUser: msg.role == 'user'),
         );
@@ -91,49 +102,101 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   Future<void> _handleSend(String text) async {
     if (_isGenerating || _chat == null) return;
 
-    setState(() {
-      _isGenerating = true;
-      _streamingContent = '';
-    });
+    setState(() => _isGenerating = true);
 
     try {
-      // Persist user message to DB.
-      await ref
-          .read(messagesProvider(widget.conversationId).notifier)
-          .addUserMessage(text);
-      _scrollToBottom();
+      // Add user message to display list.
+      final userMsg = ChatMessage(
+        id: '',
+        conversationId: widget.conversationId,
+        role: 'user',
+        content: text,
+        createdAt: DateTime.now(),
+      );
+      setState(() => _messages.add(userMsg));
 
-      // Send to InferenceChat and stream the response.
+      // Persist user message (fire-and-forget).
+      ref.read(chatRepositoryProvider.future).then(
+            (repo) => repo.addUserMessage(widget.conversationId, text),
+          );
+
+      // Send to InferenceChat.
       await _chat!.addQueryChunk(Message.text(text: text, isUser: true));
 
+      // Add placeholder assistant message.
+      final assistantMsg = ChatMessage(
+        id: '',
+        conversationId: widget.conversationId,
+        role: 'assistant',
+        content: '',
+        createdAt: DateTime.now(),
+      );
+      setState(() => _messages.add(assistantMsg));
+
+      // Stream the response.
       final buffer = StringBuffer();
       var lastUpdate = DateTime.now();
       const throttle = Duration(milliseconds: 50);
+      var receivedText = false;
 
       await for (final response in _chat!.generateChatResponseAsync()) {
-        if (response is TextResponse) {
+        if (response is ThinkingResponse) {
+          setState(() {
+            _isThinking = true;
+            _thinkingContent += response.content;
+          });
+        } else if (response is TextResponse) {
+          if (!receivedText) {
+            receivedText = true;
+            // Clear thinking as text starts.
+            setState(() {
+              _isThinking = false;
+              _thinkingContent = '';
+            });
+          }
           buffer.write(response.token);
           final now = DateTime.now();
           if (mounted && now.difference(lastUpdate) >= throttle) {
             lastUpdate = now;
-            setState(() => _streamingContent = buffer.toString());
-            _scrollToBottom();
+            setState(() {
+              _messages.last = ChatMessage(
+                id: assistantMsg.id,
+                conversationId: assistantMsg.conversationId,
+                role: 'assistant',
+                content: buffer.toString(),
+                createdAt: assistantMsg.createdAt,
+              );
+            });
           }
         }
       }
 
       // Final flush.
-      if (mounted) {
-        setState(() => _streamingContent = buffer.toString());
-        _scrollToBottom();
+      final fullResponse = buffer.toString();
+      if (mounted && fullResponse.isNotEmpty) {
+        setState(() {
+          _messages.last = ChatMessage(
+            id: assistantMsg.id,
+            conversationId: assistantMsg.conversationId,
+            role: 'assistant',
+            content: fullResponse,
+            createdAt: assistantMsg.createdAt,
+          );
+        });
+
+        // Persist assistant message (fire-and-forget).
+        ref.read(chatRepositoryProvider.future).then(
+              (repo) =>
+                  repo.addAssistantMessage(widget.conversationId, fullResponse),
+            );
       }
 
-      // Persist assistant response to DB.
-      final fullResponse = buffer.toString();
-      if (fullResponse.isNotEmpty) {
-        await ref
-            .read(messagesProvider(widget.conversationId).notifier)
-            .addAssistantMessage(fullResponse);
+      // Clear thinking in case stream ended during thinking phase.
+      if (mounted) {
+        setState(() {
+          _isThinking = false;
+          _thinkingContent = '';
+        });
       }
 
       // Auto-name if conversation still has the default title.
@@ -144,10 +207,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       debugPrint('Send failed: $e\n$stack');
     } finally {
       if (mounted) {
-        setState(() {
-          _isGenerating = false;
-          _streamingContent = '';
-        });
+        setState(() => _isGenerating = false);
       }
     }
   }
@@ -163,7 +223,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     final l10n = AppLocalizations.of(context);
     if (conv.title != l10n.chatNewConversation) return;
 
-    // Use a separate short-lived session to avoid polluting the chat context.
     try {
       final pref = await ref.read(chatBackendPreferenceProvider.future);
       final backend = pref == ChatBackendPreference.gpu
@@ -194,25 +253,50 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
   }
 
-  bool _scrollScheduled = false;
+  Future<void> _showAiInfoDialog(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final model = await ref.read(chatModelPreferenceProvider.future);
+    final backend = await ref.read(chatBackendPreferenceProvider.future);
 
-  void _scrollToBottom() {
-    if (_scrollScheduled) return;
-    _scrollScheduled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollScheduled = false;
-      if (_scrollController.hasClients) {
-        _scrollController.jumpTo(
-          _scrollController.position.maxScrollExtent,
-        );
-      }
-    });
-  }
+    if (!mounted) return;
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
+    final modelLabel = switch (model) {
+      ChatModelPreference.gemma4E2B => l10n.settingsModelOptionE2B,
+      ChatModelPreference.gemma4E4B => l10n.settingsModelOptionE4B,
+    };
+    final backendLabel = switch (backend) {
+      ChatBackendPreference.gpu => l10n.settingsBackendOptionGpu,
+      ChatBackendPreference.cpu => l10n.settingsBackendOptionCpu,
+    };
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(l10n.chatAiInfoTitle),
+        children: [
+          ListTile(
+            leading: const Icon(Icons.smart_toy_outlined),
+            title: Text(l10n.chatAiInfoModel),
+            subtitle: Text(modelLabel),
+          ),
+          ListTile(
+            leading: const Icon(Icons.memory_outlined),
+            title: Text(l10n.chatAiInfoAccelerator),
+            subtitle: Text(backendLabel),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(l10n.chatAiInfoClose),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -227,7 +311,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     }
 
     final l10n = AppLocalizations.of(context);
-    final messagesAsync = ref.watch(messagesProvider(widget.conversationId));
     final conversationsAsync = ref.watch(conversationsProvider);
     final title = conversationsAsync.valueOrNull
             ?.where((c) => c.id == widget.conversationId)
@@ -236,7 +319,15 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         '';
 
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(
+        title: Text(title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () => _showAiInfoDialog(context),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           if (_chatError != null)
@@ -254,35 +345,10 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               ],
             ),
           Expanded(
-            child: messagesAsync.when(
-              loading: () =>
-                  const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(child: Text('$error')),
-              data: (messages) {
-                final totalItems =
-                    messages.length + (_isGenerating ? 1 : 0);
-                if (totalItems == 0) {
-                  return const SizedBox.shrink();
-                }
-                return ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: totalItems,
-                  itemBuilder: (context, index) {
-                    if (index < messages.length) {
-                      final msg = messages[index];
-                      return MessageBubble(
-                        content: msg.content,
-                        isUser: msg.role == 'user',
-                      );
-                    }
-                    return MessageBubble(
-                      content: _streamingContent,
-                      isUser: false,
-                    );
-                  },
-                );
-              },
+            child: ChatListWidget(
+              messages: _messages,
+              isThinking: _isThinking,
+              thinkingContent: _thinkingContent,
             ),
           ),
           ChatInputBar(

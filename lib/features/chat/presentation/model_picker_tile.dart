@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/chat_model_preference.dart';
 import '../providers.dart';
-import 'restart_dialog.dart';
 
 class ModelPickerTile extends ConsumerWidget {
   const ModelPickerTile({super.key});
@@ -57,12 +56,10 @@ class ModelPickerTile extends ConsumerWidget {
 
     final messenger = ScaffoldMessenger.of(context);
     try {
-      await ref
-          .read(chatModelPreferenceProvider.notifier)
-          .setPreference(selected);
-      if (context.mounted) {
-        await showRestartDialog(context);
-      }
+      final service = await ref.read(chatModelServiceProvider.future);
+      await service.switchModel(selected);
+      ref.invalidate(chatModelPreferenceProvider);
+      ref.invalidate(isPreferredModelInstalledProvider);
     } catch (error, stack) {
       debugPrint('Failed to change model: $error\n$stack');
       messenger.showSnackBar(

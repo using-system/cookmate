@@ -247,7 +247,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     if (!_visionAvailable) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).chatMediaPermissionDenied)),
+          SnackBar(content: Text(AppLocalizations.of(context).chatVisionUnavailable)),
         );
       }
       return;
@@ -275,15 +275,18 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       );
       await _chatController.insertMessage(imageMsg);
 
+      final l10n = AppLocalizations.of(context);
+
       // Persist (fire-and-forget).
       ref.read(chatRepositoryProvider.future).then(
-            (repo) => repo.addImageMessage(widget.conversationId, '', filePath),
+            (repo) => repo.addImageMessage(
+                widget.conversationId, l10n.chatImageCaption, filePath),
           );
 
       // Send to InferenceChat with image.
       await _chat!.addQueryChunk(
         gemma.Message.withImage(
-          text: 'Describe this image and help me with this recipe.',
+          text: l10n.chatImagePrompt,
           imageBytes: imageBytes,
           isUser: true,
         ),
@@ -292,7 +295,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       await _streamAiResponse();
 
       if (mounted) {
-        await _autoNameIfNeeded('Image message');
+        final needsRename = await _autoNameIfNeeded(l10n.chatImageCaption);
+        if (needsRename) await _createChat();
       }
     } catch (e, stack) {
       debugPrint('Image send failed: $e\n$stack');
@@ -334,9 +338,10 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             );
 
         // Send to InferenceChat with audio.
+        final l10n = AppLocalizations.of(context);
         await _chat!.addQueryChunk(
           gemma.Message.withAudio(
-            text: 'Transcribe and respond to this audio message.',
+            text: l10n.chatAudioPrompt,
             audioBytes: audioBytes,
             isUser: true,
           ),
@@ -345,7 +350,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         await _streamAiResponse();
 
         if (mounted) {
-          await _autoNameIfNeeded('Audio message');
+          final needsRename = await _autoNameIfNeeded(l10n.chatAudioCaption);
+          if (needsRename) await _createChat();
         }
       } catch (e, stack) {
         debugPrint('Audio send failed: $e\n$stack');
@@ -358,7 +364,17 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       // Start recording.
       _audioRecorder ??= AudioRecorder();
       final hasPermission = await _audioRecorder!.hasPermission();
-      if (!hasPermission || !mounted) return;
+      if (!hasPermission) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(AppLocalizations.of(context)
+                    .chatMediaPermissionDenied)),
+          );
+        }
+        return;
+      }
+      if (!mounted) return;
 
       final tempDir = Directory.systemTemp;
       final path =
@@ -387,56 +403,81 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
     final buffer = StringBuffer();
     String? thinkingMsgId;
+    var lastUpdate = DateTime.now();
+    const throttle = Duration(milliseconds: 50);
 
-    await for (final response in _chat!.generateChatResponseAsync()) {
-      if (!mounted) break;
+    try {
+      await for (final response in _chat!.generateChatResponseAsync()) {
+        if (!mounted) break;
 
-      if (response is ThinkingResponse) {
-        if (thinkingMsgId == null) {
-          thinkingMsgId = _uuid.v4();
-          final thinkingMsg = Message.custom(
-            id: thinkingMsgId,
-            authorId: 'assistant',
-            createdAt: now,
-            metadata: {'type': 'thinking', 'content': response.content},
-          );
-          await _chatController.insertMessage(thinkingMsg);
-        } else {
-          // Update existing thinking message.
-          final existingMsg = _chatController.messages
-              .where((m) => m.id == thinkingMsgId)
-              .firstOrNull;
-          if (existingMsg != null && existingMsg is CustomMessage) {
-            final existingContent =
-                (existingMsg.metadata?['content'] as String?) ?? '';
-            final updatedMsg = Message.custom(
+        if (response is ThinkingResponse) {
+          if (thinkingMsgId == null) {
+            thinkingMsgId = _uuid.v4();
+            final thinkingMsg = Message.custom(
               id: thinkingMsgId,
               authorId: 'assistant',
               createdAt: now,
-              metadata: {
-                'type': 'thinking',
-                'content': existingContent + response.content,
-              },
+              metadata: {'type': 'thinking', 'content': response.content},
             );
-            await _chatController.updateMessage(existingMsg, updatedMsg);
+            await _chatController.insertMessage(thinkingMsg);
+          } else {
+            // Update existing thinking message.
+            final existingMsg = _chatController.messages
+                .where((m) => m.id == thinkingMsgId)
+                .firstOrNull;
+            if (existingMsg != null && existingMsg is CustomMessage) {
+              final existingContent =
+                  (existingMsg.metadata?['content'] as String?) ?? '';
+              final updatedMsg = Message.custom(
+                id: thinkingMsgId,
+                authorId: 'assistant',
+                createdAt: now,
+                metadata: {
+                  'type': 'thinking',
+                  'content': existingContent + response.content,
+                },
+              );
+              await _chatController.updateMessage(existingMsg, updatedMsg);
+            }
           }
-        }
-      } else if (response is TextResponse) {
-        // Remove thinking message if present.
-        if (thinkingMsgId != null) {
-          final thinkingMsg = _chatController.messages
-              .where((m) => m.id == thinkingMsgId)
-              .firstOrNull;
-          if (thinkingMsg != null) {
-            await _chatController.removeMessage(thinkingMsg);
+        } else if (response is TextResponse) {
+          // Remove thinking message if present.
+          if (thinkingMsgId != null) {
+            final thinkingMsg = _chatController.messages
+                .where((m) => m.id == thinkingMsgId)
+                .firstOrNull;
+            if (thinkingMsg != null) {
+              await _chatController.removeMessage(thinkingMsg);
+            }
+            thinkingMsgId = null;
           }
-          thinkingMsgId = null;
-        }
 
-        buffer.write(response.token);
+          buffer.write(response.token);
+          final elapsed = DateTime.now().difference(lastUpdate);
+          if (mounted && elapsed >= throttle) {
+            lastUpdate = DateTime.now();
+            _streamStates[streamId] =
+                StreamStateStreaming(buffer.toString());
+            setState(() {});
+          }
+        }
+      }
+    } catch (e, stack) {
+      debugPrint('Stream error: $e\n$stack');
+      if (mounted) {
         _streamStates[streamId] =
-            StreamStateStreaming(buffer.toString());
+            StreamStateError(e, accumulatedText: buffer.toString());
         setState(() {});
+      }
+    }
+
+    // Clean up thinking message if stream ended during thinking phase.
+    if (thinkingMsgId != null && mounted) {
+      final thinkingMsg = _chatController.messages
+          .where((m) => m.id == thinkingMsgId)
+          .firstOrNull;
+      if (thinkingMsg != null) {
+        await _chatController.removeMessage(thinkingMsg);
       }
     }
 
@@ -467,16 +508,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             (repo) =>
                 repo.addAssistantMessage(widget.conversationId, fullResponse),
           );
-    }
-
-    // Clean up thinking message if stream ended during thinking phase.
-    if (thinkingMsgId != null && mounted) {
-      final thinkingMsg = _chatController.messages
-          .where((m) => m.id == thinkingMsgId)
-          .firstOrNull;
-      if (thinkingMsg != null) {
-        await _chatController.removeMessage(thinkingMsg);
-      }
     }
   }
 
@@ -612,7 +643,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     if (id == 'assistant') {
       return const User(id: 'assistant', name: 'CookMate');
     }
-    return const User(id: 'user', name: 'You');
+    final l10n = AppLocalizations.of(context);
+    return User(id: 'user', name: l10n.chatUserDisplayName);
   }
 
   @override

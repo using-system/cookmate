@@ -59,5 +59,9 @@
   "chatRecordingInProgress": "Enregistrement\u2026",
   "chatImageCaption": "Image",
   "chatAudioCaption": "Message audio",
-  "chatMediaPermissionDenied": "Permission refusée. Veuillez autoriser l'accès dans les Réglages."
+  "chatMediaPermissionDenied": "Permission refusée. Veuillez autoriser l'accès dans les Réglages.",
+  "chatVisionUnavailable": "L'analyse d'image n'est pas disponible sur cet appareil.",
+  "chatImagePrompt": "Décris cette image et aide-moi avec cette recette.",
+  "chatAudioPrompt": "Transcris et réponds à ce message audio.",
+  "chatUserDisplayName": "Vous"
 }

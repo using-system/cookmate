@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../domain/models/cookidoo_auth_token.dart';
@@ -52,6 +53,8 @@ class CookidooClient {
     );
 
     if (response.statusCode != 200) {
+      debugPrint('Cookidoo login: POST $url → ${response.statusCode}');
+      debugPrint('Cookidoo login response: ${response.body}');
       throw CookidooAuthException(
         'Login failed (${response.statusCode})',
       );

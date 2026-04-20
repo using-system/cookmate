@@ -80,6 +80,7 @@ class CookidooCredentialsTile extends ConsumerWidget {
               final countryCode = CookidooClient.countryCodeFromLocale(
                 '${Localizations.localeOf(context).languageCode}-${Localizations.localeOf(context).countryCode ?? Localizations.localeOf(context).languageCode.toUpperCase()}',
               );
+              debugPrint('Cookidoo test: countryCode=$countryCode, email=${testCreds.email}');
               try {
                 await client.login(testCreds, countryCode: countryCode);
                 scaffoldMessenger.showSnackBar(

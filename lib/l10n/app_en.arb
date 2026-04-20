@@ -91,12 +91,6 @@
   "settingsModelDialogTitle": "Choose AI model",
   "@settingsModelDialogTitle": { "description": "Title of the model picker dialog." },
 
-  "settingsModelOptionE2B": "Gemma 4 E2B (lighter, tools not supported)",
-  "@settingsModelOptionE2B": { "description": "Label for the Gemma 4 E2B model option." },
-
-  "settingsModelOptionE4B": "Gemma 4 E4B (heavier, supports CookMate tools)",
-  "@settingsModelOptionE4B": { "description": "Label for the Gemma 4 E4B model option." },
-
   "settingsModelChangeFailureSnackbar": "Couldn't change model. Please try again.",
   "@settingsModelChangeFailureSnackbar": { "description": "Shown when persisting the model preference fails." },
 

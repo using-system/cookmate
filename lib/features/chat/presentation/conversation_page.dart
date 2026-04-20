@@ -727,10 +727,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
     if (!mounted) return;
 
-    final modelLabel = switch (model) {
-      ChatModelPreference.gemma4E2B => l10n.settingsModelOptionE2B,
-      ChatModelPreference.gemma4E4B => l10n.settingsModelOptionE4B,
-    };
+    final modelLabel = model.label;
     final backendLabel = switch (backend) {
       ChatBackendPreference.gpu => l10n.settingsBackendOptionGpu,
       ChatBackendPreference.cpu => l10n.settingsBackendOptionCpu,

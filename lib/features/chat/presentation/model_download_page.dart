@@ -6,13 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/chat_model_preference.dart';
 import '../providers.dart';
 
-const _modelUrls = {
-  ChatModelPreference.gemma4E2B:
-      'https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm',
-  ChatModelPreference.gemma4E4B:
-      'https://huggingface.co/litert-community/gemma-4-E4B-it-litert-lm/resolve/main/gemma-4-E4B-it.litertlm',
-};
-
 class ModelDownloadPage extends ConsumerStatefulWidget {
   const ModelDownloadPage({super.key, required this.onComplete});
 
@@ -40,11 +33,11 @@ class _ModelDownloadPageState extends ConsumerState<ModelDownloadPage> {
 
     try {
       final model = await ref.read(chatModelPreferenceProvider.future);
-      final url = _modelUrls[model]!;
 
-      await FlutterGemma.installModel(modelType: ModelType.gemmaIt)
-          .fromNetwork(url)
-          .withProgress((progress) {
+      await FlutterGemma.installModel(
+        modelType: model.modelType,
+        fileType: model.fileType,
+      ).fromNetwork(model.url).withProgress((progress) {
         if (mounted) {
           setState(() => _progress = progress);
         }

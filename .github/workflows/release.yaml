@@ -155,27 +155,20 @@ jobs:
         run: |
           prev_tag="$(git tag --sort=-v:refname | grep -v "^${TAG}$" | head -n1)"
           if [ -n "$prev_tag" ]; then
-            git log "${prev_tag}..HEAD" --pretty=format:'%s' --no-merges > commits.txt
+            git log "${prev_tag}..HEAD" --pretty=tformat:'%s' --no-merges > commits.txt
           else
-            git log --pretty=format:'%s' --no-merges -20 > commits.txt
+            git log --pretty=tformat:'%s' --no-merges -20 > commits.txt
           fi
 
-          if printf '%s\n\n%s\n' \
+          printf '%s\n\n%s\n' \
             "You are the changelog writer for CookMate, a Thermomix cooking assistant mobile app. From the git commits below, write a concise user-friendly changelog in French. Rules: only mention user-visible changes (new features, fixes, improvements). Ignore anything technical or internal (refactoring, CI, dependencies, tests, perf). Use simple non-technical language. Bullet list format, 5 points maximum. No title or header, just the bullets. If there are no user-visible changes, write only: Améliorations de stabilité et de performance. Commits:" \
             "$(cat commits.txt)" \
-            | gh models run openai/gpt-4o-mini > notes.txt 2>/dev/null; then
-            echo "LLM changelog generated successfully."
-          else
-            echo "gh models run unavailable, falling back to commit list."
-            {
-              echo "Nouveautés :"
-              sed 's/^/- /' commits.txt
-            } > notes.txt
-          fi
+            | gh models run openai/gpt-4o-mini > notes.txt
 
           {
             echo "body<<COOKMATE_RELEASE_NOTES_EOF"
             cat notes.txt
+            echo ""
             echo "COOKMATE_RELEASE_NOTES_EOF"
           } >> "$GITHUB_OUTPUT"
 

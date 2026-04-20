@@ -105,6 +105,41 @@ void main() {
       expect(list.first.title, 'New title');
     });
 
+    test('insertMessage updates conversation updated_at and reorders list',
+        () async {
+      final old = DateTime(2026, 1, 1);
+      final recent = DateTime(2026, 4, 18);
+
+      await chatDb.insertConversation(Conversation(
+        id: 'c1',
+        title: 'Old conv',
+        createdAt: old,
+        updatedAt: old,
+      ));
+      await chatDb.insertConversation(Conversation(
+        id: 'c2',
+        title: 'Recent conv',
+        createdAt: recent,
+        updatedAt: recent,
+      ));
+
+      // c2 is on top initially.
+      var list = await chatDb.getConversations();
+      expect(list.first.id, 'c2');
+
+      // Add a message to the old conversation — it should jump to the top.
+      await chatDb.insertMessage(ChatMessage(
+        id: 'm1',
+        conversationId: 'c1',
+        role: 'user',
+        content: 'Hello',
+        createdAt: DateTime(2026, 5, 1),
+      ));
+
+      list = await chatDb.getConversations();
+      expect(list.first.id, 'c1');
+    });
+
     test('deleteConversation removes conversation and its messages', () async {
       final now = DateTime.now();
       await chatDb.insertConversation(Conversation(

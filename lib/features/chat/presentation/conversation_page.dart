@@ -24,6 +24,7 @@ import '../../recipe/domain/tm_version.dart';
 import '../../recipe/domain/unit_system.dart';
 import '../../recipe/providers.dart';
 import 'model_download_page.dart';
+import 'stream_state_store.dart';
 
 const _uuid = Uuid();
 
@@ -38,7 +39,7 @@ class ConversationPage extends ConsumerStatefulWidget {
 
 class _ConversationPageState extends ConsumerState<ConversationPage> {
   final InMemoryChatController _chatController = InMemoryChatController();
-  final _StreamStateStore _streamStates = _StreamStateStore();
+  final StreamStateStore _streamStates = StreamStateStore();
   InferenceChat? _chat;
   bool _isGenerating = false;
   bool _modelReady = false;
@@ -1317,26 +1318,6 @@ class _AudioBubbleState extends State<_AudioBubble> {
         ],
       ),
     );
-  }
-}
-
-class _StreamStateStore {
-  final Map<String, ValueNotifier<StreamState>> _notifiers = {};
-
-  ValueNotifier<StreamState> of(String streamId) =>
-      _notifiers.putIfAbsent(streamId, () => ValueNotifier(const StreamStateLoading()));
-
-  void set(String streamId, StreamState state) {
-    of(streamId).value = state;
-  }
-
-  StreamState? get(String streamId) => _notifiers[streamId]?.value;
-
-  void dispose() {
-    for (final notifier in _notifiers.values) {
-      notifier.dispose();
-    }
-    _notifiers.clear();
   }
 }
 

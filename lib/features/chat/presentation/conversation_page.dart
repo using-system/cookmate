@@ -21,7 +21,6 @@ import '../../tools/providers.dart';
 import '../domain/chat_backend_preference.dart';
 import '../domain/title_generator.dart';
 import '../domain/chat_message.dart' as domain;
-import '../domain/chat_model_preference.dart';
 import '../providers.dart';
 import '../../recipe/domain/recipe_level.dart';
 import '../../recipe/domain/system_prompt_builder.dart';

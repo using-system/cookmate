@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../domain/chat_model_preference.dart';
 import '../providers.dart';
 
 class ModelDownloadPage extends ConsumerStatefulWidget {

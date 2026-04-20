@@ -6,18 +6,20 @@ void main() {
     test('default values match spec', () {
       const config = ExpertConfig();
       expect(config.maxTokens, 8000);
-      expect(config.topK, 64);
-      expect(config.topP, 0.95);
-      expect(config.temperature, 1.0);
+      expect(config.topK, 40);
+      expect(config.topP, 0.9);
+      expect(config.temperature, 0.8);
+      expect(config.tokenBuffer, 2048);
     });
 
     test('copyWith replaces only specified fields', () {
       const config = ExpertConfig();
       final modified = config.copyWith(maxTokens: 4000, temperature: 0.5);
       expect(modified.maxTokens, 4000);
-      expect(modified.topK, 64);
-      expect(modified.topP, 0.95);
+      expect(modified.topK, 40);
+      expect(modified.topP, 0.9);
       expect(modified.temperature, 0.5);
+      expect(modified.tokenBuffer, 2048);
     });
 
     test('equality works for identical values', () {

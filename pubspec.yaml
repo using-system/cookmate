@@ -82,6 +82,7 @@ flutter:
   assets:
     - assets/icon/cookmate.png
     - assets/skills/share-recipe/
+    - assets/skills/recipe-format/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

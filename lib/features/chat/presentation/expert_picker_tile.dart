@@ -69,6 +69,7 @@ class _ExpertDialogState extends State<_ExpertDialog> {
   late int _topK;
   late double _topP;
   late double _temperature;
+  late int _tokenBuffer;
 
   @override
   void initState() {
@@ -77,6 +78,7 @@ class _ExpertDialogState extends State<_ExpertDialog> {
     _topK = widget.initial.topK.clamp(5, 94);
     _topP = widget.initial.topP.clamp(0.0, 1.0);
     _temperature = widget.initial.temperature.clamp(0.0, 2.0);
+    _tokenBuffer = widget.initial.tokenBuffer.clamp(256, 4096);
   }
 
   @override
@@ -131,6 +133,16 @@ class _ExpertDialogState extends State<_ExpertDialog> {
               onChanged: (v) => setState(
                   () => _temperature = double.parse(v.toStringAsFixed(2))),
             ),
+            _SliderRow(
+              label: l10n.settingsExpertTokenBuffer,
+              info: l10n.settingsExpertTokenBufferInfo,
+              value: _tokenBuffer.toDouble(),
+              min: 256,
+              max: 4096,
+              divisions: 15,
+              displayValue: _tokenBuffer.toString(),
+              onChanged: (v) => setState(() => _tokenBuffer = v.round()),
+            ),
           ],
         ),
       ),
@@ -141,6 +153,7 @@ class _ExpertDialogState extends State<_ExpertDialog> {
             _topK = ExpertConfig.defaultTopK;
             _topP = ExpertConfig.defaultTopP;
             _temperature = ExpertConfig.defaultTemperature;
+            _tokenBuffer = ExpertConfig.defaultTokenBuffer;
           }),
           child: Text(l10n.settingsExpertReset),
         ),
@@ -155,6 +168,7 @@ class _ExpertDialogState extends State<_ExpertDialog> {
               topK: _topK,
               topP: _topP,
               temperature: _temperature,
+              tokenBuffer: _tokenBuffer,
             ),
           ),
           child: Text(l10n.ok),

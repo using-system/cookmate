@@ -2,7 +2,7 @@ enum ChatModelPreference {
   gemma4E2B,
   gemma4E4B;
 
-  static const ChatModelPreference defaultModel = ChatModelPreference.gemma4E2B;
+  static const ChatModelPreference defaultModel = ChatModelPreference.gemma4E4B;
 
   String toStorageValue() => name;
 

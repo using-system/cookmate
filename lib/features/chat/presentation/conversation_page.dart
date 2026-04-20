@@ -204,6 +204,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             temperature: expertConfig.temperature,
             topK: expertConfig.topK,
             topP: expertConfig.topP,
+            tokenBuffer: expertConfig.tokenBuffer,
             systemInstruction: systemPrompt,
             isThinking: reasoning,
             supportImage: cfg.supportImage,
@@ -490,6 +491,11 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     var lastUpdate = DateTime.now();
     const throttle = Duration(milliseconds: 50);
 
+    // Repetition guard: break out of degenerate loops.
+    String? _lastToken;
+    int _repeatCount = 0;
+    const _maxRepeat = 12;
+
     try {
       await for (final response in _chat!.generateChatResponseAsync()) {
         if (!mounted) break;
@@ -534,6 +540,19 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               await _chatController.removeMessage(thinkingMsg);
             }
             thinkingMsgId = null;
+          }
+
+          // Repetition guard.
+          if (response.token == _lastToken) {
+            _repeatCount++;
+            if (_repeatCount >= _maxRepeat) {
+              debugPrint('InferenceChat: repetition loop detected '
+                  '("${response.token}" x $_repeatCount), stopping stream.');
+              break;
+            }
+          } else {
+            _lastToken = response.token;
+            _repeatCount = 1;
           }
 
           buffer.write(response.token);
@@ -835,6 +854,12 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
                           title: Text(l10n.chatAiInfoTopP),
                           subtitle: Text(
                               expertConfig.topP.toStringAsFixed(2)),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.storage_outlined),
+                          title: Text(l10n.chatAiInfoTokenBuffer),
+                          subtitle: Text(
+                              expertConfig.tokenBuffer.toString()),
                         ),
                       ],
                     ),

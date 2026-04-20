@@ -594,9 +594,12 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       // produces its final answer using the tool results as context.
       if (_hadToolCall && mounted && _chat != null) {
         debugPrint('>>> Re-generating after tool call...');
+        int tokenCount = 0;
         await for (final response in _chat!.generateChatResponseAsync()) {
           if (!mounted) break;
+          debugPrint('>>> Re-gen response: ${response.runtimeType}');
           if (response is TextResponse) {
+            tokenCount++;
             buffer.write(response.token);
             final elapsed = DateTime.now().difference(lastUpdate);
             if (mounted && elapsed >= throttle) {
@@ -604,8 +607,11 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               _streamStates.set(
                   streamId, StreamStateStreaming(buffer.toString()));
             }
+          } else if (response is FunctionCallResponse) {
+            debugPrint('>>> Re-gen: LLM called another tool: ${response.name}');
           }
         }
+        debugPrint('>>> Re-gen done: $tokenCount tokens');
       }
     } catch (e, stack) {
       debugPrint('Stream error: $e\n$stack');

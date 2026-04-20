@@ -18,7 +18,7 @@ class ModelPickerTile extends ConsumerWidget {
     return ListTile(
       leading: const Icon(Icons.smart_toy_outlined),
       title: Text(l10n.settingsModelTitle),
-      subtitle: Text(_modelLabel(l10n, model)),
+      subtitle: Text(model.label),
       onTap: () => _openDialog(context, ref, model),
     );
   }
@@ -43,7 +43,7 @@ class ModelPickerTile extends ConsumerWidget {
             title: Text(l10n.settingsModelDialogTitle),
             children: [
               for (final model in ChatModelPreference.values)
-                _OptionTile(label: _modelLabel(l10n, model), value: model),
+                _OptionTile(label: model.label, value: model),
             ],
           ),
         );
@@ -68,12 +68,6 @@ class ModelPickerTile extends ConsumerWidget {
     }
   }
 
-  String _modelLabel(AppLocalizations l10n, ChatModelPreference model) {
-    return switch (model) {
-      ChatModelPreference.gemma4E2B => l10n.settingsModelOptionE2B,
-      ChatModelPreference.gemma4E4B => l10n.settingsModelOptionE4B,
-    };
-  }
 }
 
 class _OptionTile extends StatelessWidget {

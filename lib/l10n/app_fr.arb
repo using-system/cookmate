@@ -28,8 +28,6 @@
   "settingsThemeChangeFailureSnackbar": "Impossible de changer de thème. Réessayez.",
   "settingsModelTitle": "Modèle",
   "settingsModelDialogTitle": "Choisir le modèle IA",
-  "settingsModelOptionE2B": "Gemma 4 E2B (léger, ne fonctionne pas avec les tools)",
-  "settingsModelOptionE4B": "Gemma 4 E4B (plus lourd, fonctionne avec les tools CookMate)",
   "settingsModelChangeFailureSnackbar": "Impossible de changer de modèle. Réessayez.",
   "settingsBackendTitle": "Accélérateur",
   "settingsBackendDialogTitle": "Choisir le backend d'inférence",

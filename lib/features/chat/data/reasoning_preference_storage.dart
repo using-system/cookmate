@@ -10,10 +10,10 @@ class ReasoningPreferenceStorage {
 
   bool read() {
     try {
-      return _prefs.getBool(_key) ?? true;
+      return _prefs.getBool(_key) ?? false;
     } catch (error, stack) {
       debugPrint('Failed to read reasoning preference: $error\n$stack');
-      return true;
+      return false;
     }
   }
 

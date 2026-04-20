@@ -138,11 +138,11 @@ void main() {
   });
 
   group('chatReasoningPreferenceProvider', () {
-    test('builds with true when nothing is stored', () async {
+    test('builds with false when nothing is stored', () async {
       SharedPreferences.setMockInitialValues(<String, Object>{});
       final container = createContainer();
       final value = await container.read(chatReasoningPreferenceProvider.future);
-      expect(value, true);
+      expect(value, false);
     });
 
     test('builds with stored value when one exists', () async {

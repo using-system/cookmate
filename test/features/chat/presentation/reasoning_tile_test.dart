@@ -24,7 +24,7 @@ AppLocalizations _l10n(WidgetTester tester) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('shows enabled subtitle when reasoning is on by default',
+  testWidgets('shows disabled subtitle when reasoning is off by default',
       (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
 
@@ -33,10 +33,10 @@ void main() {
 
     final l10n = _l10n(tester);
     expect(find.text(l10n.settingsReasoningTitle), findsOneWidget);
-    expect(find.text(l10n.settingsReasoningSubtitleOn), findsOneWidget);
+    expect(find.text(l10n.settingsReasoningSubtitleOff), findsOneWidget);
   });
 
-  testWidgets('toggling switch persists false', (tester) async {
+  testWidgets('toggling switch persists true', (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
 
     await tester.pumpWidget(_wrap(const ReasoningTile()));
@@ -46,7 +46,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getBool('chat_reasoning_preference'), false);
+    expect(prefs.getBool('chat_reasoning_preference'), true);
   });
 
   testWidgets('shows disabled subtitle when stored as false', (tester) async {

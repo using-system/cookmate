@@ -13,8 +13,8 @@ void main() {
     storage = ReasoningPreferenceStorage(prefs);
   });
 
-  test('read returns true when nothing is stored', () {
-    expect(storage.read(), true);
+  test('read returns false when nothing is stored', () {
+    expect(storage.read(), false);
   });
 
   test('write then read returns the written value', () async {
@@ -28,12 +28,12 @@ void main() {
     expect(storage.read(), true);
   });
 
-  test('read returns true when stored value is corrupted', () async {
+  test('read returns false when stored value is corrupted', () async {
     SharedPreferences.setMockInitialValues(<String, Object>{
       'chat_reasoning_preference': 'not_a_bool',
     });
     final prefs = await SharedPreferences.getInstance();
     final s = ReasoningPreferenceStorage(prefs);
-    expect(s.read(), true);
+    expect(s.read(), false);
   });
 }

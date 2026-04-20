@@ -58,6 +58,7 @@
   "chatTimeHoursAgo": "vor {hours} Std.",
   "chatModelErrorBanner": "Modellfehler: {error}",
   "chatModelErrorRetry": "Erneut versuchen",
+  "chatModelLoading": "Modell wird geladen, bitte warten\u2026",
   "chatAiInfoTitle": "KI-Einstellungen",
   "chatAiInfoModel": "Modell",
   "chatAiInfoAccelerator": "Beschleuniger",

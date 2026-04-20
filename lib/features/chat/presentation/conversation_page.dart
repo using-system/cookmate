@@ -240,7 +240,15 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   }
 
   void _handleSend(String text) {
-    if (_isGenerating || _chat == null) return;
+    if (_isGenerating) return;
+    if (_chat == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).chatModelLoading),
+        ),
+      );
+      return;
+    }
     setState(() => _isGenerating = true);
 
     if (_pendingAudioPath != null) {

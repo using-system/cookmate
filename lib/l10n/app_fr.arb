@@ -58,6 +58,7 @@
   "chatTimeHoursAgo": "il y a {hours} h",
   "chatModelErrorBanner": "Erreur modèle : {error}",
   "chatModelErrorRetry": "Réessayer",
+  "chatModelLoading": "Le modèle est en cours de chargement, veuillez patienter\u2026",
   "chatAiInfoTitle": "Réglages IA",
   "chatAiInfoModel": "Modèle",
   "chatAiInfoAccelerator": "Accélérateur",

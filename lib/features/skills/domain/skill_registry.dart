@@ -14,21 +14,12 @@ class SkillRegistry {
   String buildSystemInstructions() {
     if (skills.isEmpty) return '';
 
-    final buffer = StringBuffer()
-      ..writeln()
-      ..writeln('## Available Skills')
-      ..writeln()
-      ..writeln(
-          'The following skills are available. Use them when appropriate.')
-      ..writeln();
+    final buffer = StringBuffer();
 
     for (final skill in skills) {
       buffer
-        ..writeln('### ${skill.name}')
-        ..writeln(skill.description)
-        ..writeln()
-        ..writeln(skill.instructions)
-        ..writeln();
+        ..writeln('[${skill.name}] ${skill.description}')
+        ..writeln(skill.instructions);
     }
 
     return buffer.toString();

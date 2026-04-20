@@ -9,6 +9,7 @@ import 'skill.dart';
 const _skillAssetPaths = [
   'assets/skills/share-recipe/SKILL.md',
   'assets/skills/recipe-format/SKILL.md',
+  'assets/skills/search-recipe/SKILL.md',
 ];
 
 class SkillLoader {

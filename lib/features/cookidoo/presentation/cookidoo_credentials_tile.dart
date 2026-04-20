@@ -105,9 +105,6 @@ class CookidooCredentialsTile extends ConsumerWidget {
             ],
           ),
         );
-        emailController.dispose();
-        passwordController.dispose();
-
         if (result != null) {
           await prefs.setString(_keyEmail, result.email);
           await prefs.setString(_keyPassword, result.password);

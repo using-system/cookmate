@@ -3,6 +3,12 @@ import 'package:yaml/yaml.dart';
 
 import 'skill.dart';
 
+/// Known skill asset paths. Add new skills here when adding a SKILL.md
+/// to assets/skills/.
+const _skillAssetPaths = [
+  'assets/skills/share-recipe/SKILL.md',
+];
+
 class SkillLoader {
   /// Parse a raw SKILL.md string into a [Skill].
   static Skill parseSkillMd(String raw) {
@@ -30,34 +36,17 @@ class SkillLoader {
     );
   }
 
-  /// Load all SKILL.md files from assets/skills/*/SKILL.md.
+  /// Load all skills from known asset paths.
   static Future<List<Skill>> loadFromAssets(AssetBundle bundle) async {
-    final manifestJson = await bundle.loadString('AssetManifest.json');
-    final manifest = Map<String, dynamic>.from(
-      Uri.splitQueryString(manifestJson).isEmpty
-          ? {}
-          : (manifestJson.startsWith('{'))
-              ? _parseJsonMap(manifestJson)
-              : {},
-    );
-
-    final skillPaths =
-        manifest.keys.where((key) => key.endsWith('SKILL.md')).toList();
-
     final skills = <Skill>[];
-    for (final path in skillPaths) {
-      final raw = await bundle.loadString(path);
-      skills.add(parseSkillMd(raw));
+    for (final path in _skillAssetPaths) {
+      try {
+        final raw = await bundle.loadString(path);
+        skills.add(parseSkillMd(raw));
+      } catch (e) {
+        // Skip missing assets — skill may have been removed.
+      }
     }
     return skills;
-  }
-
-  static Map<String, dynamic> _parseJsonMap(String json) {
-    final result = <String, dynamic>{};
-    final regex = RegExp(r'"([^"]+)":\s*\[([^\]]*)\]');
-    for (final match in regex.allMatches(json)) {
-      result[match.group(1)!] = match.group(2);
-    }
-    return result;
   }
 }

@@ -101,13 +101,14 @@ class CookidooCredentialsTile extends ConsumerWidget {
                 email: emailController.text.trim(),
                 password: passwordController.text,
               );
+              // Close the dialog first to avoid widget rebuild during dispose.
+              Navigator.of(ctx).pop();
               try {
                 await ref
                     .read(cookidooCredentialsProvider.notifier)
                     .setCredentials(credentials);
-                if (ctx.mounted) Navigator.of(ctx).pop();
               } catch (_) {
-                if (ctx.mounted) {
+                if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(

@@ -14,8 +14,8 @@ void main() {
     storage = ChatModelPreferenceStorage(prefs);
   });
 
-  test('read returns gemma4E2B when nothing is stored', () {
-    expect(storage.read(), ChatModelPreference.gemma4E2B);
+  test('read returns gemma4E4B when nothing is stored', () {
+    expect(storage.read(), ChatModelPreference.gemma4E4B);
   });
 
   test('read returns the stored model for every known value', () async {
@@ -30,14 +30,14 @@ void main() {
     }
   });
 
-  test('read returns gemma4E2B when stored value is unknown', () async {
+  test('read returns gemma4E4B when stored value is unknown', () async {
     SharedPreferences.setMockInitialValues(<String, Object>{
       'chat_model_preference': 'gemma99',
     });
     final prefs = await SharedPreferences.getInstance();
     final s = ChatModelPreferenceStorage(prefs);
 
-    expect(s.read(), ChatModelPreference.gemma4E2B);
+    expect(s.read(), ChatModelPreference.gemma4E4B);
   });
 
   test('write then read returns the written model', () async {

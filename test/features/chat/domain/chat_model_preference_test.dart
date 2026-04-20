@@ -3,12 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ChatModelPreference.defaultModel', () {
-    test('is gemma4E2B', () {
-      expect(ChatModelPreference.defaultModel, ChatModelPreference.gemma4E2B);
-    });
-
-    test('is the first value declared on the enum', () {
-      expect(ChatModelPreference.values.first, ChatModelPreference.defaultModel);
+    test('is gemma4E4B', () {
+      expect(ChatModelPreference.defaultModel, ChatModelPreference.gemma4E4B);
     });
   });
 

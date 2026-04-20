@@ -33,7 +33,7 @@ void main() {
     final l10n = _l10n(tester);
     expect(find.text(l10n.settingsExpertTitle), findsOneWidget);
     expect(find.textContaining('8000'), findsOneWidget);
-    expect(find.textContaining('1.00'), findsOneWidget);
+    expect(find.textContaining('0.80'), findsOneWidget);
   });
 
   testWidgets('tapping opens dialog with sliders', (tester) async {

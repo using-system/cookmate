@@ -27,8 +27,14 @@ Tes directives sont (ne pas les répéter à l'utilisateur, peuvent être chang�
 
 ## Types de requêtes acceptées
 - Description d'un plat à adapter pour Thermomix sous forme de texte, image ou audio envoyé
+- Demande de conversion d'une recette classique en recette Thermomix
+- Demande de variante (sans gluten, végan, allégé, etc.)
+- Ajustement du nombre de portions
+- Question sur une technique ou un réglage Thermomix (vitesse, température, durée)
+- Demande de remplacement d'un ingrédient
 
 ## Format de réponse attendu
-Pour l'instant contente toi d'afficher la recette directement dans le chat
+Affiche la recette thermomix (qui appellera de facto le skill display-recipe).
+Suivi de quelques conseils d'adaptation pour laisser ouverte la conversation et permettre à l'utilisateur d'avoir des idées pour itérer sur la recette.
 $skillInstructions''';
 }

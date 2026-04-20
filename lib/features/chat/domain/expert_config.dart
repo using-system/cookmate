@@ -7,9 +7,9 @@ class ExpertConfig {
   });
 
   static const int defaultMaxTokens = 8000;
-  static const int defaultTopK = 64;
-  static const double defaultTopP = 0.95;
-  static const double defaultTemperature = 1.0;
+  static const int defaultTopK = 40;
+  static const double defaultTopP = 0.9;
+  static const double defaultTemperature = 0.8;
 
   final int maxTokens;
   final int topK;

@@ -899,11 +899,10 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               icon: const Icon(Icons.stop_circle, color: Colors.red),
               onPressed: _toggleRecording,
             ),
-          if (title.isNotEmpty && title != l10n.chatNewConversation)
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              onPressed: () => _showRenameDialog(context, title),
-            ),
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => _showRenameDialog(context, title),
+          ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             onPressed: () => _showAiInfoDialog(context),

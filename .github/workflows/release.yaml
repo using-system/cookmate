@@ -208,6 +208,10 @@ jobs:
         with:
           name: cookmate-apk
           path: artifacts
+      - name: Write release notes file
+        env:
+          RELEASE_NOTES: ${{ needs.friendly-release-notes.outputs.body }}
+        run: printf '%s\n' "$RELEASE_NOTES" > release-notes.txt
       - name: Upload APK to Firebase App Distribution
         uses: wzieba/Firebase-Distribution-Github-Action@bd494989dd4bec0343f78adee87fe66e48279ad6 # v1.7.1
         with:
@@ -215,4 +219,4 @@ jobs:
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           groups: testers
           file: artifacts/cookmate-${{ needs.version.outputs.new_tag }}-arm64-v8a.apk
-          releaseNotes: ${{ needs.friendly-release-notes.outputs.body }}
+          releaseNotesFile: release-notes.txt

@@ -8,6 +8,7 @@ import '../../chat/presentation/model_picker_tile.dart';
 import '../../chat/presentation/reasoning_tile.dart';
 import '../../chat/providers.dart';
 import '../../l10n/presentation/language_picker_tile.dart';
+import '../../cookidoo/presentation/cookidoo_credentials_tile.dart';
 import '../../recipe/presentation/dietary_restrictions_tile.dart';
 import '../../recipe/presentation/level_picker_tile.dart';
 import '../../recipe/presentation/portions_picker_tile.dart';
@@ -42,6 +43,12 @@ class SettingsPage extends ConsumerWidget {
           const LevelPickerTile(),
           const Divider(height: 1),
           const DietaryRestrictionsTile(),
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Text(l10n.settingsSectionCookidoo, style: sectionStyle),
+          ),
+          const CookidooCredentialsTile(),
           const Divider(height: 1),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),

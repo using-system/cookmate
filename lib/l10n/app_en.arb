@@ -196,6 +196,9 @@
   "chatModelErrorRetry": "Retry",
   "@chatModelErrorRetry": { "description": "Retry button on model error banner." },
 
+  "chatModelLoading": "Model is loading, please wait\u2026",
+  "@chatModelLoading": { "description": "Snackbar shown when user tries to send before model is ready." },
+
   "chatAiInfoTitle": "AI Settings",
   "@chatAiInfoTitle": { "description": "Title of the AI info overlay in conversation." },
 

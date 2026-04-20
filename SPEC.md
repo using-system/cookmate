@@ -20,7 +20,18 @@
 
 ## On-Device AI
 
-- flutter_gemma (Gemma 4 E2B / E4B inference, multimodal: vision + audio)
+- flutter_gemma (Gemma 4 E2B / E4B inference, multimodal: vision + audio, function calling)
+
+## Skill System
+
+- Markdown-driven skills (`assets/skills/*/SKILL.md`) inject LLM instructions into the system prompt
+- yaml (SKILL.md frontmatter parsing)
+
+## Function Calling
+
+- ToolHandler-based system: each tool = 1 handler file in `lib/features/tools/handlers/`
+- ToolRegistry dispatches flutter_gemma `FunctionCallResponse` to matching handlers
+- share_plus (native share sheet for Android/iOS)
 
 ## Chat UI
 

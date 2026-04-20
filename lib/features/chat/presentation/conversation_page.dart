@@ -14,6 +14,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:flutter_gemma/core/model_response.dart';
+import 'package:flutter_gemma/core/tool.dart';
+import '../../skills/providers.dart';
+import '../../tools/providers.dart';
 import '../domain/chat_backend_preference.dart';
 import '../domain/title_generator.dart';
 import '../domain/chat_message.dart' as domain;
@@ -159,6 +163,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           await ref.read(chatExpertConfigProvider.future);
       final recipeConfig =
           await ref.read(recipeConfigProvider.future);
+      final skillRegistry = await ref.read(skillRegistryProvider.future);
+      final toolRegistry = ref.read(toolRegistryProvider);
       final backend = pref == ChatBackendPreference.gpu
           ? PreferredBackend.gpu
           : PreferredBackend.cpu;
@@ -170,7 +176,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       final systemPrompt = buildSystemPrompt(
         config: recipeConfig,
         language: languageName,
+        skillInstructions: skillRegistry.buildSystemInstructions(),
       );
+      final tools = toolRegistry.tools;
 
       await _chat?.close();
       _chat = null;
@@ -200,6 +208,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             isThinking: reasoning,
             supportImage: cfg.supportImage,
             supportAudio: cfg.supportAudio,
+            tools: tools,
+            supportsFunctionCalls: toolRegistry.hasTools,
+            toolChoice: ToolChoice.auto,
           );
           break;
         } catch (_) {
@@ -229,7 +240,19 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   }
 
   void _handleSend(String text) {
-    if (_isGenerating || _chat == null) return;
+    if (_isGenerating) return;
+    if (_chat == null) {
+      final message = _chatError != null
+          ? _chatError!
+          : AppLocalizations.of(context).chatModelLoading;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      if (_chatError != null) {
+        _createChat();
+      }
+      return;
+    }
     setState(() => _isGenerating = true);
 
     if (_pendingAudioPath != null) {
@@ -519,6 +542,17 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             lastUpdate = DateTime.now();
             _streamStates.set(
                 streamId, StreamStateStreaming(buffer.toString()));
+          }
+        } else if (response is FunctionCallResponse) {
+          if (mounted) {
+            final toolReg = ref.read(toolRegistryProvider);
+            await toolReg.handle(response, context);
+          }
+        } else if (response is ParallelFunctionCallResponse) {
+          if (!mounted) continue;
+          final toolReg = ref.read(toolRegistryProvider);
+          for (final call in response.calls) {
+            await toolReg.handle(call, context);
           }
         }
       }

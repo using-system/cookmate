@@ -52,7 +52,6 @@ final cookidooClientProvider = Provider<CookidooClient>((ref) {
 
 final cookidooRepositoryProvider = Provider<CookidooRepository>((ref) {
   final client = ref.watch(cookidooClientProvider);
-  final credentials = ref.watch(cookidooCredentialsProvider).valueOrNull;
   final effectiveLocale = ref.watch(effectiveLocaleProvider);
   final locale = effectiveLocale ??
       WidgetsBinding.instance.platformDispatcher.locale;
@@ -62,6 +61,9 @@ final cookidooRepositoryProvider = Provider<CookidooRepository>((ref) {
   return CookidooRepositoryImpl(
     client: client,
     locale: lang,
-    credentials: credentials,
+    // Read credentials lazily to avoid rebuilding the repository (and the
+    // entire tool registry chain) every time credentials change.
+    credentialsReader: () =>
+        ref.read(cookidooCredentialsProvider).valueOrNull,
   );
 });

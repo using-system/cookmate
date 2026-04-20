@@ -9,12 +9,14 @@ class CookidooRepositoryImpl implements CookidooRepository {
   CookidooRepositoryImpl({
     required this.client,
     required this.locale,
-    this.credentials,
+    required this.credentialsReader,
   });
 
   final CookidooClient client;
   final String locale;
-  final CookidooCredentials? credentials;
+  final CookidooCredentials? Function() credentialsReader;
+
+  CookidooCredentials? get credentials => credentialsReader();
 
   String get _lang => locale;
   String get _countryCode => CookidooClient.countryCodeFromLocale(locale);

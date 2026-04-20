@@ -186,7 +186,7 @@ jobs:
           echo "::endgroup::"
 
           printf '%s\n\n%s\n' \
-            "You are the changelog writer for CookMate, a Thermomix cooking assistant mobile app. From the git commits below, write a concise user-friendly changelog in French. Rules: only mention user-visible changes (new features, fixes, improvements). Ignore anything technical or internal (refactoring, CI, dependencies, tests, perf). Use simple non-technical language. Bullet list format, 5 points maximum. No title or header, just the bullets. If there are no user-visible changes, write only: Améliorations de stabilité et de performance. Commits:" \
+            "You are the changelog writer for CookMate, a Thermomix cooking assistant mobile app. From the git commits below, write a concise user-friendly changelog in English. Rules: only mention user-visible changes (new features, fixes, improvements). Ignore anything technical or internal (refactoring, CI, dependencies, tests, perf). Use simple non-technical language. Bullet list format, 5 points maximum. No title or header, just the bullets. If there are no user-visible changes, write only: Stability and performance improvements. Commits:" \
             "$(cat commits.txt)" \
             | gh models run "$LLM_MODEL" > notes.txt
 

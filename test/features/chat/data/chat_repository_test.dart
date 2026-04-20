@@ -87,6 +87,20 @@ void main() {
     expect(await repository.getConversations(), isEmpty);
   });
 
+  test('deleteAllConversations removes all conversations and their messages',
+      () async {
+    final conv1 = await repository.createConversation('First');
+    final conv2 = await repository.createConversation('Second');
+    await repository.addUserMessage(conv1.id, 'Hello');
+    await repository.addUserMessage(conv2.id, 'World');
+
+    await repository.deleteAllConversations();
+
+    expect(await repository.getConversations(), isEmpty);
+    expect(await repository.getMessages(conv1.id), isEmpty);
+    expect(await repository.getMessages(conv2.id), isEmpty);
+  });
+
   test('renameConversation updates the title', () async {
     final conv = await repository.createConversation('Old');
     await repository.renameConversation(conv.id, 'New');

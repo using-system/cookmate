@@ -44,8 +44,6 @@ jobs:
     needs: version
     if: needs.version.outputs.new_tag != ''
     runs-on: ubuntu-latest
-    env:
-      TAG: ${{ needs.version.outputs.new_tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -79,16 +77,28 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Build APK
+        env:
+          TAG: ${{ needs.version.outputs.new_tag }}
         run: |
           BUILD_NAME="${TAG#v}"
           flutter build apk --release \
+            --split-per-abi \
+            --target-platform android-arm,android-arm64 \
+            --obfuscate \
+            --split-debug-info=build/debug-info \
             --build-name="${BUILD_NAME}" \
             --build-number="${GITHUB_RUN_NUMBER}"
-      - name: Rename APK
+      - name: Rename APKs
+        env:
+          TAG: ${{ needs.version.outputs.new_tag }}
         run: |
-          mv build/app/outputs/flutter-apk/app-release.apk \
-             "build/app/outputs/flutter-apk/cookmate-${TAG}.apk"
-      - name: Upload APK artifact
+          cd build/app/outputs/flutter-apk
+          for apk in app-*-release.apk; do
+            abi="${apk#app-}"
+            abi="${abi%-release.apk}"
+            mv "$apk" "cookmate-${TAG}-${abi}.apk"
+          done
+      - name: Upload APK artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: cookmate-apk
@@ -123,7 +133,6 @@ jobs:
     if: needs.version.outputs.new_tag != ''
     runs-on: ubuntu-latest
     env:
-      TAG: ${{ needs.version.outputs.new_tag }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
@@ -135,6 +144,8 @@ jobs:
           path: artifacts
       - name: Fetch GitHub Release notes
         id: notes
+        env:
+          TAG: ${{ needs.version.outputs.new_tag }}
         run: |
           release_body=""
           for attempt in 1 2 3 4 5; do
@@ -158,5 +169,5 @@ jobs:
           appId: ${{ secrets.FIREBASE_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           groups: testers
-          file: artifacts/cookmate-${{ needs.version.outputs.new_tag }}.apk
+          file: artifacts/cookmate-${{ needs.version.outputs.new_tag }}-arm64-v8a.apk
           releaseNotes: ${{ steps.notes.outputs.body }}

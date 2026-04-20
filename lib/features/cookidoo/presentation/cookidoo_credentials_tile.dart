@@ -1,46 +1,56 @@
 import 'package:cookmate/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/cookidoo_client.dart';
 import '../domain/models/cookidoo_credentials.dart';
-import '../providers.dart';
 
-class CookidooCredentialsTile extends ConsumerStatefulWidget {
+class CookidooCredentialsTile extends StatefulWidget {
   const CookidooCredentialsTile({super.key});
 
   @override
-  ConsumerState<CookidooCredentialsTile> createState() =>
+  State<CookidooCredentialsTile> createState() =>
       _CookidooCredentialsTileState();
 }
 
-class _CookidooCredentialsTileState
-    extends ConsumerState<CookidooCredentialsTile> {
-  CookidooCredentials? _credentials;
-  bool _loaded = false;
+class _CookidooCredentialsTileState extends State<CookidooCredentialsTile> {
+  static const _keyEmail = 'cookidoo_email';
+  static const _keyPassword = 'cookidoo_password';
+
+  String _email = '';
+  String _password = '';
 
   @override
   void initState() {
     super.initState();
-    _loadCredentials();
+    _load();
   }
 
-  Future<void> _loadCredentials() async {
-    final storage =
-        await ref.read(cookidooCredentialsStorageProvider.future);
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
-      _credentials = storage.read();
-      _loaded = true;
+      _email = prefs.getString(_keyEmail) ?? '';
+      _password = prefs.getString(_keyPassword) ?? '';
+    });
+  }
+
+  Future<void> _save(CookidooCredentials creds) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyEmail, creds.email);
+    await prefs.setString(_keyPassword, creds.password);
+    if (!mounted) return;
+    setState(() {
+      _email = creds.email;
+      _password = creds.password;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final subtitle = (_loaded && _credentials != null && !_credentials!.isEmpty)
-        ? _credentials!.email
-        : l10n.settingsCookidooNotConfigured;
+    final subtitle =
+        _email.isNotEmpty ? _email : l10n.settingsCookidooNotConfigured;
 
     return ListTile(
       leading: const Icon(Icons.cloud_outlined),
@@ -52,10 +62,8 @@ class _CookidooCredentialsTileState
 
   Future<void> _showCredentialsDialog(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
-    final emailController =
-        TextEditingController(text: _credentials?.email ?? '');
-    final passwordController =
-        TextEditingController(text: _credentials?.password ?? '');
+    final emailController = TextEditingController(text: _email);
+    final passwordController = TextEditingController(text: _password);
 
     final saved = await showDialog<CookidooCredentials>(
       context: context,
@@ -96,22 +104,23 @@ class _CookidooCredentialsTileState
                 email: emailController.text.trim(),
                 password: passwordController.text,
               );
-              final client = ref.read(cookidooClientProvider);
-              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              final locale = Localizations.localeOf(context);
               final countryCode = CookidooClient.countryCodeFromLocale(
-                '${Localizations.localeOf(context).languageCode}-${Localizations.localeOf(context).countryCode ?? Localizations.localeOf(context).languageCode.toUpperCase()}',
+                '${locale.languageCode}-${locale.countryCode ?? locale.languageCode.toUpperCase()}',
               );
-              debugPrint(
-                  'Cookidoo test: countryCode=$countryCode, email=${testCreds.email}');
+              final messenger = ScaffoldMessenger.of(context);
               try {
-                await client.login(testCreds, countryCode: countryCode);
-                scaffoldMessenger.showSnackBar(
+                await CookidooClient().login(
+                  testCreds,
+                  countryCode: countryCode,
+                );
+                messenger.showSnackBar(
                   SnackBar(
                       content: Text(l10n.settingsCookidooTestSuccess)),
                 );
               } catch (e) {
                 debugPrint('Cookidoo test login failed: $e');
-                scaffoldMessenger.showSnackBar(
+                messenger.showSnackBar(
                   SnackBar(
                       content: Text(l10n.settingsCookidooTestFailure)),
                 );
@@ -135,24 +144,8 @@ class _CookidooCredentialsTileState
     emailController.dispose();
     passwordController.dispose();
 
-    // Save after the dialog is fully closed.
-    if (saved == null) return;
-    try {
-      final storage =
-          await ref.read(cookidooCredentialsStorageProvider.future);
-      await storage.write(saved);
-      if (mounted) {
-        setState(() => _credentials = saved);
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                AppLocalizations.of(context).settingsCookidooChangeFailureSnackbar),
-          ),
-        );
-      }
+    if (saved != null) {
+      await _save(saved);
     }
   }
 }

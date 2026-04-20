@@ -121,5 +121,7 @@
   "chatRecipeInfoPortions": "Portions",
   "chatRecipeInfoLevel": "Niveau",
   "chatRecipeInfoDietaryRestrictions": "Restrictions alimentaires",
-  "chatRecipeInfoLanguage": "Langue"
+  "chatRecipeInfoLanguage": "Langue",
+  "chatRenameConversation": "Renommer la conversation",
+  "chatRenameHint": "Nom de la conversation"
 }

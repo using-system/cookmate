@@ -24,6 +24,7 @@ import '../../recipe/domain/tm_version.dart';
 import '../../recipe/domain/unit_system.dart';
 import '../../recipe/providers.dart';
 import 'model_download_page.dart';
+import 'stream_state_store.dart';
 
 const _uuid = Uuid();
 
@@ -38,7 +39,7 @@ class ConversationPage extends ConsumerStatefulWidget {
 
 class _ConversationPageState extends ConsumerState<ConversationPage> {
   final InMemoryChatController _chatController = InMemoryChatController();
-  final _StreamStateStore _streamStates = _StreamStateStore();
+  final StreamStateStore _streamStates = StreamStateStore();
   InferenceChat? _chat;
   bool _isGenerating = false;
   bool _modelReady = false;
@@ -571,12 +572,12 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         await _chatController.updateMessage(currentMsg, updatedMsg);
       }
 
-      // Persist assistant message (fire-and-forget).
+      // Persist assistant message and refresh conversation order.
       ref.read(chatRepositoryProvider.future).then(
             (repo) =>
                 repo.addAssistantMessage(widget.conversationId, fullResponse),
             onError: (e, s) => debugPrint('Persist failed: $e\n$s'),
-          );
+          ).then((_) => ref.invalidate(conversationsProvider));
     }
 
     // Keep the final StreamState (completed/error) so the builder doesn't
@@ -668,6 +669,38 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       // Title generation is best-effort; ignore failures.
     }
     return calledGetActiveModel;
+  }
+
+  Future<void> _showRenameDialog(BuildContext context, String currentTitle) async {
+    final l10n = AppLocalizations.of(context);
+    final controller = TextEditingController(text: currentTitle);
+    final newTitle = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.chatRenameConversation),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(hintText: l10n.chatRenameHint),
+          onSubmitted: (value) => Navigator.of(ctx).pop(value.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+            child: Text(l10n.ok),
+          ),
+        ],
+      ),
+    );
+    if (newTitle != null && newTitle.isNotEmpty && newTitle != currentTitle) {
+      await ref
+          .read(conversationsProvider.notifier)
+          .rename(widget.conversationId, newTitle);
+    }
   }
 
   Future<void> _showAiInfoDialog(BuildContext context) async {
@@ -867,6 +900,10 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               icon: const Icon(Icons.stop_circle, color: Colors.red),
               onPressed: _toggleRecording,
             ),
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => _showRenameDialog(context, title),
+          ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             onPressed: () => _showAiInfoDialog(context),
@@ -1281,26 +1318,6 @@ class _AudioBubbleState extends State<_AudioBubble> {
         ],
       ),
     );
-  }
-}
-
-class _StreamStateStore {
-  final Map<String, ValueNotifier<StreamState>> _notifiers = {};
-
-  ValueNotifier<StreamState> of(String streamId) =>
-      _notifiers.putIfAbsent(streamId, () => ValueNotifier(const StreamStateLoading()));
-
-  void set(String streamId, StreamState state) {
-    of(streamId).value = state;
-  }
-
-  StreamState? get(String streamId) => _notifiers[streamId]?.value;
-
-  void dispose() {
-    for (final notifier in _notifiers.values) {
-      notifier.dispose();
-    }
-    _notifiers.clear();
   }
 }
 

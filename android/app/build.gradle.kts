@@ -53,6 +53,22 @@ android {
         }
     }
 
+    packaging {
+        jniLibs {
+            // Exclude native libraries shipped by flutter_gemma that are not
+            // needed for LLM chat (vision, image generation, embeddings, RAG).
+            excludes += setOf(
+                "**/libmediapipe_tasks_vision_jni.so",
+                "**/libmediapipe_tasks_vision_image_generator_jni.so",
+                "**/libimagegenerator_gpu.so",
+                "**/libgemma_embedding_model_jni.so",
+                "**/libgecko_embedding_model_jni.so",
+                "**/libtext_chunker_jni.so",
+                "**/libsqlite_vector_store_jni.so",
+            )
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true

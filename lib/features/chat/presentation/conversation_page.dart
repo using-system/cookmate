@@ -15,6 +15,7 @@ import 'package:record/record.dart';
 import 'package:uuid/uuid.dart';
 
 import '../domain/chat_backend_preference.dart';
+import '../domain/title_generator.dart';
 import '../domain/chat_message.dart' as domain;
 import '../domain/chat_model_preference.dart';
 import '../providers.dart';
@@ -256,6 +257,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         text: text,
       );
       await _chatController.insertMessage(userMsg);
+      _autoNameIfNeeded(text);
 
       ref.read(chatRepositoryProvider.future).then(
             (repo) => repo.addUserMessage(widget.conversationId, text),
@@ -265,13 +267,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       await _chat!.addQueryChunk(gemma.Message.text(text: text, isUser: true));
 
       await _streamAiResponse();
-
-      if (mounted) {
-        final needsRename = await _autoNameIfNeeded(text);
-        if (needsRename) {
-          await _createChat();
-        }
-      }
     } catch (e, stack) {
       debugPrint('Send failed: $e\n$stack');
     } finally {
@@ -300,6 +295,11 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       );
       await _chatController.insertMessage(audioMsg);
 
+      final l10n = AppLocalizations.of(context);
+      _autoNameIfNeeded(
+        text.trim().isNotEmpty ? text.trim() : l10n.chatAudioCaption,
+      );
+
       // Clear the composer chip now that the message is visible in chat.
       setState(() => _pendingAudioPath = null);
 
@@ -308,7 +308,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             onError: (e, s) => debugPrint('Persist failed: $e\n$s'),
           );
 
-      final l10n = AppLocalizations.of(context);
       final prompt = text.trim().isNotEmpty ? text.trim() : l10n.chatAudioPrompt;
 
       await _chat!.addQueryChunk(
@@ -320,13 +319,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       );
 
       await _streamAiResponse();
-
-      if (mounted) {
-        final needsRename = await _autoNameIfNeeded(
-          text.trim().isNotEmpty ? text.trim() : l10n.chatAudioCaption,
-        );
-        if (needsRename) await _createChat();
-      }
     } catch (e, stack) {
       debugPrint('Audio send failed: $e\n$stack');
     } finally {
@@ -379,9 +371,12 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       );
       await _chatController.insertMessage(imageMsg);
 
-      setState(() => _pendingImagePath = null);
-
       final l10n = AppLocalizations.of(context);
+      _autoNameIfNeeded(
+        text.trim().isNotEmpty ? text.trim() : l10n.chatImageCaption,
+      );
+
+      setState(() => _pendingImagePath = null);
 
       // Persist (fire-and-forget).
       ref.read(chatRepositoryProvider.future).then(
@@ -402,13 +397,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       );
 
       await _streamAiResponse();
-
-      if (mounted) {
-        final needsRename = await _autoNameIfNeeded(
-          text.trim().isNotEmpty ? text.trim() : l10n.chatImageCaption,
-        );
-        if (needsRename) await _createChat();
-      }
     } catch (e, stack) {
       debugPrint('Image send failed: $e\n$stack');
     } finally {
@@ -625,50 +613,23 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     );
   }
 
-  /// Returns `true` if it called [FlutterGemma.getActiveModel] (which
-  /// reinitializes the native engine and invalidates existing sessions).
-  Future<bool> _autoNameIfNeeded(String firstUserMessage) async {
+  void _autoNameIfNeeded(String firstUserMessage) {
     final conversations =
         ref.read(conversationsProvider).valueOrNull ?? [];
     final conv = conversations
         .where((c) => c.id == widget.conversationId)
         .firstOrNull;
-    if (conv == null || !mounted) return false;
+    if (conv == null || !mounted) return;
 
     final l10n = AppLocalizations.of(context);
-    if (conv.title != l10n.chatNewConversation) return false;
+    if (conv.title != l10n.chatNewConversation) return;
 
-    var calledGetActiveModel = false;
-    try {
-      final pref = await ref.read(chatBackendPreferenceProvider.future);
-      final backend = pref == ChatBackendPreference.gpu
-          ? PreferredBackend.gpu
-          : PreferredBackend.cpu;
-      calledGetActiveModel = true;
-      final model = await FlutterGemma.getActiveModel(
-        maxTokens: 64,
-        preferredBackend: backend,
-      );
-      final session = await model.createSession(temperature: 0.3, topK: 1);
-      await session.addQueryChunk(gemma.Message.text(
-        text:
-            'Summarize this conversation in 3-5 words as a title. Reply with ONLY the title, nothing else: $firstUserMessage',
-        isUser: true,
-      ));
-      final title = await session.getResponse();
-      await session.close();
+    final title = generateTitle(firstUserMessage);
+    if (title == null) return;
 
-      final cleaned =
-          title.trim().replaceAll(RegExp('["\' ]+\$|^["\' ]+'), '');
-      if (cleaned.isNotEmpty) {
-        await ref
-            .read(conversationsProvider.notifier)
-            .rename(widget.conversationId, cleaned);
-      }
-    } catch (_) {
-      // Title generation is best-effort; ignore failures.
-    }
-    return calledGetActiveModel;
+    ref
+        .read(conversationsProvider.notifier)
+        .rename(widget.conversationId, title);
   }
 
   Future<void> _showRenameDialog(BuildContext context, String currentTitle) async {

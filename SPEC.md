@@ -24,11 +24,14 @@
 
 ## Skill System
 
-- Markdown-driven skills (`assets/skills/*/SKILL.md`) parsed at startup
-- Skills inject metadata into the system prompt and register tools via flutter_gemma function calling
-- Generic `run_intent` executor dispatches native actions (share, email, etc.)
-- share_plus (native share sheet for Android/iOS)
+- Markdown-driven skills (`assets/skills/*/SKILL.md`) inject LLM instructions into the system prompt
 - yaml (SKILL.md frontmatter parsing)
+
+## Function Calling
+
+- ToolHandler-based system: each tool = 1 handler file in `lib/features/tools/handlers/`
+- ToolRegistry dispatches flutter_gemma `FunctionCallResponse` to matching handlers
+- share_plus (native share sheet for Android/iOS)
 
 ## Chat UI
 

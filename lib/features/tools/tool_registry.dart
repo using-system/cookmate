@@ -37,14 +37,20 @@ class ToolRegistry {
   bool get hasTools => _handlers.isNotEmpty;
 
   /// Dispatch a single [FunctionCallResponse] to the matching handler.
-  Future<void> handle(
+  ///
+  /// Returns the tool name and result map, or `null` if the handler is
+  /// fire-and-forget or not found.
+  Future<({String name, Map<String, dynamic> result})?> handle(
       FunctionCallResponse response, BuildContext context) async {
-    debugPrint('>>> ToolRegistry.handle: "${response.name}" args=${response.args}');
+    debugPrint(
+        '>>> ToolRegistry.handle: "${response.name}" args=${response.args}');
     final handler = _handlers[response.name];
-    if (handler != null) {
-      await handler.execute(response.args, context);
-    } else {
+    if (handler == null) {
       debugPrint('>>> ToolRegistry: no handler for "${response.name}"');
+      return null;
     }
+    final result = await handler.execute(response.args, context);
+    if (result == null) return null;
+    return (name: response.name, result: result);
   }
 }

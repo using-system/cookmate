@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/widgets.dart';
 import 'package:flutter_gemma/core/tool.dart';
 
@@ -36,17 +34,17 @@ class SearchRecipesHandler extends ToolHandler {
       );
 
   @override
-  Future<void> execute(
+  Future<Map<String, dynamic>?> execute(
       Map<String, dynamic> args, BuildContext context) async {
     final query = args['query'] as String? ?? '';
     final limit = args['limit'] as int? ?? 5;
 
-    debugPrint('>>> SearchRecipesHandler.execute called: query="$query" limit=$limit');
+    debugPrint('>>> SearchRecipesHandler.execute: query="$query" limit=$limit');
 
     try {
       final results =
           await _repository.searchRecipes(query, limit: limit);
-      final summaries = results
+      final recipes = results
           .map((r) => {
                 'id': r.id,
                 'title': r.title,
@@ -54,14 +52,14 @@ class SearchRecipesHandler extends ToolHandler {
                 'totalTimeMinutes': r.totalTime ~/ 60,
               })
           .toList();
-      debugPrint(
-        '>>> SearchRecipesHandler: ${results.length} results for "$query"'
-        '\n${jsonEncode(summaries)}',
-      );
+      debugPrint('>>> SearchRecipesHandler: ${results.length} results');
+      return {'recipes': recipes};
     } on CookidooNetworkException catch (e) {
       debugPrint('>>> SearchRecipesHandler: network error — $e');
+      return {'error': 'Network error: $e'};
     } catch (e) {
-      debugPrint('>>> SearchRecipesHandler: unexpected error — $e');
+      debugPrint('>>> SearchRecipesHandler: error — $e');
+      return {'error': '$e'};
     }
   }
 }

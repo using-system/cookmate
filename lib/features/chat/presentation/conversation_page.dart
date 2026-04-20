@@ -564,13 +564,25 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         } else if (response is FunctionCallResponse) {
           if (mounted) {
             final toolReg = ref.read(toolRegistryProvider);
-            await toolReg.handle(response, context);
+            final toolResult = await toolReg.handle(response, context);
+            if (toolResult != null && _chat != null) {
+              await _chat!.addQueryChunk(gemma.Message.toolResponse(
+                toolName: toolResult.name,
+                response: toolResult.result,
+              ));
+            }
           }
         } else if (response is ParallelFunctionCallResponse) {
           if (!mounted) continue;
           final toolReg = ref.read(toolRegistryProvider);
           for (final call in response.calls) {
-            await toolReg.handle(call, context);
+            final toolResult = await toolReg.handle(call, context);
+            if (toolResult != null && _chat != null) {
+              await _chat!.addQueryChunk(gemma.Message.toolResponse(
+                toolName: toolResult.name,
+                response: toolResult.result,
+              ));
+            }
           }
         }
       }

@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/widgets.dart';
 import 'package:flutter_gemma/core/tool.dart';
 
@@ -31,9 +29,11 @@ class GetRecipeDetailHandler extends ToolHandler {
       );
 
   @override
-  Future<void> execute(
+  Future<Map<String, dynamic>?> execute(
       Map<String, dynamic> args, BuildContext context) async {
     final recipeId = args['recipe_id'] as String? ?? '';
+
+    debugPrint('>>> GetRecipeDetailHandler.execute: recipeId="$recipeId"');
 
     try {
       final detail = await _repository.getRecipeDetail(recipeId);
@@ -46,19 +46,32 @@ class GetRecipeDetailHandler extends ToolHandler {
           .map((s) => '${s.title}: ${s.text}')
           .toList();
 
-      debugPrint(
-        'GetRecipeDetailHandler: ${detail.title}'
-        '\nIngredients: ${jsonEncode(ingredients)}'
-        '\nSteps: ${jsonEncode(steps)}',
-      );
+      debugPrint('>>> GetRecipeDetailHandler: ${detail.title}');
+      return {
+        'title': detail.title,
+        'servingSize': detail.servingSize,
+        'totalTimeMinutes': detail.totalTime ~/ 60,
+        'rating': detail.rating,
+        'ingredients': ingredients,
+        'steps': steps,
+        'thermomixVersions': detail.thermomixVersions,
+        if (detail.nutrition != null)
+          'nutrition': {
+            'calories': detail.nutrition!.calories,
+            'protein': detail.nutrition!.protein,
+            'fat': detail.nutrition!.fat,
+            'carbs': detail.nutrition!.carbs,
+          },
+      };
     } on CookidooAuthException {
-      debugPrint(
-        'GetRecipeDetailHandler: credentials not configured or invalid',
-      );
+      debugPrint('>>> GetRecipeDetailHandler: credentials not configured');
+      return {'error': 'Cookidoo credentials not configured'};
     } on CookidooNotFoundException {
-      debugPrint('GetRecipeDetailHandler: recipe $recipeId not found');
+      debugPrint('>>> GetRecipeDetailHandler: recipe $recipeId not found');
+      return {'error': 'Recipe $recipeId not found'};
     } on CookidooNetworkException catch (e) {
-      debugPrint('GetRecipeDetailHandler: network error — $e');
+      debugPrint('>>> GetRecipeDetailHandler: network error — $e');
+      return {'error': 'Network error: $e'};
     }
   }
 }

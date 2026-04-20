@@ -35,6 +35,7 @@ class CookidooCredentialsTile extends ConsumerWidget {
 
         final result = await showDialog<CookidooCredentials>(
           context: context,
+          useRootNavigator: true,
           builder: (ctx) => AlertDialog(
             title: const Text('Cookidoo'),
             content: Column(

@@ -97,6 +97,7 @@ class SettingsPage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
+      useRootNavigator: true,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.settingsDeleteAllConversations),
         content: Text(l10n.settingsDeleteAllConversationsConfirmation),

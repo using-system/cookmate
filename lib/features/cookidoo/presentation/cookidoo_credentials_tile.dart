@@ -6,37 +6,58 @@ import '../data/cookidoo_client.dart';
 import '../domain/models/cookidoo_credentials.dart';
 import '../providers.dart';
 
-class CookidooCredentialsTile extends ConsumerWidget {
+class CookidooCredentialsTile extends ConsumerStatefulWidget {
   const CookidooCredentialsTile({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CookidooCredentialsTile> createState() =>
+      _CookidooCredentialsTileState();
+}
+
+class _CookidooCredentialsTileState
+    extends ConsumerState<CookidooCredentialsTile> {
+  CookidooCredentials? _credentials;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCredentials();
+  }
+
+  Future<void> _loadCredentials() async {
+    final storage =
+        await ref.read(cookidooCredentialsStorageProvider.future);
+    if (!mounted) return;
+    setState(() {
+      _credentials = storage.read();
+      _loaded = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final credentials = ref.watch(cookidooCredentialsProvider).valueOrNull;
-    final subtitle = (credentials != null && !credentials.isEmpty)
-        ? credentials.email
+    final subtitle = (_loaded && _credentials != null && !_credentials!.isEmpty)
+        ? _credentials!.email
         : l10n.settingsCookidooNotConfigured;
 
     return ListTile(
       leading: const Icon(Icons.cloud_outlined),
       title: const Text('Cookidoo'),
       subtitle: Text(subtitle),
-      onTap: () => _showCredentialsDialog(context, ref, credentials),
+      onTap: () => _showCredentialsDialog(context),
     );
   }
 
-  Future<void> _showCredentialsDialog(
-    BuildContext context,
-    WidgetRef ref,
-    CookidooCredentials? current,
-  ) async {
+  Future<void> _showCredentialsDialog(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final emailController =
-        TextEditingController(text: current?.email ?? '');
+        TextEditingController(text: _credentials?.email ?? '');
     final passwordController =
-        TextEditingController(text: current?.password ?? '');
+        TextEditingController(text: _credentials?.password ?? '');
 
-    await showDialog<void>(
+    final saved = await showDialog<CookidooCredentials>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Cookidoo'),
@@ -80,50 +101,30 @@ class CookidooCredentialsTile extends ConsumerWidget {
               final countryCode = CookidooClient.countryCodeFromLocale(
                 '${Localizations.localeOf(context).languageCode}-${Localizations.localeOf(context).countryCode ?? Localizations.localeOf(context).languageCode.toUpperCase()}',
               );
-              debugPrint('Cookidoo test: countryCode=$countryCode, email=${testCreds.email}');
+              debugPrint(
+                  'Cookidoo test: countryCode=$countryCode, email=${testCreds.email}');
               try {
                 await client.login(testCreds, countryCode: countryCode);
                 scaffoldMessenger.showSnackBar(
-                  SnackBar(content: Text(l10n.settingsCookidooTestSuccess)),
+                  SnackBar(
+                      content: Text(l10n.settingsCookidooTestSuccess)),
                 );
               } catch (e) {
                 debugPrint('Cookidoo test login failed: $e');
                 scaffoldMessenger.showSnackBar(
-                  SnackBar(content: Text(l10n.settingsCookidooTestFailure)),
+                  SnackBar(
+                      content: Text(l10n.settingsCookidooTestFailure)),
                 );
               }
             },
             child: Text(l10n.settingsCookidooTest),
           ),
           TextButton(
-            onPressed: () async {
-              final credentials = CookidooCredentials(
+            onPressed: () {
+              Navigator.of(ctx).pop(CookidooCredentials(
                 email: emailController.text.trim(),
                 password: passwordController.text,
-              );
-              // Write to storage before closing — no provider involved yet.
-              try {
-                final storage = await ref
-                    .read(cookidooCredentialsStorageProvider.future);
-                await storage.write(credentials);
-              } catch (_) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                          l10n.settingsCookidooChangeFailureSnackbar),
-                    ),
-                  );
-                }
-                return;
-              }
-              if (!ctx.mounted) return;
-              // Close the dialog and wait for it to fully animate out,
-              // then invalidate the provider so the tile picks up the
-              // new credentials without conflicting with the overlay.
-              await Navigator.of(ctx).maybePop();
-              await Future<void>.delayed(const Duration(milliseconds: 300));
-              ref.invalidate(cookidooCredentialsProvider);
+              ));
             },
             child: Text(l10n.ok),
           ),
@@ -133,5 +134,25 @@ class CookidooCredentialsTile extends ConsumerWidget {
 
     emailController.dispose();
     passwordController.dispose();
+
+    // Save after the dialog is fully closed.
+    if (saved == null) return;
+    try {
+      final storage =
+          await ref.read(cookidooCredentialsStorageProvider.future);
+      await storage.write(saved);
+      if (mounted) {
+        setState(() => _credentials = saved);
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                AppLocalizations.of(context).settingsCookidooChangeFailureSnackbar),
+          ),
+        );
+      }
+    }
   }
 }

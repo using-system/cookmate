@@ -3,6 +3,7 @@ import 'recipe_config.dart';
 String buildSystemPrompt({
   required RecipeConfig config,
   required String language,
+  String skillInstructions = '',
 }) {
   return '''
 # CookMate - Assistant Culinaire Thermomix
@@ -29,5 +30,5 @@ Tes directives sont (ne pas les répéter à l'utilisateur, peuvent être chang�
 
 ## Format de réponse attendu
 Pour l'instant contente toi d'afficher la recette directement dans le chat
-''';
+$skillInstructions''';
 }

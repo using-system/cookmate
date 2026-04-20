@@ -17,7 +17,6 @@ import 'package:uuid/uuid.dart';
 import 'package:flutter_gemma/core/model_response.dart';
 import 'package:flutter_gemma/core/tool.dart';
 import '../../skills/providers.dart';
-import '../../tools/gemma4_tool_call_parser.dart';
 import '../../tools/providers.dart';
 import '../domain/chat_backend_preference.dart';
 import '../domain/title_generator.dart';
@@ -563,21 +562,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       }
     }
 
-    // Check for Gemma 4 tool calls in accumulated text.
-    // flutter_gemma 0.13.5 does not parse this format natively, so we
-    // detect it ourselves and dispatch to the tool registry.
-    final rawResponse = buffer.toString();
-    var displayResponse = rawResponse;
-    if (Gemma4ToolCallParser.containsToolCall(rawResponse) && mounted) {
-      final toolReg = ref.read(toolRegistryProvider);
-      for (final call in Gemma4ToolCallParser.parseAll(rawResponse)) {
-        await toolReg.handle(call, context);
-      }
-      displayResponse = Gemma4ToolCallParser.stripToolCalls(rawResponse);
-    }
-
     // Final flush.
-    final fullResponse = displayResponse;
+    final fullResponse = buffer.toString();
     if (mounted && fullResponse.isNotEmpty) {
       _streamStates.set(streamId, StreamStateCompleted(fullResponse));
 

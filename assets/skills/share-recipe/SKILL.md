@@ -11,7 +11,6 @@ When the user asks to share, send, or forward a recipe,
 call the `share_recipe` tool with the following parameters:
 
 - title: the recipe title. String.
-- content: the full formatted recipe text, including ingredients and steps. String.
+- content: a SHORT summary of the recipe (under 400 characters). Include only the dish name, number of portions, and the list of main ingredients. Do NOT include the full steps. String.
 
-Always format the recipe clearly before sharing: title, ingredients list,
-and numbered Thermomix steps with temperature, speed and duration.
+IMPORTANT: keep content very short. The tool has a size limit.

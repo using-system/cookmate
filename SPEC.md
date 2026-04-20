@@ -20,7 +20,15 @@
 
 ## On-Device AI
 
-- flutter_gemma (Gemma 4 E2B / E4B inference, multimodal: vision + audio)
+- flutter_gemma (Gemma 4 E2B / E4B inference, multimodal: vision + audio, function calling)
+
+## Skill System
+
+- Markdown-driven skills (`assets/skills/*/SKILL.md`) parsed at startup
+- Skills inject metadata into the system prompt and register tools via flutter_gemma function calling
+- Generic `run_intent` executor dispatches native actions (share, email, etc.)
+- share_plus (native share sheet for Android/iOS)
+- yaml (SKILL.md frontmatter parsing)
 
 ## Chat UI
 

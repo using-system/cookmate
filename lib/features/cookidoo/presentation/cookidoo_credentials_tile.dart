@@ -2,6 +2,7 @@ import 'package:cookmate/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/cookidoo_client.dart';
 import '../domain/models/cookidoo_credentials.dart';
 import '../providers.dart';
 
@@ -70,18 +71,26 @@ class CookidooCredentialsTile extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () async {
-              final repo = ref.read(cookidooRepositoryProvider);
-              final scaffoldMessenger = ScaffoldMessenger.of(context);
-              final success = await repo.isAuthenticated();
-              scaffoldMessenger.showSnackBar(
-                SnackBar(
-                  content: Text(
-                    success
-                        ? l10n.settingsCookidooTestSuccess
-                        : l10n.settingsCookidooTestFailure,
-                  ),
-                ),
+              final testCreds = CookidooCredentials(
+                email: emailController.text.trim(),
+                password: passwordController.text,
               );
+              final client = ref.read(cookidooClientProvider);
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              final countryCode = CookidooClient.countryCodeFromLocale(
+                '${Localizations.localeOf(context).languageCode}-${Localizations.localeOf(context).countryCode ?? Localizations.localeOf(context).languageCode.toUpperCase()}',
+              );
+              try {
+                await client.login(testCreds, countryCode: countryCode);
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(content: Text(l10n.settingsCookidooTestSuccess)),
+                );
+              } catch (e) {
+                debugPrint('Cookidoo test login failed: $e');
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(content: Text(l10n.settingsCookidooTestFailure)),
+                );
+              }
             },
             child: Text(l10n.settingsCookidooTest),
           ),

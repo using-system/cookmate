@@ -1,11 +1,12 @@
 ---
-name: display-recipe
-description: Format and display a Thermomix recipe in the chat.
+name: recipe-format
+description: Output format for Thermomix recipes in the chat.
 ---
 
-# Display recipe
+# Recipe format
 
 Use this format for every recipe. Follow the order. Use the user's language.
+This is a formatting guideline, NOT a tool — never call it as a function.
 
 1. **Title** — recipe name as heading
 2. **Info** — servings, prep time, cook time, total time, device (from settings)

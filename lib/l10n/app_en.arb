@@ -389,5 +389,14 @@
   "@chatRenameConversation": { "description": "Title of the rename conversation dialog." },
 
   "chatRenameHint": "Conversation name",
-  "@chatRenameHint": { "description": "Hint text in the rename conversation text field." }
+  "@chatRenameHint": { "description": "Hint text in the rename conversation text field." },
+
+  "settingsSectionActions": "Actions",
+  "@settingsSectionActions": { "description": "Section header for action settings." },
+
+  "settingsDeleteAllConversations": "Delete all conversations",
+  "@settingsDeleteAllConversations": { "description": "Label for the delete all conversations action." },
+
+  "settingsDeleteAllConversationsConfirmation": "Delete all conversations? This cannot be undone.",
+  "@settingsDeleteAllConversationsConfirmation": { "description": "Confirmation prompt before deleting all conversations." }
 }

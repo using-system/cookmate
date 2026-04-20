@@ -123,5 +123,8 @@
   "chatRecipeInfoDietaryRestrictions": "Restricciones dietéticas",
   "chatRecipeInfoLanguage": "Idioma",
   "chatRenameConversation": "Renombrar conversación",
-  "chatRenameHint": "Nombre de la conversación"
+  "chatRenameHint": "Nombre de la conversación",
+  "settingsSectionActions": "Acciones",
+  "settingsDeleteAllConversations": "Eliminar todas las conversaciones",
+  "settingsDeleteAllConversationsConfirmation": "¿Eliminar todas las conversaciones? Esta acción no se puede deshacer."
 }

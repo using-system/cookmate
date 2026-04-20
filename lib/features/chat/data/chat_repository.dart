@@ -29,6 +29,8 @@ class ChatRepository {
 
   Future<void> deleteConversation(String id) => _db.deleteConversation(id);
 
+  Future<void> deleteAllConversations() => _db.deleteAllConversations();
+
   Future<List<ChatMessage>> getMessages(String conversationId) =>
       _db.getMessages(conversationId);
 

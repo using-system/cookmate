@@ -82,6 +82,10 @@ class ChatDatabase {
     await _db.delete('conversations', where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<void> deleteAllConversations() async {
+    await _db.delete('conversations');
+  }
+
   Future<List<ChatMessage>> getMessages(String conversationId) async {
     final rows = await _db.query(
       'messages',

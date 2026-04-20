@@ -58,6 +58,12 @@ class ConversationsNotifier extends AsyncNotifier<List<Conversation>> {
     await repo.renameConversation(id, title);
     ref.invalidateSelf();
   }
+
+  Future<void> deleteAll() async {
+    final repo = await ref.read(chatRepositoryProvider.future);
+    await repo.deleteAllConversations();
+    ref.invalidateSelf();
+  }
 }
 
 // ── Model preference ──

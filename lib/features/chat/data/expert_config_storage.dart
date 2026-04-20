@@ -10,6 +10,7 @@ class ExpertConfigStorage {
   static const _keyTopK = 'expert_top_k';
   static const _keyTopP = 'expert_top_p';
   static const _keyTemperature = 'expert_temperature';
+  static const _keyTokenBuffer = 'expert_token_buffer';
 
   final SharedPreferences _prefs;
 
@@ -21,6 +22,8 @@ class ExpertConfigStorage {
         topP: _prefs.getDouble(_keyTopP) ?? ExpertConfig.defaultTopP,
         temperature:
             _prefs.getDouble(_keyTemperature) ?? ExpertConfig.defaultTemperature,
+        tokenBuffer:
+            _prefs.getInt(_keyTokenBuffer) ?? ExpertConfig.defaultTokenBuffer,
       );
     } catch (error, stack) {
       debugPrint('Failed to read expert config: $error\n$stack');
@@ -40,6 +43,9 @@ class ExpertConfigStorage {
     }
     if (!await _prefs.setDouble(_keyTemperature, config.temperature)) {
       throw Exception('Failed to persist expert config temperature.');
+    }
+    if (!await _prefs.setInt(_keyTokenBuffer, config.tokenBuffer)) {
+      throw Exception('Failed to persist expert config tokenBuffer.');
     }
   }
 }

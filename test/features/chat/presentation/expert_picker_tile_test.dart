@@ -47,7 +47,7 @@ void main() {
 
     final l10n = _l10n(tester);
     expect(find.text(l10n.settingsExpertDialogTitle), findsOneWidget);
-    expect(find.byType(Slider), findsNWidgets(4));
+    expect(find.byType(Slider), findsNWidgets(5));
   });
 
   testWidgets('shows stored values in subtitle', (tester) async {

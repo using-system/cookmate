@@ -154,6 +154,12 @@
   "settingsExpertTemperatureInfo": "Controls randomness. Low values (near 0) produce deterministic, focused answers. High values make the model more creative and surprising.",
   "@settingsExpertTemperatureInfo": { "description": "Tooltip explaining the temperature parameter." },
 
+  "settingsExpertTokenBuffer": "Token buffer",
+  "@settingsExpertTokenBuffer": { "description": "Label for the token buffer field in expert settings." },
+
+  "settingsExpertTokenBufferInfo": "Reserved token space for context management. Higher values trigger history trimming earlier, preventing degeneration on long conversations. Range: 256–4096.",
+  "@settingsExpertTokenBufferInfo": { "description": "Tooltip explaining the token buffer parameter." },
+
   "settingsExpertReset": "Reset",
   "@settingsExpertReset": { "description": "Button label to reset expert settings to defaults." },
 
@@ -222,6 +228,9 @@
 
   "chatAiInfoTopP": "Top-P",
   "@chatAiInfoTopP": { "description": "Label for the Top-P row in AI info overlay." },
+
+  "chatAiInfoTokenBuffer": "Token buffer",
+  "@chatAiInfoTokenBuffer": { "description": "Label for the token buffer row in AI info overlay." },
 
   "chatAiInfoClose": "Close",
   "@chatAiInfoClose": { "description": "Close button in the AI info overlay." },

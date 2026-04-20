@@ -204,6 +204,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             temperature: expertConfig.temperature,
             topK: expertConfig.topK,
             topP: expertConfig.topP,
+            tokenBuffer: expertConfig.tokenBuffer,
             systemInstruction: systemPrompt,
             isThinking: reasoning,
             supportImage: cfg.supportImage,
@@ -853,6 +854,12 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
                           title: Text(l10n.chatAiInfoTopP),
                           subtitle: Text(
                               expertConfig.topP.toStringAsFixed(2)),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.storage_outlined),
+                          title: Text(l10n.chatAiInfoTokenBuffer),
+                          subtitle: Text(
+                              expertConfig.tokenBuffer.toString()),
                         ),
                       ],
                     ),

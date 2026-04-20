@@ -9,6 +9,7 @@ void main() {
       expect(config.topK, 40);
       expect(config.topP, 0.9);
       expect(config.temperature, 0.8);
+      expect(config.tokenBuffer, 2048);
     });
 
     test('copyWith replaces only specified fields', () {
@@ -18,6 +19,7 @@ void main() {
       expect(modified.topK, 40);
       expect(modified.topP, 0.9);
       expect(modified.temperature, 0.5);
+      expect(modified.tokenBuffer, 2048);
     });
 
     test('equality works for identical values', () {

@@ -242,11 +242,15 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   void _handleSend(String text) {
     if (_isGenerating) return;
     if (_chat == null) {
+      final message = _chatError != null
+          ? _chatError!
+          : AppLocalizations.of(context).chatModelLoading;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).chatModelLoading),
-        ),
+        SnackBar(content: Text(message)),
       );
+      if (_chatError != null) {
+        _createChat();
+      }
       return;
     }
     setState(() => _isGenerating = true);

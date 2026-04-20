@@ -20,8 +20,8 @@ class ShareHandler extends ToolHandler {
             'content': {
               'type': 'string',
               'description':
-                  'The full formatted recipe text, including ingredients '
-                      'and steps.',
+                  'The recipe steps only, suitable for sharing, kept under '
+                      '800 characters.',
             },
           },
           'required': ['title', 'content'],

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:yaml/yaml.dart';
 
@@ -13,7 +14,7 @@ class SkillLoader {
   /// Parse a raw SKILL.md string into a [Skill].
   static Skill parseSkillMd(String raw) {
     final fmMatch =
-        RegExp(r'^---\n(.*?)\n---\n?', dotAll: true).firstMatch(raw);
+        RegExp(r'^---\r?\n(.*?)\r?\n---\r?\n?', dotAll: true).firstMatch(raw);
     if (fmMatch == null) {
       throw const FormatException('SKILL.md missing frontmatter delimiters.');
     }
@@ -43,8 +44,10 @@ class SkillLoader {
       try {
         final raw = await bundle.loadString(path);
         skills.add(parseSkillMd(raw));
+      } on FlutterError {
+        // Asset not found — skill may have been removed from pubspec.
       } catch (e) {
-        // Skip missing assets — skill may have been removed.
+        debugPrint('SkillLoader: failed to load $path: $e');
       }
     }
     return skills;

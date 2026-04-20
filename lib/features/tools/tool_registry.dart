@@ -11,7 +11,22 @@ import 'tool_handler.dart';
 /// [handle] to dispatch [FunctionCallResponse] events from the stream.
 class ToolRegistry {
   ToolRegistry(List<ToolHandler> handlers)
-      : _handlers = {for (final h in handlers) h.definition.name: h};
+      : _handlers = _buildHandlers(handlers);
+
+  static Map<String, ToolHandler> _buildHandlers(List<ToolHandler> handlers) {
+    final map = <String, ToolHandler>{};
+    for (final h in handlers) {
+      final name = h.definition.name;
+      if (map.containsKey(name)) {
+        throw ArgumentError(
+          'Duplicate tool handler registration for "$name". '
+          'Tool names must be unique.',
+        );
+      }
+      map[name] = h;
+    }
+    return map;
+  }
 
   final Map<String, ToolHandler> _handlers;
 

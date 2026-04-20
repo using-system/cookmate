@@ -383,5 +383,11 @@
   "@chatRecipeInfoDietaryRestrictions": { "description": "Label for dietary restrictions in recipe info tab." },
 
   "chatRecipeInfoLanguage": "Language",
-  "@chatRecipeInfoLanguage": { "description": "Label for language in recipe info tab." }
+  "@chatRecipeInfoLanguage": { "description": "Label for language in recipe info tab." },
+
+  "chatRenameConversation": "Rename conversation",
+  "@chatRenameConversation": { "description": "Title of the rename conversation dialog." },
+
+  "chatRenameHint": "Conversation name",
+  "@chatRenameHint": { "description": "Hint text in the rename conversation text field." }
 }

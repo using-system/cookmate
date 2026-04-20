@@ -670,6 +670,38 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     return calledGetActiveModel;
   }
 
+  Future<void> _showRenameDialog(BuildContext context, String currentTitle) async {
+    final l10n = AppLocalizations.of(context);
+    final controller = TextEditingController(text: currentTitle);
+    final newTitle = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.chatRenameConversation),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(hintText: l10n.chatRenameHint),
+          onSubmitted: (value) => Navigator.of(ctx).pop(value.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+            child: Text(l10n.ok),
+          ),
+        ],
+      ),
+    );
+    if (newTitle != null && newTitle.isNotEmpty && newTitle != currentTitle) {
+      await ref
+          .read(conversationsProvider.notifier)
+          .rename(widget.conversationId, newTitle);
+    }
+  }
+
   Future<void> _showAiInfoDialog(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final model = await ref.read(chatModelPreferenceProvider.future);
@@ -866,6 +898,11 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             IconButton(
               icon: const Icon(Icons.stop_circle, color: Colors.red),
               onPressed: _toggleRecording,
+            ),
+          if (title.isNotEmpty && title != l10n.chatNewConversation)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () => _showRenameDialog(context, title),
             ),
           IconButton(
             icon: const Icon(Icons.info_outline),

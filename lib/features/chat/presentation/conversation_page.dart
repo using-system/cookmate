@@ -571,12 +571,12 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         await _chatController.updateMessage(currentMsg, updatedMsg);
       }
 
-      // Persist assistant message (fire-and-forget).
+      // Persist assistant message and refresh conversation order.
       ref.read(chatRepositoryProvider.future).then(
             (repo) =>
                 repo.addAssistantMessage(widget.conversationId, fullResponse),
             onError: (e, s) => debugPrint('Persist failed: $e\n$s'),
-          );
+          ).then((_) => ref.invalidate(conversationsProvider));
     }
 
     // Keep the final StreamState (completed/error) so the builder doesn't

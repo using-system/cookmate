@@ -39,11 +39,12 @@ class ToolRegistry {
   /// Dispatch a single [FunctionCallResponse] to the matching handler.
   Future<void> handle(
       FunctionCallResponse response, BuildContext context) async {
+    debugPrint('>>> ToolRegistry.handle: "${response.name}" args=${response.args}');
     final handler = _handlers[response.name];
     if (handler != null) {
       await handler.execute(response.args, context);
     } else {
-      debugPrint('ToolRegistry: no handler for "${response.name}"');
+      debugPrint('>>> ToolRegistry: no handler for "${response.name}"');
     }
   }
 }

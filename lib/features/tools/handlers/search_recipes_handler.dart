@@ -41,6 +41,8 @@ class SearchRecipesHandler extends ToolHandler {
     final query = args['query'] as String? ?? '';
     final limit = args['limit'] as int? ?? 5;
 
+    debugPrint('>>> SearchRecipesHandler.execute called: query="$query" limit=$limit');
+
     try {
       final results =
           await _repository.searchRecipes(query, limit: limit);
@@ -53,11 +55,13 @@ class SearchRecipesHandler extends ToolHandler {
               })
           .toList();
       debugPrint(
-        'SearchRecipesHandler: ${results.length} results for "$query"'
+        '>>> SearchRecipesHandler: ${results.length} results for "$query"'
         '\n${jsonEncode(summaries)}',
       );
     } on CookidooNetworkException catch (e) {
-      debugPrint('SearchRecipesHandler: network error — $e');
+      debugPrint('>>> SearchRecipesHandler: network error — $e');
+    } catch (e) {
+      debugPrint('>>> SearchRecipesHandler: unexpected error — $e');
     }
   }
 }

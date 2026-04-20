@@ -404,5 +404,35 @@
   "@settingsDeleteAllConversations": { "description": "Label for the delete all conversations action." },
 
   "settingsDeleteAllConversationsConfirmation": "Delete all conversations? This cannot be undone.",
-  "@settingsDeleteAllConversationsConfirmation": { "description": "Confirmation prompt before deleting all conversations." }
+  "@settingsDeleteAllConversationsConfirmation": { "description": "Confirmation prompt before deleting all conversations." },
+
+  "settingsSectionCookidoo": "Cookidoo",
+  "@settingsSectionCookidoo": { "description": "Section header for Cookidoo settings." },
+
+  "settingsCookidooEmailTitle": "Email",
+  "@settingsCookidooEmailTitle": { "description": "Title for the Cookidoo email field." },
+
+  "settingsCookidooEmailHint": "Cookidoo account email",
+  "@settingsCookidooEmailHint": { "description": "Hint for the Cookidoo email text field." },
+
+  "settingsCookidooPasswordTitle": "Password",
+  "@settingsCookidooPasswordTitle": { "description": "Title for the Cookidoo password field." },
+
+  "settingsCookidooPasswordHint": "Cookidoo account password",
+  "@settingsCookidooPasswordHint": { "description": "Hint for the Cookidoo password text field." },
+
+  "settingsCookidooTest": "Test",
+  "@settingsCookidooTest": { "description": "Button label to test Cookidoo credentials." },
+
+  "settingsCookidooTestSuccess": "Connection successful!",
+  "@settingsCookidooTestSuccess": { "description": "Snackbar shown when Cookidoo credentials are valid." },
+
+  "settingsCookidooTestFailure": "Connection failed. Please check your credentials.",
+  "@settingsCookidooTestFailure": { "description": "Snackbar shown when Cookidoo credentials are invalid." },
+
+  "settingsCookidooNotConfigured": "Not configured",
+  "@settingsCookidooNotConfigured": { "description": "Subtitle shown when Cookidoo credentials are not set." },
+
+  "settingsCookidooChangeFailureSnackbar": "Couldn't save Cookidoo credentials. Please try again.",
+  "@settingsCookidooChangeFailureSnackbar": { "description": "Shown when persisting Cookidoo credentials fails." }
 }

@@ -128,5 +128,16 @@
   "chatRenameHint": "Name der Unterhaltung",
   "settingsSectionActions": "Aktionen",
   "settingsDeleteAllConversations": "Alle Unterhaltungen löschen",
-  "settingsDeleteAllConversationsConfirmation": "Alle Unterhaltungen löschen? Dies kann nicht rückgängig gemacht werden."
+  "settingsDeleteAllConversationsConfirmation": "Alle Unterhaltungen löschen? Dies kann nicht rückgängig gemacht werden.",
+
+  "settingsSectionCookidoo": "Cookidoo",
+  "settingsCookidooEmailTitle": "E-Mail",
+  "settingsCookidooEmailHint": "Cookidoo-Konto-E-Mail",
+  "settingsCookidooPasswordTitle": "Passwort",
+  "settingsCookidooPasswordHint": "Cookidoo-Konto-Passwort",
+  "settingsCookidooTest": "Testen",
+  "settingsCookidooTestSuccess": "Verbindung erfolgreich!",
+  "settingsCookidooTestFailure": "Verbindung fehlgeschlagen. Bitte Zugangsdaten prüfen.",
+  "settingsCookidooNotConfigured": "Nicht konfiguriert",
+  "settingsCookidooChangeFailureSnackbar": "Cookidoo-Zugangsdaten konnten nicht gespeichert werden. Bitte versuche es erneut."
 }

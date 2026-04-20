@@ -38,7 +38,7 @@ class ConversationPage extends ConsumerStatefulWidget {
 
 class _ConversationPageState extends ConsumerState<ConversationPage> {
   final InMemoryChatController _chatController = InMemoryChatController();
-  final _StreamStateNotifier _streamStates = _StreamStateNotifier();
+  final _StreamStateStore _streamStates = _StreamStateStore();
   InferenceChat? _chat;
   bool _isGenerating = false;
   bool _modelReady = false;
@@ -1052,12 +1052,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
                   required bool isSentByMe,
                   MessageGroupStatus? groupStatus,
                 }) {
-                  return ListenableBuilder(
-                    listenable: _streamStates,
-                    builder: (context, _) {
-                      final state =
-                          _streamStates.get(message.streamId) ??
-                          const StreamStateLoading();
+                  return ValueListenableBuilder<StreamState>(
+                    valueListenable: _streamStates.of(message.streamId),
+                    builder: (context, state, _) {
                       return FlyerChatTextStreamMessage(
                         message: message,
                         index: index,
@@ -1287,14 +1284,23 @@ class _AudioBubbleState extends State<_AudioBubble> {
   }
 }
 
-class _StreamStateNotifier extends ChangeNotifier {
-  final Map<String, StreamState> _states = {};
+class _StreamStateStore {
+  final Map<String, ValueNotifier<StreamState>> _notifiers = {};
 
-  StreamState? get(String streamId) => _states[streamId];
+  ValueNotifier<StreamState> of(String streamId) =>
+      _notifiers.putIfAbsent(streamId, () => ValueNotifier(const StreamStateLoading()));
 
   void set(String streamId, StreamState state) {
-    _states[streamId] = state;
-    notifyListeners();
+    of(streamId).value = state;
+  }
+
+  StreamState? get(String streamId) => _notifiers[streamId]?.value;
+
+  void dispose() {
+    for (final notifier in _notifiers.values) {
+      notifier.dispose();
+    }
+    _notifiers.clear();
   }
 }
 

@@ -47,8 +47,7 @@ class CookidooCredentialsTile extends ConsumerWidget {
                     hintText: l10n.settingsCookidooEmailHint,
                   ),
                   keyboardType: TextInputType.emailAddress,
-                  autofillHints: const [AutofillHints.email],
-                ),
+                    ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: passwordController,
@@ -57,8 +56,7 @@ class CookidooCredentialsTile extends ConsumerWidget {
                     hintText: l10n.settingsCookidooPasswordHint,
                   ),
                   obscureText: true,
-                  autofillHints: const [AutofillHints.password],
-                ),
+                    ),
               ],
             ),
             actions: [

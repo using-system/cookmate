@@ -160,11 +160,26 @@ jobs:
           LLM_MODEL: openai/gpt-4o-mini
         run: |
           prev_tag="$(git tag --sort=-v:refname | grep -v "^${TAG}$" | head -n1)"
+
+          # Collect original PR commit messages (not squash titles) for richer context.
+          # For each squash commit, extract the PR number and fetch its commits via API.
+          # Falls back to the squash commit subject if no PR is found.
           if [ -n "$prev_tag" ]; then
-            git log "${prev_tag}..HEAD" --pretty=tformat:'%s' --no-merges > commits.txt
+            git log "${prev_tag}..HEAD" --pretty=tformat:'%s' --no-merges > squash_commits.txt
           else
-            git log --pretty=tformat:'%s' --no-merges -20 > commits.txt
+            git log --pretty=tformat:'%s' --no-merges -20 > squash_commits.txt
           fi
+
+          : > commits.txt
+          while IFS= read -r line; do
+            pr_num="$(echo "$line" | grep -oE '\(#([0-9]+)\)$' | tr -d '(#)')"
+            if [ -n "$pr_num" ]; then
+              gh pr view "$pr_num" --json commits --jq '.commits[].messageHeadline' >> commits.txt 2>/dev/null \
+                || echo "$line" >> commits.txt
+            else
+              echo "$line" >> commits.txt
+            fi
+          done < squash_commits.txt
 
           echo "::group::Commits to process (prev_tag=${prev_tag:-none})"
           cat commits.txt

@@ -494,6 +494,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     String? _lastToken;
     int _repeatCount = 0;
     const _maxRepeat = 12;
+    bool _hadToolCall = false;
 
     try {
       await for (final response in _chat!.generateChatResponseAsync()) {
@@ -566,6 +567,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             final toolReg = ref.read(toolRegistryProvider);
             final toolResult = await toolReg.handle(response, context);
             if (toolResult != null && _chat != null) {
+              _hadToolCall = true;
               await _chat!.addQueryChunk(gemma.Message.toolResponse(
                 toolName: toolResult.name,
                 response: toolResult.result,
@@ -578,10 +580,29 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           for (final call in response.calls) {
             final toolResult = await toolReg.handle(call, context);
             if (toolResult != null && _chat != null) {
+              _hadToolCall = true;
               await _chat!.addQueryChunk(gemma.Message.toolResponse(
                 toolName: toolResult.name,
                 response: toolResult.result,
               ));
+            }
+          }
+        }
+      }
+
+      // After stream ends, if a tool was called, re-generate so the LLM
+      // produces its final answer using the tool results as context.
+      if (_hadToolCall && mounted && _chat != null) {
+        debugPrint('>>> Re-generating after tool call...');
+        await for (final response in _chat!.generateChatResponseAsync()) {
+          if (!mounted) break;
+          if (response is TextResponse) {
+            buffer.write(response.token);
+            final elapsed = DateTime.now().difference(lastUpdate);
+            if (mounted && elapsed >= throttle) {
+              lastUpdate = DateTime.now();
+              _streamStates.set(
+                  streamId, StreamStateStreaming(buffer.toString()));
             }
           }
         }

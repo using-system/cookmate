@@ -1,27 +1,15 @@
-class SkillParameter {
-  const SkillParameter({
-    required this.name,
-    required this.type,
-    required this.description,
-  });
-
-  final String name;
-  final String type;
-  final String description;
-}
-
+/// A skill provides LLM instructions loaded from a SKILL.md asset file.
+///
+/// Skills tell the LLM *when* and *how* to use tools — they do not define
+/// the tools themselves. Tool definitions live in `features/tools/`.
 class Skill {
   const Skill({
     required this.name,
     required this.description,
-    this.intent,
-    required this.parameters,
     required this.instructions,
   });
 
   final String name;
   final String description;
-  final String? intent;
-  final List<SkillParameter> parameters;
   final String instructions;
 }

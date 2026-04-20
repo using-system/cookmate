@@ -1,12 +1,16 @@
-import 'package:flutter_gemma/core/tool.dart';
-
 import 'skill.dart';
 
+/// Central registry for LLM skill instructions.
+///
+/// Skills provide context and instructions that are appended to the system
+/// prompt. They tell the LLM *when* and *how* to use available tools.
+/// The tools themselves are managed independently by `features/tools/`.
 class SkillRegistry {
   SkillRegistry(this.skills);
 
   final List<Skill> skills;
 
+  /// Build the system prompt block that describes all available skills.
   String buildSystemInstructions() {
     if (skills.isEmpty) return '';
 
@@ -14,7 +18,8 @@ class SkillRegistry {
       ..writeln()
       ..writeln('## Available Skills')
       ..writeln()
-      ..writeln('The following skills are available. Use them when appropriate.')
+      ..writeln(
+          'The following skills are available. Use them when appropriate.')
       ..writeln();
 
     for (final skill in skills) {
@@ -27,44 +32,5 @@ class SkillRegistry {
     }
 
     return buffer.toString();
-  }
-
-  List<Tool> buildTools() {
-    final intentSkills = skills.where((s) => s.intent != null).toList();
-    if (intentSkills.isEmpty) return [];
-
-    final intentEnum = intentSkills.map((s) => s.intent!).toList();
-
-    return [
-      Tool(
-        name: 'run_intent',
-        description:
-            'Execute a native device action. '
-            'Available intents: ${intentEnum.join(", ")}.',
-        parameters: {
-          'type': 'object',
-          'properties': {
-            'intent': {
-              'type': 'string',
-              'description': 'The native action to perform.',
-              'enum': intentEnum,
-            },
-            'parameters': {
-              'type': 'string',
-              'description':
-                  'A JSON string containing the parameters for the intent.',
-            },
-          },
-          'required': ['intent', 'parameters'],
-        },
-      ),
-    ];
-  }
-
-  Skill? findSkillByIntent(String intent) {
-    for (final skill in skills) {
-      if (skill.intent == intent) return skill;
-    }
-    return null;
   }
 }

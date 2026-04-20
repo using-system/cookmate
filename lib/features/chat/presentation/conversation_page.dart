@@ -17,7 +17,7 @@ import 'package:uuid/uuid.dart';
 import 'package:flutter_gemma/core/model_response.dart';
 import 'package:flutter_gemma/core/tool.dart';
 import '../../skills/providers.dart';
-import '../../skills/data/executors/intent_executor.dart';
+import '../../tools/providers.dart';
 import '../domain/chat_backend_preference.dart';
 import '../domain/title_generator.dart';
 import '../domain/chat_message.dart' as domain;
@@ -164,6 +164,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       final recipeConfig =
           await ref.read(recipeConfigProvider.future);
       final skillRegistry = await ref.read(skillRegistryProvider.future);
+      final toolRegistry = ref.read(toolRegistryProvider);
       final backend = pref == ChatBackendPreference.gpu
           ? PreferredBackend.gpu
           : PreferredBackend.cpu;
@@ -177,7 +178,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         language: languageName,
         skillInstructions: skillRegistry.buildSystemInstructions(),
       );
-      final skillTools = skillRegistry.buildTools();
+      final tools = toolRegistry.tools;
 
       await _chat?.close();
       _chat = null;
@@ -207,8 +208,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             isThinking: reasoning,
             supportImage: cfg.supportImage,
             supportAudio: cfg.supportAudio,
-            tools: skillTools,
-            supportsFunctionCalls: skillTools.isNotEmpty,
+            tools: tools,
+            supportsFunctionCalls: toolRegistry.hasTools,
             toolChoice: ToolChoice.auto,
           );
           break;
@@ -531,19 +532,15 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
                 streamId, StreamStateStreaming(buffer.toString()));
           }
         } else if (response is FunctionCallResponse) {
-          if (response.name == 'run_intent' && mounted) {
-            final intent = response.args['intent'] as String? ?? '';
-            final params = response.args['parameters'] as String? ?? '{}';
-            await IntentExecutor.execute(intent, params, context);
+          if (mounted) {
+            final toolReg = ref.read(toolRegistryProvider);
+            await toolReg.handle(response, context);
           }
         } else if (response is ParallelFunctionCallResponse) {
           if (!mounted) continue;
+          final toolReg = ref.read(toolRegistryProvider);
           for (final call in response.calls) {
-            if (call.name == 'run_intent') {
-              final intent = call.args['intent'] as String? ?? '';
-              final params = call.args['parameters'] as String? ?? '{}';
-              await IntentExecutor.execute(intent, params, context);
-            }
+            await toolReg.handle(call, context);
           }
         }
       }

@@ -6,7 +6,8 @@ import 'skill.dart';
 class SkillLoader {
   /// Parse a raw SKILL.md string into a [Skill].
   static Skill parseSkillMd(String raw) {
-    final fmMatch = RegExp(r'^---\n(.*?)\n---\n?', dotAll: true).firstMatch(raw);
+    final fmMatch =
+        RegExp(r'^---\n(.*?)\n---\n?', dotAll: true).firstMatch(raw);
     if (fmMatch == null) {
       throw const FormatException('SKILL.md missing frontmatter delimiters.');
     }
@@ -20,28 +21,11 @@ class SkillLoader {
     }
 
     final description = yamlMap['description'] as String? ?? '';
-    final intent = yamlMap['intent'] as String?;
-
-    final rawParams = yamlMap['parameters'] as YamlList?;
-    final parameters = <SkillParameter>[];
-    if (rawParams != null) {
-      for (final p in rawParams) {
-        final map = p as YamlMap;
-        parameters.add(SkillParameter(
-          name: map['name'] as String,
-          type: map['type'] as String? ?? 'string',
-          description: map['description'] as String? ?? '',
-        ));
-      }
-    }
-
     final instructions = raw.substring(fmMatch.end).trim();
 
     return Skill(
       name: name,
       description: description,
-      intent: intent,
-      parameters: parameters,
       instructions: instructions,
     );
   }
@@ -57,9 +41,8 @@ class SkillLoader {
               : {},
     );
 
-    final skillPaths = manifest.keys
-        .where((key) => key.endsWith('SKILL.md'))
-        .toList();
+    final skillPaths =
+        manifest.keys.where((key) => key.endsWith('SKILL.md')).toList();
 
     final skills = <Skill>[];
     for (final path in skillPaths) {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:cookmate/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +38,7 @@ class ConversationPage extends ConsumerStatefulWidget {
 
 class _ConversationPageState extends ConsumerState<ConversationPage> {
   final InMemoryChatController _chatController = InMemoryChatController();
-  final Map<String, StreamState> _streamStates = {};
+  final _StreamStateStore _streamStates = _StreamStateStore();
   InferenceChat? _chat;
   bool _isGenerating = false;
   bool _modelReady = false;
@@ -84,6 +85,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     // conversation inherits the previous conversation's context.
     _chat?.close();
     _chatController.dispose();
+    _streamStates.dispose();
     _audioRecorder?.dispose();
     super.dispose();
   }
@@ -468,9 +470,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       streamId: streamId,
     );
 
-    _streamStates[streamId] = const StreamStateLoading();
+    _streamStates.set(streamId, const StreamStateLoading());
     await _chatController.insertMessage(streamMsg);
-    if (mounted) setState(() {});
 
     final buffer = StringBuffer();
     String? thinkingMsgId;
@@ -527,18 +528,16 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           final elapsed = DateTime.now().difference(lastUpdate);
           if (mounted && elapsed >= throttle) {
             lastUpdate = DateTime.now();
-            _streamStates[streamId] =
-                StreamStateStreaming(buffer.toString());
-            setState(() {});
+            _streamStates.set(
+                streamId, StreamStateStreaming(buffer.toString()));
           }
         }
       }
     } catch (e, stack) {
       debugPrint('Stream error: $e\n$stack');
       if (mounted) {
-        _streamStates[streamId] =
-            StreamStateError(e, accumulatedText: buffer.toString());
-        setState(() {});
+        _streamStates.set(streamId,
+            StreamStateError(e, accumulatedText: buffer.toString()));
       }
     }
 
@@ -555,7 +554,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     // Final flush.
     final fullResponse = buffer.toString();
     if (mounted && fullResponse.isNotEmpty) {
-      _streamStates[streamId] = StreamStateCompleted(fullResponse);
+      _streamStates.set(streamId, StreamStateCompleted(fullResponse));
 
       // Update message status to sent.
       final currentMsg = _chatController.messages
@@ -571,8 +570,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         );
         await _chatController.updateMessage(currentMsg, updatedMsg);
       }
-
-      setState(() {});
 
       // Persist assistant message (fire-and-forget).
       ref.read(chatRepositoryProvider.future).then(
@@ -942,6 +939,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
                               width: 48,
                               height: 48,
                               fit: BoxFit.cover,
+                              cacheWidth: 96,
+                              cacheHeight: 96,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -1053,15 +1052,17 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
                   required bool isSentByMe,
                   MessageGroupStatus? groupStatus,
                 }) {
-                  final state =
-                      _streamStates[message.streamId] ??
-                      const StreamStateLoading();
-                  return FlyerChatTextStreamMessage(
-                    message: message,
-                    index: index,
-                    streamState: state,
-                    mode: TextStreamMessageMode.animatedOpacity,
-                    showTime: false,
+                  return ValueListenableBuilder<StreamState>(
+                    valueListenable: _streamStates.of(message.streamId),
+                    builder: (context, state, _) {
+                      return FlyerChatTextStreamMessage(
+                        message: message,
+                        index: index,
+                        streamState: state,
+                        mode: TextStreamMessageMode.animatedOpacity,
+                        showTime: false,
+                      );
+                    },
                   );
                 },
                 customMessageBuilder: (
@@ -1127,6 +1128,7 @@ class _ImageBubble extends StatelessWidget {
                 File(source),
                 width: double.infinity,
                 fit: BoxFit.cover,
+                cacheWidth: 600,
                 errorBuilder: (_, e, s) => const Padding(
                   padding: EdgeInsets.all(16),
                   child: Icon(Icons.broken_image, size: 48),
@@ -1189,9 +1191,21 @@ class _AudioBubble extends StatefulWidget {
 class _AudioBubbleState extends State<_AudioBubble> {
   final AudioPlayer _player = AudioPlayer();
   bool _isPlaying = false;
+  StreamSubscription<PlayerState>? _playerSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _playerSubscription = _player.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed && mounted) {
+        setState(() => _isPlaying = false);
+      }
+    });
+  }
 
   @override
   void dispose() {
+    _playerSubscription?.cancel();
     _player.dispose();
     super.dispose();
   }
@@ -1205,11 +1219,6 @@ class _AudioBubbleState extends State<_AudioBubble> {
           _player.processingState == ProcessingState.idle) {
         await _player.setFilePath(widget.source);
       }
-      _player.playerStateStream.listen((state) {
-        if (state.processingState == ProcessingState.completed && mounted) {
-          setState(() => _isPlaying = false);
-        }
-      });
       await _player.play();
       setState(() => _isPlaying = true);
     }
@@ -1272,6 +1281,26 @@ class _AudioBubbleState extends State<_AudioBubble> {
         ],
       ),
     );
+  }
+}
+
+class _StreamStateStore {
+  final Map<String, ValueNotifier<StreamState>> _notifiers = {};
+
+  ValueNotifier<StreamState> of(String streamId) =>
+      _notifiers.putIfAbsent(streamId, () => ValueNotifier(const StreamStateLoading()));
+
+  void set(String streamId, StreamState state) {
+    of(streamId).value = state;
+  }
+
+  StreamState? get(String streamId) => _notifiers[streamId]?.value;
+
+  void dispose() {
+    for (final notifier in _notifiers.values) {
+      notifier.dispose();
+    }
+    _notifiers.clear();
   }
 }
 

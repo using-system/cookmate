@@ -44,8 +44,6 @@ jobs:
     needs: version
     if: needs.version.outputs.new_tag != ''
     runs-on: ubuntu-latest
-    env:
-      TAG: ${{ needs.version.outputs.new_tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -79,22 +77,41 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Build APK
+        env:
+          TAG: ${{ needs.version.outputs.new_tag }}
         run: |
           BUILD_NAME="${TAG#v}"
           flutter build apk --release \
+            --split-per-abi \
+            --target-platform android-arm,android-arm64 \
+            --obfuscate \
+            --split-debug-info=build/debug-info \
             --build-name="${BUILD_NAME}" \
             --build-number="${GITHUB_RUN_NUMBER}"
-      - name: Rename APK
+      - name: Rename APKs
+        env:
+          TAG: ${{ needs.version.outputs.new_tag }}
         run: |
-          mv build/app/outputs/flutter-apk/app-release.apk \
-             "build/app/outputs/flutter-apk/cookmate-${TAG}.apk"
-      - name: Upload APK artifact
+          cd build/app/outputs/flutter-apk
+          for apk in app-*-release.apk; do
+            abi="${apk#app-}"
+            abi="${abi%-release.apk}"
+            mv "$apk" "cookmate-${TAG}-${abi}.apk"
+          done
+      - name: Upload APK artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: cookmate-apk
           path: build/app/outputs/flutter-apk/cookmate-*.apk
           retention-days: 7
           if-no-files-found: error
+      - name: Upload debug symbols
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cookmate-debug-info
+          path: build/debug-info/
+          retention-days: 90
+          if-no-files-found: warn
 
   release:
     name: Release
@@ -117,46 +134,67 @@ jobs:
           generate_release_notes: true
           files: artifacts/cookmate-*.apk
 
-  distribute-firebase:
-    name: Distribute to Firebase App Distribution
-    needs: [version, build-android, release]
+  friendly-release-notes:
+    name: Generate Friendly Release Notes
+    needs: [version, release]
     if: needs.version.outputs.new_tag != ''
     runs-on: ubuntu-latest
+    outputs:
+      body: ${{ steps.notes.outputs.body }}
     env:
-      TAG: ${{ needs.version.outputs.new_tag }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+      - name: Generate user-friendly release notes
+        id: notes
+        env:
+          TAG: ${{ needs.version.outputs.new_tag }}
+        run: |
+          prev_tag="$(git tag --sort=-v:refname | grep -v "^${TAG}$" | head -n1)"
+          if [ -n "$prev_tag" ]; then
+            git log "${prev_tag}..HEAD" --pretty=format:'%s' --no-merges > commits.txt
+          else
+            git log --pretty=format:'%s' --no-merges -20 > commits.txt
+          fi
+
+          if printf '%s\n\n%s\n' \
+            "You are the changelog writer for CookMate, a Thermomix cooking assistant mobile app. From the git commits below, write a concise user-friendly changelog in French. Rules: only mention user-visible changes (new features, fixes, improvements). Ignore anything technical or internal (refactoring, CI, dependencies, tests, perf). Use simple non-technical language. Bullet list format, 5 points maximum. No title or header, just the bullets. If there are no user-visible changes, write only: Améliorations de stabilité et de performance. Commits:" \
+            "$(cat commits.txt)" \
+            | gh models run openai/gpt-4o-mini > notes.txt 2>/dev/null; then
+            echo "LLM changelog generated successfully."
+          else
+            echo "gh models run unavailable, falling back to commit list."
+            {
+              echo "Nouveautés :"
+              sed 's/^/- /' commits.txt
+            } > notes.txt
+          fi
+
+          {
+            echo "body<<COOKMATE_RELEASE_NOTES_EOF"
+            cat notes.txt
+            echo "COOKMATE_RELEASE_NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+  distribute-firebase:
+    name: Distribute to Firebase App Distribution
+    needs: [version, build-android, friendly-release-notes]
+    if: needs.version.outputs.new_tag != ''
+    runs-on: ubuntu-latest
+    steps:
       - name: Download APK artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: cookmate-apk
           path: artifacts
-      - name: Fetch GitHub Release notes
-        id: notes
-        run: |
-          release_body=""
-          for attempt in 1 2 3 4 5; do
-            if release_body="$(gh release view "$TAG" --json body --jq .body)"; then
-              break
-            fi
-            if [ "$attempt" -eq 5 ]; then
-              echo "Failed to fetch GitHub release notes for $TAG after 5 attempts." >&2
-              exit 1
-            fi
-            sleep $((attempt * 2))
-          done
-          {
-            echo "body<<COOKMATE_RELEASE_NOTES_EOF"
-            printf '%s\n' "$release_body"
-            echo "COOKMATE_RELEASE_NOTES_EOF"
-          } >> "$GITHUB_OUTPUT"
       - name: Upload APK to Firebase App Distribution
         uses: wzieba/Firebase-Distribution-Github-Action@bd494989dd4bec0343f78adee87fe66e48279ad6 # v1.7.1
         with:
           appId: ${{ secrets.FIREBASE_APP_ID }}
           serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
           groups: testers
-          file: artifacts/cookmate-${{ needs.version.outputs.new_tag }}.apk
-          releaseNotes: ${{ steps.notes.outputs.body }}
+          file: artifacts/cookmate-${{ needs.version.outputs.new_tag }}-arm64-v8a.apk
+          releaseNotes: ${{ needs.friendly-release-notes.outputs.body }}

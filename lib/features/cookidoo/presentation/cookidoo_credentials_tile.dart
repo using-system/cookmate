@@ -101,15 +101,11 @@ class CookidooCredentialsTile extends ConsumerWidget {
                 email: emailController.text.trim(),
                 password: passwordController.text,
               );
-              Navigator.of(ctx).pop();
-              // Write directly to storage to avoid triggering provider
-              // rebuilds while the dialog route is still animating out.
+              // Write to storage before closing — no provider involved yet.
               try {
                 final storage = await ref
                     .read(cookidooCredentialsStorageProvider.future);
                 await storage.write(credentials);
-                // Refresh the provider after the dialog is fully gone.
-                ref.invalidate(cookidooCredentialsProvider);
               } catch (_) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -119,7 +115,15 @@ class CookidooCredentialsTile extends ConsumerWidget {
                     ),
                   );
                 }
+                return;
               }
+              if (!ctx.mounted) return;
+              // Close the dialog and wait for it to fully animate out,
+              // then invalidate the provider so the tile picks up the
+              // new credentials without conflicting with the overlay.
+              await Navigator.of(ctx).maybePop();
+              await Future<void>.delayed(const Duration(milliseconds: 300));
+              ref.invalidate(cookidooCredentialsProvider);
             },
             child: Text(l10n.ok),
           ),

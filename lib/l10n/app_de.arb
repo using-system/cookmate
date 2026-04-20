@@ -123,5 +123,8 @@
   "chatRecipeInfoDietaryRestrictions": "Ernährungseinschränkungen",
   "chatRecipeInfoLanguage": "Sprache",
   "chatRenameConversation": "Unterhaltung umbenennen",
-  "chatRenameHint": "Name der Unterhaltung"
+  "chatRenameHint": "Name der Unterhaltung",
+  "settingsSectionActions": "Aktionen",
+  "settingsDeleteAllConversations": "Alle Unterhaltungen löschen",
+  "settingsDeleteAllConversationsConfirmation": "Alle Unterhaltungen löschen? Dies kann nicht rückgängig gemacht werden."
 }

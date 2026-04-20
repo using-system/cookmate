@@ -140,6 +140,48 @@ void main() {
       expect(list.first.id, 'c1');
     });
 
+    test('deleteAllConversations removes all conversations and messages',
+        () async {
+      final now = DateTime.now();
+      await chatDb.insertConversation(Conversation(
+        id: 'c1',
+        title: 'First',
+        createdAt: now,
+        updatedAt: now,
+      ));
+      await chatDb.insertConversation(Conversation(
+        id: 'c2',
+        title: 'Second',
+        createdAt: now,
+        updatedAt: now,
+      ));
+      await chatDb.insertMessage(ChatMessage(
+        id: 'm1',
+        conversationId: 'c1',
+        role: 'user',
+        content: 'Hello',
+        createdAt: now,
+      ));
+      await chatDb.insertMessage(ChatMessage(
+        id: 'm2',
+        conversationId: 'c2',
+        role: 'user',
+        content: 'World',
+        createdAt: now,
+      ));
+
+      await chatDb.deleteAllConversations();
+
+      expect(await chatDb.getConversations(), isEmpty);
+      expect(await chatDb.getMessages('c1'), isEmpty);
+      expect(await chatDb.getMessages('c2'), isEmpty);
+    });
+
+    test('deleteAllConversations on empty database does nothing', () async {
+      await chatDb.deleteAllConversations();
+      expect(await chatDb.getConversations(), isEmpty);
+    });
+
     test('deleteConversation removes conversation and its messages', () async {
       final now = DateTime.now();
       await chatDb.insertConversation(Conversation(

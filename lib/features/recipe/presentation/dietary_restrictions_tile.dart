@@ -49,7 +49,6 @@ class DietaryRestrictionsTile extends ConsumerWidget {
             ],
           ),
         );
-        controller.dispose();
         if (result != null && result != current) {
           try {
             final config = configAsync.valueOrNull ?? const RecipeConfig();

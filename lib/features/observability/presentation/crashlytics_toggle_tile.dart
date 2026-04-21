@@ -18,7 +18,7 @@ class CrashlyticsToggleTile extends ConsumerWidget {
       title: Text(l10n.settingsCrashlyticsTitle),
       subtitle: Text(l10n.settingsCrashlyticsDescription),
       value: enabled,
-      onChanged: (value) async {
+      onChanged: crashlyticsAsync.isLoading ? null : (value) async {
         try {
           await ref
               .read(crashlyticsPreferenceProvider.notifier)

@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/skill.dart';
-import '../domain/skill_loader.dart';
+import '../providers.dart';
 
-class SkillsSection extends StatefulWidget {
+class SkillsSection extends ConsumerStatefulWidget {
   const SkillsSection({super.key});
 
   @override
-  State<SkillsSection> createState() => _SkillsSectionState();
+  ConsumerState<SkillsSection> createState() => _SkillsSectionState();
 }
 
-class _SkillsSectionState extends State<SkillsSection> {
+class _SkillsSectionState extends ConsumerState<SkillsSection> {
   List<Skill> _skills = [];
   SharedPreferences? _prefs;
 
@@ -24,9 +25,7 @@ class _SkillsSectionState extends State<SkillsSection> {
   }
 
   Future<void> _load() async {
-    final skills = await SkillLoader.loadFromAssets(
-      DefaultAssetBundle.of(context),
-    );
+    final skills = await ref.read(allSkillsProvider.future);
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
@@ -53,6 +52,9 @@ class _SkillsSectionState extends State<SkillsSection> {
             onChanged: (enabled) async {
               await _prefs!.setBool(_key(skill.name), enabled);
               setState(() {});
+              // Invalidate so the chat picks up the change.
+              ref.invalidate(skillPreferencesStorageProvider);
+              ref.invalidate(skillRegistryProvider);
             },
           ),
           const Divider(height: 1),

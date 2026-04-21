@@ -935,6 +935,13 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Recreate the chat when skill config changes (e.g. user toggled a skill).
+    ref.listen(skillRegistryProvider, (prev, next) {
+      if (prev != next && _modelReady && !_isGenerating) {
+        _createChat();
+      }
+    });
+
     if (!_modelReady) {
       return ModelDownloadPage(
         onComplete: () {

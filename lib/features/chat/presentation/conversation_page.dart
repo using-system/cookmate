@@ -220,12 +220,17 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         }
       }
 
+      final chat = _chat;
+      if (chat == null) {
+        if (mounted) {
+          setState(() => _chatError = 'Model initialization failed');
+        }
+        return;
+      }
+
       if (mounted) {
         setState(() => _chatError = null);
       }
-
-      final chat = _chat;
-      if (chat == null) return;
       final repo = await ref.read(chatRepositoryProvider.future);
       final messages = await repo.getMessages(widget.conversationId);
       for (final msg in messages) {
@@ -484,6 +489,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   }
 
   Future<void> _streamAiResponse() async {
+    final chat = _chat;
+    if (chat == null) return;
+
     final streamId = _uuid.v4();
     final streamMsgId = _uuid.v4();
     final now = DateTime.now();
@@ -508,9 +516,6 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     int _repeatCount = 0;
     const _maxRepeat = 12;
     bool _hadToolCall = false;
-
-    final chat = _chat;
-    if (chat == null) return;
 
     try {
       await for (final response in chat.generateChatResponseAsync()) {
@@ -584,7 +589,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           if (mounted) {
             final toolReg = ref.read(toolRegistryProvider);
             final toolResult = await toolReg.handle(response, context);
-            if (toolResult != null && _chat != null) {
+            if (toolResult != null && _chat == chat) {
               _hadToolCall = true;
               await chat.addQueryChunk(gemma.Message.toolResponse(
                 toolName: toolResult.name,
@@ -597,7 +602,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           final toolReg = ref.read(toolRegistryProvider);
           for (final call in response.calls) {
             final toolResult = await toolReg.handle(call, context);
-            if (toolResult != null && _chat != null) {
+            if (toolResult != null && _chat == chat) {
               _hadToolCall = true;
               await chat.addQueryChunk(gemma.Message.toolResponse(
                 toolName: toolResult.name,
@@ -610,7 +615,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
       // After stream ends, if a tool was called, re-generate so the LLM
       // produces its final answer using the tool results as context.
-      if (_hadToolCall && mounted && _chat != null) {
+      if (_hadToolCall && mounted && _chat == chat) {
         debugPrint('>>> Re-generating after tool call...');
         int tokenCount = 0;
         await for (final response in chat.generateChatResponseAsync()) {

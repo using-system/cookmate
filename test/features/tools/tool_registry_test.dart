@@ -22,8 +22,10 @@ class _FakeHandler extends ToolHandler {
       );
 
   @override
-  Future<void> execute(Map<String, dynamic> args, BuildContext context) async {
+  Future<Map<String, dynamic>?> execute(
+      Map<String, dynamic> args, BuildContext context) async {
     lastCalledWith = args['value'] as String?;
+    return {'status': 'ok'};
   }
 }
 

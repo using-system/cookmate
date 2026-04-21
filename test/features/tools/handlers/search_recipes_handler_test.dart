@@ -121,7 +121,6 @@ void main() {
     });
 
     test('returns error key on network exception', () async {
-      final repo = _FakeRepository();
       // Override to throw a network exception.
       final handler = SearchRecipesHandler(_ThrowingRepository());
 

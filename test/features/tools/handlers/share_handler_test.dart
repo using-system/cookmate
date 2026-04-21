@@ -1,8 +1,5 @@
 import 'package:cookmate/features/tools/handlers/share_handler.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-class _FakeBuildContext extends Fake implements BuildContext {}
 
 void main() {
   group('ShareHandler definition', () {

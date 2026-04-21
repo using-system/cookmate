@@ -171,7 +171,7 @@ void main() {
   });
 
   group('CookidooRecipeDetail.fromJson', () {
-    Map<String, dynamic> _fullJson() => {
+    Map<String, dynamic> fullJson() => {
           'id': 'r145192',
           'title': 'Bolognese',
           'aggregateRating': {'ratingValue': 4.7},
@@ -221,7 +221,7 @@ void main() {
         };
 
     test('parses a complete recipe detail', () {
-      final detail = CookidooRecipeDetail.fromJson(_fullJson());
+      final detail = CookidooRecipeDetail.fromJson(fullJson());
 
       expect(detail.id, 'r145192');
       expect(detail.title, 'Bolognese');
@@ -238,13 +238,13 @@ void main() {
     });
 
     test('image transformation is applied', () {
-      final detail = CookidooRecipeDetail.fromJson(_fullJson());
+      final detail = CookidooRecipeDetail.fromJson(fullJson());
       expect(detail.imageUrl, contains('t_web_rdp_recipe_584x480_1_5x'));
       expect(detail.imageUrl, isNot(contains('{transformation}')));
     });
 
     test('falls back to rating field when aggregateRating is absent', () {
-      final json = _fullJson()
+      final json = fullJson()
         ..remove('aggregateRating')
         ..['rating'] = 3.8;
 
@@ -254,7 +254,7 @@ void main() {
     });
 
     test('falls back to totalTime field when times array is absent', () {
-      final json = _fullJson()
+      final json = fullJson()
         ..remove('times')
         ..['totalTime'] = 1800;
 
@@ -264,7 +264,7 @@ void main() {
     });
 
     test('uses descriptiveAssets for image when image field is absent', () {
-      final json = _fullJson()..remove('image');
+      final json = fullJson()..remove('image');
       json['descriptiveAssets'] = [
         {'square': 'https://cdn.example.com/{transformation}/square.jpg'},
       ];
@@ -276,7 +276,7 @@ void main() {
     });
 
     test('nutrition is null when nutritionGroups is absent', () {
-      final json = _fullJson()..remove('nutritionGroups');
+      final json = fullJson()..remove('nutritionGroups');
 
       final detail = CookidooRecipeDetail.fromJson(json);
 
@@ -284,7 +284,7 @@ void main() {
     });
 
     test('nutrition is null when nutritionGroups is empty', () {
-      final json = _fullJson();
+      final json = fullJson();
       json['nutritionGroups'] = <dynamic>[];
 
       final detail = CookidooRecipeDetail.fromJson(json);
@@ -293,7 +293,7 @@ void main() {
     });
 
     test('empty lists when ingredient/step groups are absent', () {
-      final json = _fullJson()
+      final json = fullJson()
         ..remove('recipeIngredientGroups')
         ..remove('recipeStepGroups');
 
@@ -304,7 +304,7 @@ void main() {
     });
 
     test('servingSize is trimmed when unit is absent', () {
-      final json = _fullJson();
+      final json = fullJson();
       json['servingSize'] = {'quantity': null, 'unitNotation': null};
 
       final detail = CookidooRecipeDetail.fromJson(json);

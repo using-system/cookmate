@@ -4,7 +4,6 @@ import 'package:cookmate/features/cookidoo/data/cookidoo_client.dart';
 import 'package:cookmate/features/cookidoo/data/cookidoo_repository_impl.dart';
 import 'package:cookmate/features/cookidoo/domain/models/cookidoo_credentials.dart';
 import 'package:cookmate/features/cookidoo/domain/models/cookidoo_exceptions.dart';
-import 'package:cookmate/features/cookidoo/domain/models/cookidoo_recipe_overview.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';

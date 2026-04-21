@@ -80,7 +80,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   void initState() {
     super.initState();
     _loadMessages();
-    _initModel();
+    // Defer model init to let the UI render first.
+    Future.microtask(() => _initModel());
   }
 
   @override
@@ -230,6 +231,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         await _chat!.addQueryChunk(
           gemma.Message.text(text: msg.content, isUser: msg.role == 'user'),
         );
+        // Yield to the UI between history messages to keep input responsive.
+        await Future<void>.delayed(Duration.zero);
       }
     } catch (e, stack) {
       debugPrint('Failed to create chat: $e\n$stack');
@@ -561,6 +564,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             lastUpdate = DateTime.now();
             _streamStates.set(
                 streamId, StreamStateStreaming(buffer.toString()));
+            // Yield to let the UI process frames (input, scrolling).
+            await Future<void>.delayed(Duration.zero);
           }
         } else if (response is FunctionCallResponse) {
           if (mounted) {
@@ -606,6 +611,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               lastUpdate = DateTime.now();
               _streamStates.set(
                   streamId, StreamStateStreaming(buffer.toString()));
+              await Future<void>.delayed(Duration.zero);
             }
           } else if (response is FunctionCallResponse) {
             debugPrint('>>> Re-gen: LLM called another tool: ${response.name}');

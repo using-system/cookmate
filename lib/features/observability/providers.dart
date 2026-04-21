@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,8 +25,10 @@ class CrashlyticsPreferenceNotifier extends AsyncNotifier<bool> {
     state = const AsyncValue<bool>.loading().copyWithPrevious(state);
     try {
       await storage.write(enabled);
-      await FirebaseCrashlytics.instance
-          .setCrashlyticsCollectionEnabled(enabled);
+      if (Firebase.apps.isNotEmpty) {
+        await FirebaseCrashlytics.instance
+            .setCrashlyticsCollectionEnabled(enabled);
+      }
       state = AsyncValue.data(enabled);
     } catch (error, stack) {
       state =

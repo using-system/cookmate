@@ -31,8 +31,8 @@ void main() {
 
         FlutterError.onError =
             FirebaseCrashlytics.instance.recordFlutterFatalError;
-      } catch (e) {
-        debugPrint('Firebase init skipped: $e');
+      } catch (e, stack) {
+        debugPrint('Firebase init skipped: $e\n$stack');
       }
 
       await FlutterGemma.initialize();

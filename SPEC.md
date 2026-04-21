@@ -33,6 +33,10 @@
 - ToolRegistry dispatches flutter_gemma `FunctionCallResponse` to matching handlers
 - share_plus (native share sheet for Android/iOS)
 
+## Cookidoo Integration
+
+- http (REST client for Cookidoo recipe search and detail APIs)
+
 ## Chat UI
 
 - flutter_chat_ui (Flyer Chat v2 — message list, composer, streaming)

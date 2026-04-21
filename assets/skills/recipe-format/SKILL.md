@@ -1,6 +1,7 @@
 ---
 name: recipe-format
 description: Output format and Thermomix rules for recipes in the chat.
+tools: []
 ---
 
 # Recipe format

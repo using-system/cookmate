@@ -10,5 +10,9 @@ abstract class ToolHandler {
   Tool get definition;
 
   /// Execute this tool with the args provided by the LLM.
-  Future<void> execute(Map<String, dynamic> args, BuildContext context);
+  ///
+  /// Return a result map to send back to the LLM via [Message.toolResponse],
+  /// or `null` for fire-and-forget tools (e.g. share).
+  Future<Map<String, dynamic>?> execute(
+      Map<String, dynamic> args, BuildContext context);
 }

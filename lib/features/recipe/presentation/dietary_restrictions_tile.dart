@@ -26,6 +26,7 @@ class DietaryRestrictionsTile extends ConsumerWidget {
         final controller = TextEditingController(text: current);
         final result = await showDialog<String>(
           context: context,
+          useRootNavigator: true,
           builder: (ctx) => AlertDialog(
             title: Text(l10n.settingsDietaryRestrictionsDialogTitle),
             content: TextField(
@@ -48,7 +49,6 @@ class DietaryRestrictionsTile extends ConsumerWidget {
             ],
           ),
         );
-        controller.dispose();
         if (result != null && result != current) {
           try {
             final config = configAsync.valueOrNull ?? const RecipeConfig();

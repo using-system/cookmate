@@ -80,7 +80,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   void initState() {
     super.initState();
     _loadMessages();
-    _initModel();
+    // Defer model init to let the UI render first.
+    Future.microtask(() => _initModel());
   }
 
   @override
@@ -230,6 +231,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         await _chat!.addQueryChunk(
           gemma.Message.text(text: msg.content, isUser: msg.role == 'user'),
         );
+        // Yield to the UI between history messages to keep input responsive.
+        await Future<void>.delayed(Duration.zero);
       }
     } catch (e, stack) {
       debugPrint('Failed to create chat: $e\n$stack');
@@ -494,6 +497,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     String? _lastToken;
     int _repeatCount = 0;
     const _maxRepeat = 12;
+    bool _hadToolCall = false;
 
     try {
       await for (final response in _chat!.generateChatResponseAsync()) {
@@ -560,19 +564,60 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             lastUpdate = DateTime.now();
             _streamStates.set(
                 streamId, StreamStateStreaming(buffer.toString()));
+            // Yield to let the UI process frames (input, scrolling).
+            await Future<void>.delayed(Duration.zero);
           }
         } else if (response is FunctionCallResponse) {
           if (mounted) {
             final toolReg = ref.read(toolRegistryProvider);
-            await toolReg.handle(response, context);
+            final toolResult = await toolReg.handle(response, context);
+            if (toolResult != null && _chat != null) {
+              _hadToolCall = true;
+              await _chat!.addQueryChunk(gemma.Message.toolResponse(
+                toolName: toolResult.name,
+                response: toolResult.result,
+              ));
+            }
           }
         } else if (response is ParallelFunctionCallResponse) {
           if (!mounted) continue;
           final toolReg = ref.read(toolRegistryProvider);
           for (final call in response.calls) {
-            await toolReg.handle(call, context);
+            final toolResult = await toolReg.handle(call, context);
+            if (toolResult != null && _chat != null) {
+              _hadToolCall = true;
+              await _chat!.addQueryChunk(gemma.Message.toolResponse(
+                toolName: toolResult.name,
+                response: toolResult.result,
+              ));
+            }
           }
         }
+      }
+
+      // After stream ends, if a tool was called, re-generate so the LLM
+      // produces its final answer using the tool results as context.
+      if (_hadToolCall && mounted && _chat != null) {
+        debugPrint('>>> Re-generating after tool call...');
+        int tokenCount = 0;
+        await for (final response in _chat!.generateChatResponseAsync()) {
+          if (!mounted) break;
+          debugPrint('>>> Re-gen response: ${response.runtimeType}');
+          if (response is TextResponse) {
+            tokenCount++;
+            buffer.write(response.token);
+            final elapsed = DateTime.now().difference(lastUpdate);
+            if (mounted && elapsed >= throttle) {
+              lastUpdate = DateTime.now();
+              _streamStates.set(
+                  streamId, StreamStateStreaming(buffer.toString()));
+              await Future<void>.delayed(Duration.zero);
+            }
+          } else if (response is FunctionCallResponse) {
+            debugPrint('>>> Re-gen: LLM called another tool: ${response.name}');
+          }
+        }
+        debugPrint('>>> Re-gen done: $tokenCount tokens');
       }
     } catch (e, stack) {
       debugPrint('Stream error: $e\n$stack');
@@ -723,6 +768,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     final reasoning = await ref.read(chatReasoningPreferenceProvider.future);
     final expertConfig = await ref.read(chatExpertConfigProvider.future);
     final recipeConfig = await ref.read(recipeConfigProvider.future);
+    final allSkills = await ref.read(allSkillsProvider.future);
+    final skillPrefs =
+        await ref.read(skillPreferencesStorageProvider.future);
 
     if (!mounted) return;
 
@@ -756,8 +804,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
     await showDialog<void>(
       context: context,
+      useRootNavigator: true,
       builder: (ctx) => DefaultTabController(
-        length: 2,
+        length: 3,
         child: Dialog(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -765,6 +814,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               TabBar(
                 tabs: [
                   Tab(text: l10n.chatInfoTabRecipe),
+                  Tab(text: l10n.chatInfoTabSkills),
                   Tab(text: l10n.chatInfoTabAi),
                 ],
               ),
@@ -809,6 +859,30 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
                           title: Text(l10n.chatRecipeInfoLanguage),
                           subtitle: Text(languageLabel),
                         ),
+                      ],
+                    ),
+                    ListView(
+                      shrinkWrap: true,
+                      children: [
+                        for (final skill in allSkills)
+                          ListTile(
+                            leading: Icon(
+                              skillPrefs.isEnabled(skill.name)
+                                  ? Icons.check_circle
+                                  : Icons.cancel_outlined,
+                              color: skillPrefs.isEnabled(skill.name)
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                            ),
+                            title: Text(skill.name),
+                            subtitle: Text(
+                              skill.description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                       ],
                     ),
                     ListView(
@@ -890,6 +964,13 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Recreate the chat when skill config changes (e.g. user toggled a skill).
+    ref.listen(skillRegistryProvider, (prev, next) {
+      if (prev != next && _modelReady && !_isGenerating) {
+        _createChat();
+      }
+    });
+
     if (!_modelReady) {
       return ModelDownloadPage(
         onComplete: () {
@@ -1068,6 +1149,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
                         ? SendButtonVisibilityMode.always
                         : SendButtonVisibilityMode.disabled,
                     allowEmptyMessage: hasPending,
+                    inputClearMode: _chat != null
+                        ? InputClearMode.always
+                        : InputClearMode.never,
                   );
                 },
                 imageMessageBuilder: (

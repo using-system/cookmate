@@ -117,6 +117,7 @@
   "settingsDietaryRestrictionsNone": "Aucune",
   "settingsRecipeChangeFailureSnackbar": "Impossible de sauvegarder les réglages recette. Réessayez.",
   "chatInfoTabRecipe": "Recette",
+  "chatInfoTabSkills": "Skills",
   "chatInfoTabAi": "IA",
   "chatRecipeInfoTmVersion": "Version TM",
   "chatRecipeInfoUnitSystem": "Système d'unités",
@@ -128,5 +129,18 @@
   "chatRenameHint": "Nom de la conversation",
   "settingsSectionActions": "Actions",
   "settingsDeleteAllConversations": "Supprimer toutes les conversations",
-  "settingsDeleteAllConversationsConfirmation": "Supprimer toutes les conversations ? Cette action est irréversible."
+  "settingsDeleteAllConversationsConfirmation": "Supprimer toutes les conversations ? Cette action est irréversible.",
+
+  "settingsSectionSkills": "Skills",
+
+  "settingsSectionCookidoo": "Cookidoo",
+  "settingsCookidooEmailTitle": "Email",
+  "settingsCookidooEmailHint": "Email du compte Cookidoo",
+  "settingsCookidooPasswordTitle": "Mot de passe",
+  "settingsCookidooPasswordHint": "Mot de passe du compte Cookidoo",
+  "settingsCookidooTest": "Tester",
+  "settingsCookidooTestSuccess": "Connexion réussie !",
+  "settingsCookidooTestFailure": "Échec de connexion. Vérifiez vos identifiants.",
+  "settingsCookidooNotConfigured": "Non configuré",
+  "settingsCookidooChangeFailureSnackbar": "Impossible de sauvegarder les identifiants Cookidoo. Réessayez."
 }

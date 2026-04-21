@@ -29,11 +29,12 @@ class ShareHandler extends ToolHandler {
       );
 
   @override
-  Future<void> execute(
+  Future<Map<String, dynamic>?> execute(
       Map<String, dynamic> args, BuildContext context) async {
     final title = args['title'] as String? ?? '';
     final content = args['content'] as String? ?? '';
     final text = title.isNotEmpty ? '$title\n\n$content' : content;
     await SharePlus.instance.share(ShareParams(text: text));
+    return null; // Fire-and-forget, no result to send back to LLM.
   }
 }

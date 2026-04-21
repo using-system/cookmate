@@ -9,6 +9,7 @@ import 'skill.dart';
 const _skillAssetPaths = [
   'assets/skills/share-recipe/SKILL.md',
   'assets/skills/recipe-format/SKILL.md',
+  'assets/skills/search-recipe/SKILL.md',
 ];
 
 class SkillLoader {
@@ -29,12 +30,16 @@ class SkillLoader {
     }
 
     final description = yamlMap['description'] as String? ?? '';
+    final toolsRaw = yamlMap['tools'] as YamlList?;
+    final tools =
+        toolsRaw?.map((e) => e.toString()).toList() ?? const <String>[];
     final instructions = raw.substring(fmMatch.end).trim();
 
     return Skill(
       name: name,
       description: description,
       instructions: instructions,
+      tools: tools,
     );
   }
 

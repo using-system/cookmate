@@ -1,6 +1,7 @@
 ---
 name: share-recipe
 description: Share a recipe with another app (WhatsApp, email, Telegram, etc.).
+tools: [share_recipe]
 ---
 
 # Share recipe

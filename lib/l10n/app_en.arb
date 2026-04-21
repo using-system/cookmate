@@ -440,5 +440,17 @@
   "@settingsCookidooNotConfigured": { "description": "Subtitle shown when Cookidoo credentials are not set." },
 
   "settingsCookidooChangeFailureSnackbar": "Couldn't save Cookidoo credentials. Please try again.",
-  "@settingsCookidooChangeFailureSnackbar": { "description": "Shown when persisting Cookidoo credentials fails." }
+  "@settingsCookidooChangeFailureSnackbar": { "description": "Shown when persisting Cookidoo credentials fails." },
+
+  "settingsSectionObservability": "Observability",
+  "@settingsSectionObservability": { "description": "Section header for observability settings." },
+
+  "settingsCrashlyticsTitle": "Crash reporting",
+  "@settingsCrashlyticsTitle": { "description": "Title of the crash reporting toggle tile." },
+
+  "settingsCrashlyticsDescription": "Send anonymous crash reports to help improve the app",
+  "@settingsCrashlyticsDescription": { "description": "Subtitle explaining what crash reporting does." },
+
+  "settingsCrashlyticsChangeFailureSnackbar": "Couldn't change crash reporting setting. Please try again.",
+  "@settingsCrashlyticsChangeFailureSnackbar": { "description": "Shown when persisting the crash reporting toggle fails." }
 }

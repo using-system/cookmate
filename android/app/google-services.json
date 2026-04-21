@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "691874426189",
+    "project_id": "cookmate-d8571",
+    "storage_bucket": "cookmate-d8571.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:691874426189:android:344aae686c918f34b49b04",
+        "android_client_info": {
+          "package_name": "com.cookmate.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrNYwZRbCxStw-UJ5ewvRka7r516T7MK0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -142,5 +142,10 @@
   "settingsCookidooTestSuccess": "¡Conexión exitosa!",
   "settingsCookidooTestFailure": "Conexión fallida. Verifica tus credenciales.",
   "settingsCookidooNotConfigured": "No configurado",
-  "settingsCookidooChangeFailureSnackbar": "No se pudieron guardar las credenciales de Cookidoo. Inténtalo de nuevo."
+  "settingsCookidooChangeFailureSnackbar": "No se pudieron guardar las credenciales de Cookidoo. Inténtalo de nuevo.",
+
+  "settingsSectionObservability": "Observabilidad",
+  "settingsCrashlyticsTitle": "Informe de fallos",
+  "settingsCrashlyticsDescription": "Enviar informes de fallos anónimos para mejorar la aplicación",
+  "settingsCrashlyticsChangeFailureSnackbar": "No se pudo cambiar la configuración de informe de fallos. Inténtelo de nuevo."
 }

@@ -15,6 +15,7 @@ import '../../recipe/presentation/level_picker_tile.dart';
 import '../../recipe/presentation/portions_picker_tile.dart';
 import '../../recipe/presentation/tm_version_picker_tile.dart';
 import '../../recipe/presentation/unit_system_picker_tile.dart';
+import '../../observability/presentation/observability_section.dart';
 import '../../theme/presentation/theme_picker_tile.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -76,6 +77,11 @@ class SettingsPage extends ConsumerWidget {
           const Divider(height: 1),
           const ThemePickerTile(),
           const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Text(l10n.settingsSectionObservability, style: sectionStyle),
+          ),
+          const ObservabilitySection(),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
             child: Text(l10n.settingsSectionActions, style: sectionStyle),

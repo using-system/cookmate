@@ -406,6 +406,9 @@
   "settingsDeleteAllConversationsConfirmation": "Delete all conversations? This cannot be undone.",
   "@settingsDeleteAllConversationsConfirmation": { "description": "Confirmation prompt before deleting all conversations." },
 
+  "settingsSectionSkills": "Skills",
+  "@settingsSectionSkills": { "description": "Section header for skill toggles in settings." },
+
   "settingsSectionCookidoo": "Cookidoo",
   "@settingsSectionCookidoo": { "description": "Section header for Cookidoo settings." },
 

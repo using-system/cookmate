@@ -130,6 +130,8 @@
   "settingsDeleteAllConversations": "Alle Unterhaltungen löschen",
   "settingsDeleteAllConversationsConfirmation": "Alle Unterhaltungen löschen? Dies kann nicht rückgängig gemacht werden.",
 
+  "settingsSectionSkills": "Skills",
+
   "settingsSectionCookidoo": "Cookidoo",
   "settingsCookidooEmailTitle": "E-Mail",
   "settingsCookidooEmailHint": "Cookidoo-Konto-E-Mail",

@@ -1,6 +1,7 @@
 ---
 name: search-recipe
 description: Search for Thermomix recipes on Cookidoo for inspiration.
+tools: [search_recipes, get_recipe_detail]
 ---
 
 # Search recipe

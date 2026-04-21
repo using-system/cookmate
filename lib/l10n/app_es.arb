@@ -130,6 +130,8 @@
   "settingsDeleteAllConversations": "Eliminar todas las conversaciones",
   "settingsDeleteAllConversationsConfirmation": "¿Eliminar todas las conversaciones? Esta acción no se puede deshacer.",
 
+  "settingsSectionSkills": "Skills",
+
   "settingsSectionCookidoo": "Cookidoo",
   "settingsCookidooEmailTitle": "Email",
   "settingsCookidooEmailHint": "Email de la cuenta Cookidoo",

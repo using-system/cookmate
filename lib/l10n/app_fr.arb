@@ -130,6 +130,8 @@
   "settingsDeleteAllConversations": "Supprimer toutes les conversations",
   "settingsDeleteAllConversationsConfirmation": "Supprimer toutes les conversations ? Cette action est irréversible.",
 
+  "settingsSectionSkills": "Skills",
+
   "settingsSectionCookidoo": "Cookidoo",
   "settingsCookidooEmailTitle": "Email",
   "settingsCookidooEmailHint": "Email du compte Cookidoo",

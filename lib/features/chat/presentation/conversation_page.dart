@@ -220,15 +220,22 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         }
       }
 
+      final chat = _chat;
+      if (chat == null) {
+        if (mounted) {
+          setState(() => _chatError = 'Model initialization failed');
+        }
+        return;
+      }
+
       if (mounted) {
         setState(() => _chatError = null);
       }
-
       final repo = await ref.read(chatRepositoryProvider.future);
       final messages = await repo.getMessages(widget.conversationId);
       for (final msg in messages) {
         if (msg.content.isEmpty) continue;
-        await _chat!.addQueryChunk(
+        await chat.addQueryChunk(
           gemma.Message.text(text: msg.content, isUser: msg.role == 'user'),
         );
         // Yield to the UI between history messages to keep input responsive.
@@ -290,7 +297,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             onError: (e, s) => debugPrint('Persist failed: $e\n$s'),
           );
 
-      await _chat!.addQueryChunk(gemma.Message.text(text: text, isUser: true));
+      final chat = _chat;
+      if (chat == null) return;
+      await chat.addQueryChunk(gemma.Message.text(text: text, isUser: true));
 
       await _streamAiResponse();
     } catch (e, stack) {
@@ -303,7 +312,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   }
 
   Future<void> _doSendAudioWithText(String text) async {
-    final audioPath = _pendingAudioPath!;
+    final audioPath = _pendingAudioPath;
+    if (audioPath == null) return;
 
     try {
       final audioBytes = await File(audioPath).readAsBytes();
@@ -336,7 +346,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
       final prompt = text.trim().isNotEmpty ? text.trim() : l10n.chatAudioPrompt;
 
-      await _chat!.addQueryChunk(
+      final chat = _chat;
+      if (chat == null) return;
+      await chat.addQueryChunk(
         gemma.Message.withAudio(
           text: prompt,
           audioBytes: audioBytes,
@@ -380,7 +392,8 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   }
 
   Future<void> _doSendImageWithText(String text) async {
-    final imagePath = _pendingImagePath!;
+    final imagePath = _pendingImagePath;
+    if (imagePath == null) return;
 
     try {
       final imageBytes = await File(imagePath).readAsBytes();
@@ -414,7 +427,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       final prompt = text.trim().isNotEmpty ? text.trim() : l10n.chatImagePrompt;
 
       // Send to InferenceChat with image.
-      await _chat!.addQueryChunk(
+      final chat = _chat;
+      if (chat == null) return;
+      await chat.addQueryChunk(
         gemma.Message.withImage(
           text: prompt,
           imageBytes: imageBytes,
@@ -474,6 +489,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
   }
 
   Future<void> _streamAiResponse() async {
+    final chat = _chat;
+    if (chat == null) return;
+
     final streamId = _uuid.v4();
     final streamMsgId = _uuid.v4();
     final now = DateTime.now();
@@ -500,7 +518,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     bool _hadToolCall = false;
 
     try {
-      await for (final response in _chat!.generateChatResponseAsync()) {
+      await for (final response in chat.generateChatResponseAsync()) {
         if (!mounted) break;
 
         if (response is ThinkingResponse) {
@@ -571,9 +589,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           if (mounted) {
             final toolReg = ref.read(toolRegistryProvider);
             final toolResult = await toolReg.handle(response, context);
-            if (toolResult != null && _chat != null) {
+            if (toolResult != null && _chat == chat) {
               _hadToolCall = true;
-              await _chat!.addQueryChunk(gemma.Message.toolResponse(
+              await chat.addQueryChunk(gemma.Message.toolResponse(
                 toolName: toolResult.name,
                 response: toolResult.result,
               ));
@@ -584,9 +602,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
           final toolReg = ref.read(toolRegistryProvider);
           for (final call in response.calls) {
             final toolResult = await toolReg.handle(call, context);
-            if (toolResult != null && _chat != null) {
+            if (toolResult != null && _chat == chat) {
               _hadToolCall = true;
-              await _chat!.addQueryChunk(gemma.Message.toolResponse(
+              await chat.addQueryChunk(gemma.Message.toolResponse(
                 toolName: toolResult.name,
                 response: toolResult.result,
               ));
@@ -597,10 +615,10 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
       // After stream ends, if a tool was called, re-generate so the LLM
       // produces its final answer using the tool results as context.
-      if (_hadToolCall && mounted && _chat != null) {
+      if (_hadToolCall && mounted && _chat == chat) {
         debugPrint('>>> Re-generating after tool call...');
         int tokenCount = 0;
-        await for (final response in _chat!.generateChatResponseAsync()) {
+        await for (final response in chat.generateChatResponseAsync()) {
           if (!mounted) break;
           debugPrint('>>> Re-gen response: ${response.runtimeType}');
           if (response is TextResponse) {

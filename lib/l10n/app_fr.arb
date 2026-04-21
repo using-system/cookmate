@@ -142,5 +142,10 @@
   "settingsCookidooTestSuccess": "Connexion réussie !",
   "settingsCookidooTestFailure": "Échec de connexion. Vérifiez vos identifiants.",
   "settingsCookidooNotConfigured": "Non configuré",
-  "settingsCookidooChangeFailureSnackbar": "Impossible de sauvegarder les identifiants Cookidoo. Réessayez."
+  "settingsCookidooChangeFailureSnackbar": "Impossible de sauvegarder les identifiants Cookidoo. Réessayez.",
+
+  "settingsSectionObservability": "Observabilité",
+  "settingsCrashlyticsTitle": "Rapport de plantage",
+  "settingsCrashlyticsDescription": "Envoyer des rapports de plantage anonymes pour améliorer l'application",
+  "settingsCrashlyticsChangeFailureSnackbar": "Impossible de modifier le paramètre de rapport de plantage. Veuillez réessayer."
 }

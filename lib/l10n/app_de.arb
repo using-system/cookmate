@@ -142,5 +142,10 @@
   "settingsCookidooTestSuccess": "Verbindung erfolgreich!",
   "settingsCookidooTestFailure": "Verbindung fehlgeschlagen. Bitte Zugangsdaten prüfen.",
   "settingsCookidooNotConfigured": "Nicht konfiguriert",
-  "settingsCookidooChangeFailureSnackbar": "Cookidoo-Zugangsdaten konnten nicht gespeichert werden. Bitte versuche es erneut."
+  "settingsCookidooChangeFailureSnackbar": "Cookidoo-Zugangsdaten konnten nicht gespeichert werden. Bitte versuche es erneut.",
+
+  "settingsSectionObservability": "Beobachtbarkeit",
+  "settingsCrashlyticsTitle": "Absturzbericht",
+  "settingsCrashlyticsDescription": "Anonyme Absturzberichte senden, um die App zu verbessern",
+  "settingsCrashlyticsChangeFailureSnackbar": "Absturzbericht-Einstellung konnte nicht geändert werden. Bitte versuchen Sie es erneut."
 }

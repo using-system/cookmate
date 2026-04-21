@@ -50,6 +50,11 @@
 - record (live audio recording)
 - just_audio (audio playback in chat bubbles)
 
+## Observability
+
+- firebase_core (Firebase initialization)
+- firebase_crashlytics (opt-in crash reporting)
+
 ## Internationalization
 
 - flutter_localizations (ARB-based, 4 locales: en, fr, de, es)

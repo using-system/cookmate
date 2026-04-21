@@ -1149,6 +1149,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
                         ? SendButtonVisibilityMode.always
                         : SendButtonVisibilityMode.disabled,
                     allowEmptyMessage: hasPending,
+                    inputClearMode: _chat != null
+                        ? InputClearMode.always
+                        : InputClearMode.never,
                   );
                 },
                 imageMessageBuilder: (

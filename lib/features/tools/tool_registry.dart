@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_gemma/core/model_response.dart';
 import 'package:flutter_gemma/core/tool.dart';
@@ -42,11 +43,15 @@ class ToolRegistry {
   /// fire-and-forget or not found.
   Future<({String name, Map<String, dynamic> result})?> handle(
       FunctionCallResponse response, BuildContext context) async {
-    debugPrint(
-        '>>> ToolRegistry.handle: "${response.name}" args=${response.args}');
+    if (kDebugMode) {
+      debugPrint(
+          '>>> ToolRegistry.handle: "${response.name}" args=${response.args}');
+    }
     final handler = _handlers[response.name];
     if (handler == null) {
-      debugPrint('>>> ToolRegistry: no handler for "${response.name}"');
+      if (kDebugMode) {
+        debugPrint('>>> ToolRegistry: no handler for "${response.name}"');
+      }
       return null;
     }
     final result = await handler.execute(response.args, context);

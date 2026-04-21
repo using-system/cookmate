@@ -37,7 +37,7 @@ class SearchRecipesHandler extends ToolHandler {
   Future<Map<String, dynamic>?> execute(
       Map<String, dynamic> args, BuildContext context) async {
     final query = args['query'] as String? ?? '';
-    final limit = args['limit'] as int? ?? 5;
+    final limit = (args['limit'] as num?)?.toInt() ?? 5;
 
     debugPrint('>>> SearchRecipesHandler.execute: query="$query" limit=$limit');
 

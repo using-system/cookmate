@@ -72,6 +72,9 @@ class GetRecipeDetailHandler extends ToolHandler {
     } on CookidooNetworkException catch (e) {
       debugPrint('>>> GetRecipeDetailHandler: network error — $e');
       return {'error': 'Network error: $e'};
+    } catch (e) {
+      debugPrint('>>> GetRecipeDetailHandler: unexpected error — $e');
+      return {'error': 'Unexpected error fetching recipe'};
     }
   }
 }

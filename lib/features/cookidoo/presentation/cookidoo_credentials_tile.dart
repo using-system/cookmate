@@ -1,4 +1,5 @@
 import 'package:cookmate/l10n/app_localizations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,7 +23,7 @@ class CookidooCredentialsTile extends ConsumerWidget {
 
     return ListTile(
       leading: const Icon(Icons.cloud_outlined),
-      title: const Text('Cookidoo'),
+      title: Text(l10n.settingsSectionCookidoo),
       subtitle: Text(subtitle),
       onTap: () async {
         final prefs = prefsAsync.valueOrNull;
@@ -37,7 +38,7 @@ class CookidooCredentialsTile extends ConsumerWidget {
           context: context,
           useRootNavigator: true,
           builder: (ctx) => AlertDialog(
-            title: const Text('Cookidoo'),
+            title: Text(l10n.settingsSectionCookidoo),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -86,7 +87,9 @@ class CookidooCredentialsTile extends ConsumerWidget {
                         content:
                             Text(l10n.settingsCookidooTestSuccess)));
                   } catch (e) {
-                    debugPrint('Cookidoo test login failed: $e');
+                    if (kDebugMode) {
+                      debugPrint('Cookidoo test login failed: $e');
+                    }
                     messenger.showSnackBar(SnackBar(
                         content:
                             Text(l10n.settingsCookidooTestFailure)));

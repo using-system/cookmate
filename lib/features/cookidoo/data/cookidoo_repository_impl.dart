@@ -35,7 +35,7 @@ class CookidooRepositoryImpl implements CookidooRepository {
   }
 
   @override
-  Future<CookidooRecipeDetail> getRecipeDetail(String recipeId) {
+  Future<CookidooRecipeDetail> getRecipeDetail(String recipeId) async {
     final creds = credentials;
     if (creds == null || creds.isEmpty) {
       throw const CookidooAuthException(
@@ -57,7 +57,7 @@ class CookidooRepositoryImpl implements CookidooRepository {
     try {
       await client.login(creds, countryCode: _countryCode);
       return true;
-    } on CookidooAuthException {
+    } on Exception {
       return false;
     }
   }

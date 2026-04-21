@@ -40,21 +40,28 @@ class CookidooClient {
   }) async {
     final url =
         Uri.parse('${_baseUrl(countryCode)}/ciam/auth/token');
-    final response = await _http.post(
-      url,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': _basicAuth,
-      },
-      body:
-          'grant_type=password&username=${Uri.encodeComponent(credentials.email)}'
-          '&password=${Uri.encodeComponent(credentials.password)}',
-    );
+    final http.Response response;
+    try {
+      response = await _http.post(
+        url,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': _basicAuth,
+        },
+        body:
+            'grant_type=password&username=${Uri.encodeComponent(credentials.email)}'
+            '&password=${Uri.encodeComponent(credentials.password)}',
+      );
+    } on Exception catch (e) {
+      throw CookidooAuthException('Login request failed: $e');
+    }
 
     if (response.statusCode != 200) {
-      debugPrint('Cookidoo login: POST $url → ${response.statusCode}');
-      debugPrint('Cookidoo login response: ${response.body}');
+      if (kDebugMode) {
+        debugPrint('Cookidoo login: POST $url → ${response.statusCode}');
+        debugPrint('Cookidoo login response: ${response.body}');
+      }
       throw CookidooAuthException(
         'Login failed (${response.statusCode})',
       );
@@ -72,17 +79,23 @@ class CookidooClient {
 
     final url =
         Uri.parse('${_baseUrl(countryCode)}/ciam/auth/token');
-    final response = await _http.post(
-      url,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': _basicAuth,
-      },
-      body:
-          'grant_type=refresh_token&refresh_token=${_token!.refreshToken}'
-          '&client_id=$_clientId',
-    );
+    final http.Response response;
+    try {
+      response = await _http.post(
+        url,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': _basicAuth,
+        },
+        body: 'grant_type=refresh_token'
+            '&refresh_token=${Uri.encodeComponent(_token!.refreshToken)}'
+            '&client_id=$_clientId',
+      );
+    } on Exception catch (e) {
+      _token = null;
+      throw CookidooAuthException('Token refresh request failed: $e');
+    }
 
     if (response.statusCode != 200) {
       _token = null;
@@ -121,9 +134,12 @@ class CookidooClient {
       '?query=${Uri.encodeComponent(query)}&context=recipes&limit=$limit',
     );
 
-    final response = await _http.get(url, headers: {
-      'Accept': 'application/json',
-    });
+    final http.Response response;
+    try {
+      response = await _http.get(url, headers: {'Accept': 'application/json'});
+    } on Exception catch (e) {
+      throw CookidooNetworkException('Search request failed: $e');
+    }
 
     if (response.statusCode != 200) {
       throw CookidooNetworkException(
@@ -151,10 +167,15 @@ class CookidooClient {
       '${_baseUrl(countryCode)}/recipes/recipe/$lang/$recipeId',
     );
 
-    final response = await _http.get(url, headers: {
-      'Accept': 'application/vnd.vorwerk.recipe.embedded.hal+json',
-      'Authorization': 'Bearer ${_token!.accessToken}',
-    });
+    final http.Response response;
+    try {
+      response = await _http.get(url, headers: {
+        'Accept': 'application/vnd.vorwerk.recipe.embedded.hal+json',
+        'Authorization': 'Bearer ${_token!.accessToken}',
+      });
+    } on Exception catch (e) {
+      throw CookidooNetworkException('Recipe detail request failed: $e');
+    }
 
     if (response.statusCode == 404) {
       throw CookidooNotFoundException(recipeId);

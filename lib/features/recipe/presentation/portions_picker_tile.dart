@@ -27,14 +27,32 @@ class PortionsPickerTile extends ConsumerWidget {
             return StatefulBuilder(
               builder: (ctx, setDialogState) => AlertDialog(
                 title: Text(l10n.settingsPortionsDialogTitle),
-                content: Slider(
-                  value: selected.toDouble(),
-                  min: RecipeConfig.minPortions.toDouble(),
-                  max: RecipeConfig.maxPortions.toDouble(),
-                  divisions: RecipeConfig.maxPortions - RecipeConfig.minPortions,
-                  label: selected.toString(),
-                  onChanged: (val) =>
-                      setDialogState(() => selected = val.round()),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$selected',
+                      style: Theme.of(context)
+                          .textTheme
+                          .displayMedium
+                          ?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    Slider(
+                      value: selected.toDouble(),
+                      min: RecipeConfig.minPortions.toDouble(),
+                      max: RecipeConfig.maxPortions.toDouble(),
+                      divisions:
+                          RecipeConfig.maxPortions - RecipeConfig.minPortions,
+                      label: selected.toString(),
+                      onChanged: (val) =>
+                          setDialogState(() => selected = val.round()),
+                    ),
+                  ],
                 ),
                 actions: [
                   TextButton(

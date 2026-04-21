@@ -117,6 +117,7 @@
   "settingsDietaryRestrictionsNone": "Keine",
   "settingsRecipeChangeFailureSnackbar": "Rezepteinstellungen konnten nicht gespeichert werden. Bitte versuche es erneut.",
   "chatInfoTabRecipe": "Rezept",
+  "chatInfoTabSkills": "Skills",
   "chatInfoTabAi": "KI",
   "chatRecipeInfoTmVersion": "TM-Version",
   "chatRecipeInfoUnitSystem": "Einheitensystem",

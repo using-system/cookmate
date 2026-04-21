@@ -768,6 +768,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     final reasoning = await ref.read(chatReasoningPreferenceProvider.future);
     final expertConfig = await ref.read(chatExpertConfigProvider.future);
     final recipeConfig = await ref.read(recipeConfigProvider.future);
+    final allSkills = await ref.read(allSkillsProvider.future);
+    final skillPrefs =
+        await ref.read(skillPreferencesStorageProvider.future);
 
     if (!mounted) return;
 
@@ -801,8 +804,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
     await showDialog<void>(
       context: context,
+      useRootNavigator: true,
       builder: (ctx) => DefaultTabController(
-        length: 2,
+        length: 3,
         child: Dialog(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -810,6 +814,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               TabBar(
                 tabs: [
                   Tab(text: l10n.chatInfoTabRecipe),
+                  Tab(text: l10n.chatInfoTabSkills),
                   Tab(text: l10n.chatInfoTabAi),
                 ],
               ),
@@ -854,6 +859,30 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
                           title: Text(l10n.chatRecipeInfoLanguage),
                           subtitle: Text(languageLabel),
                         ),
+                      ],
+                    ),
+                    ListView(
+                      shrinkWrap: true,
+                      children: [
+                        for (final skill in allSkills)
+                          ListTile(
+                            leading: Icon(
+                              skillPrefs.isEnabled(skill.name)
+                                  ? Icons.check_circle
+                                  : Icons.cancel_outlined,
+                              color: skillPrefs.isEnabled(skill.name)
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                            ),
+                            title: Text(skill.name),
+                            subtitle: Text(
+                              skill.description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                       ],
                     ),
                     ListView(

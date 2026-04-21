@@ -370,6 +370,9 @@
   "chatInfoTabRecipe": "Recipe",
   "@chatInfoTabRecipe": { "description": "Tab label for recipe settings in the conversation info dialog." },
 
+  "chatInfoTabSkills": "Skills",
+  "@chatInfoTabSkills": { "description": "Tab label for skills status in the conversation info dialog." },
+
   "chatInfoTabAi": "AI",
   "@chatInfoTabAi": { "description": "Tab label for AI settings in the conversation info dialog." },
 

@@ -13,8 +13,8 @@ void main() {
     storage = CrashlyticsPreferenceStorage(prefs);
   });
 
-  test('read returns false when nothing is stored', () {
-    expect(storage.read(), false);
+  test('read returns true when nothing is stored', () {
+    expect(storage.read(), true);
   });
 
   test('write then read returns the written value', () async {
@@ -28,12 +28,12 @@ void main() {
     expect(storage.read(), false);
   });
 
-  test('read returns false when stored value is corrupted', () async {
+  test('read returns true when stored value is corrupted', () async {
     SharedPreferences.setMockInitialValues(<String, Object>{
       'observability_crashlytics_enabled': 'not_a_bool',
     });
     final prefs = await SharedPreferences.getInstance();
     final s = CrashlyticsPreferenceStorage(prefs);
-    expect(s.read(), false);
+    expect(s.read(), true);
   });
 }

@@ -60,16 +60,16 @@ void main() {
     expect(find.text(l10n.settingsCrashlyticsDescription), findsOneWidget);
   });
 
-  testWidgets('switch defaults to off', (tester) async {
+  testWidgets('switch defaults to on', (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
 
     await tester.pumpWidget(
-      _wrap(const CrashlyticsToggleTile()),
+      _wrap(const CrashlyticsToggleTile(), initialValue: true),
     );
     await tester.pumpAndSettle();
 
     final switchWidget = tester.widget<Switch>(find.byType(Switch));
-    expect(switchWidget.value, false);
+    expect(switchWidget.value, true);
   });
 
   testWidgets('switch reflects stored true value', (tester) async {

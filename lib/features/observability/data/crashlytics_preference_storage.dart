@@ -10,10 +10,10 @@ class CrashlyticsPreferenceStorage {
 
   bool read() {
     try {
-      return _prefs.getBool(_key) ?? false;
+      return _prefs.getBool(_key) ?? true;
     } catch (error, stack) {
       debugPrint('Failed to read crashlytics preference: $error\n$stack');
-      return false;
+      return true;
     }
   }
 

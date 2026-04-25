@@ -147,5 +147,9 @@
   "settingsSectionObservability": "Observabilidad",
   "settingsCrashlyticsTitle": "Informe de fallos",
   "settingsCrashlyticsDescription": "Enviar informes de fallos anónimos para mejorar la aplicación",
-  "settingsCrashlyticsChangeFailureSnackbar": "No se pudo cambiar la configuración de informe de fallos. Inténtelo de nuevo."
+  "settingsCrashlyticsChangeFailureSnackbar": "No se pudo cambiar la configuración de informe de fallos. Inténtelo de nuevo.",
+
+  "settingsPerformanceTitle": "Monitoreo de rendimiento",
+  "settingsPerformanceDescription": "Recopilar datos de rendimiento anónimos para mejorar la aplicación",
+  "settingsPerformanceChangeFailureSnackbar": "No se pudo cambiar la configuración de monitoreo de rendimiento. Inténtelo de nuevo."
 }

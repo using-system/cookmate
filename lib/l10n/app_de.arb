@@ -147,5 +147,9 @@
   "settingsSectionObservability": "Beobachtbarkeit",
   "settingsCrashlyticsTitle": "Absturzbericht",
   "settingsCrashlyticsDescription": "Anonyme Absturzberichte senden, um die App zu verbessern",
-  "settingsCrashlyticsChangeFailureSnackbar": "Absturzbericht-Einstellung konnte nicht geändert werden. Bitte versuchen Sie es erneut."
+  "settingsCrashlyticsChangeFailureSnackbar": "Absturzbericht-Einstellung konnte nicht geändert werden. Bitte versuchen Sie es erneut.",
+
+  "settingsPerformanceTitle": "Leistungsüberwachung",
+  "settingsPerformanceDescription": "Anonyme Leistungsdaten sammeln, um die App zu verbessern",
+  "settingsPerformanceChangeFailureSnackbar": "Leistungsüberwachung-Einstellung konnte nicht geändert werden. Bitte versuchen Sie es erneut."
 }

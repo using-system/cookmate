@@ -1,5 +1,6 @@
 import 'package:cookmate/features/observability/presentation/crashlytics_toggle_tile.dart';
 import 'package:cookmate/features/observability/presentation/observability_section.dart';
+import 'package:cookmate/features/observability/presentation/performance_toggle_tile.dart';
 import 'package:cookmate/features/observability/providers.dart';
 import 'package:cookmate/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -17,10 +18,22 @@ class _FakeNotifier extends CrashlyticsPreferenceNotifier {
   }
 }
 
+class _FakePerformanceNotifier extends PerformancePreferenceNotifier {
+  @override
+  Future<bool> build() async => true;
+
+  @override
+  Future<void> setPreference(bool enabled) async {
+    state = AsyncValue.data(enabled);
+  }
+}
+
 Widget _wrap(Widget child) {
   return ProviderScope(
     overrides: [
       crashlyticsPreferenceProvider.overrideWith(() => _FakeNotifier()),
+      performancePreferenceProvider
+          .overrideWith(() => _FakePerformanceNotifier()),
     ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -43,12 +56,21 @@ void main() {
     expect(find.byType(CrashlyticsToggleTile), findsOneWidget);
   });
 
-  testWidgets('contains a Divider', (tester) async {
+  testWidgets('contains PerformanceToggleTile', (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
 
     await tester.pumpWidget(_wrap(const ObservabilitySection()));
     await tester.pumpAndSettle();
 
-    expect(find.byType(Divider), findsOneWidget);
+    expect(find.byType(PerformanceToggleTile), findsOneWidget);
+  });
+
+  testWidgets('contains Dividers between tiles', (tester) async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+
+    await tester.pumpWidget(_wrap(const ObservabilitySection()));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Divider), findsNWidgets(2));
   });
 }

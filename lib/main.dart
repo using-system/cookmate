@@ -31,13 +31,17 @@ void main() {
         await FirebaseCrashlytics.instance
             .setCrashlyticsCollectionEnabled(crashlyticsEnabled);
 
-        final performanceEnabled =
-            PerformancePreferenceStorage(prefs).read();
-        await FirebasePerformance.instance
-            .setPerformanceCollectionEnabled(performanceEnabled);
-
         FlutterError.onError =
             FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+        try {
+          final performanceEnabled =
+              PerformancePreferenceStorage(prefs).read();
+          await FirebasePerformance.instance
+              .setPerformanceCollectionEnabled(performanceEnabled);
+        } catch (e, stack) {
+          debugPrint('Firebase Performance init skipped: $e\n$stack');
+        }
       } catch (e, stack) {
         debugPrint('Firebase init skipped: $e\n$stack');
       }

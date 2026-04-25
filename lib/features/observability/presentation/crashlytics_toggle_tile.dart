@@ -11,7 +11,7 @@ class CrashlyticsToggleTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final crashlyticsAsync = ref.watch(crashlyticsPreferenceProvider);
-    final enabled = crashlyticsAsync.valueOrNull ?? false;
+    final enabled = crashlyticsAsync.valueOrNull ?? true;
 
     return SwitchListTile(
       secondary: const Icon(Icons.bug_report_outlined),

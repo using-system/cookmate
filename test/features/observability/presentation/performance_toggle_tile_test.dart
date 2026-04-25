@@ -72,7 +72,7 @@ void main() {
     expect(switchWidget.value, true);
   });
 
-  testWidgets('switch reflects stored false value', (tester) async {
+  testWidgets('switch reflects provided false value', (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{
       'observability_performance_enabled': false,
     });

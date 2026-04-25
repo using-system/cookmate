@@ -23,7 +23,7 @@ class _FakeNotifier extends CrashlyticsPreferenceNotifier {
   }
 }
 
-Widget _wrap(Widget child, {bool initialValue = false}) {
+Widget _wrap(Widget child, {bool initialValue = true}) {
   return ProviderScope(
     overrides: [
       crashlyticsPreferenceProvider.overrideWith(
@@ -60,7 +60,7 @@ void main() {
     expect(find.text(l10n.settingsCrashlyticsDescription), findsOneWidget);
   });
 
-  testWidgets('switch defaults to on', (tester) async {
+  testWidgets('switch reflects provided on value', (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
 
     await tester.pumpWidget(
@@ -86,7 +86,7 @@ void main() {
     expect(switchWidget.value, true);
   });
 
-  testWidgets('toggling switch persists true', (tester) async {
+  testWidgets('toggling switch persists false', (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
 
     await tester.pumpWidget(
@@ -98,7 +98,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getBool('observability_crashlytics_enabled'), true);
+    expect(prefs.getBool('observability_crashlytics_enabled'), false);
   });
 
   testWidgets('shows bug report icon', (tester) async {

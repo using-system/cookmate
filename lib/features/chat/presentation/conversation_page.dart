@@ -212,6 +212,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             tools: tools,
             supportsFunctionCalls: toolRegistry.hasTools,
             toolChoice: ToolChoice.auto,
+            maxFunctionBufferLength: 8000,
           );
           break;
         } catch (_) {

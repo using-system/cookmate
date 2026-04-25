@@ -452,5 +452,14 @@
   "@settingsCrashlyticsDescription": { "description": "Subtitle explaining what crash reporting does." },
 
   "settingsCrashlyticsChangeFailureSnackbar": "Couldn't change crash reporting setting. Please try again.",
-  "@settingsCrashlyticsChangeFailureSnackbar": { "description": "Shown when persisting the crash reporting toggle fails." }
+  "@settingsCrashlyticsChangeFailureSnackbar": { "description": "Shown when persisting the crash reporting toggle fails." },
+
+  "settingsPerformanceTitle": "Performance monitoring",
+  "@settingsPerformanceTitle": { "description": "Title of the performance monitoring toggle tile." },
+
+  "settingsPerformanceDescription": "Collect anonymous performance data to help improve the app",
+  "@settingsPerformanceDescription": { "description": "Subtitle explaining what performance monitoring does." },
+
+  "settingsPerformanceChangeFailureSnackbar": "Couldn't change performance monitoring setting. Please try again.",
+  "@settingsPerformanceChangeFailureSnackbar": { "description": "Shown when persisting the performance monitoring toggle fails." }
 }

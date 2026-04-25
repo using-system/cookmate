@@ -1,9 +1,11 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/shared_preferences_provider.dart';
 import 'data/crashlytics_preference_storage.dart';
+import 'data/performance_preference_storage.dart';
 
 final crashlyticsPreferenceStorageProvider =
     FutureProvider<CrashlyticsPreferenceStorage>((ref) async {
@@ -41,4 +43,42 @@ class CrashlyticsPreferenceNotifier extends AsyncNotifier<bool> {
 final crashlyticsPreferenceProvider =
     AsyncNotifierProvider<CrashlyticsPreferenceNotifier, bool>(
   CrashlyticsPreferenceNotifier.new,
+);
+
+final performancePreferenceStorageProvider =
+    FutureProvider<PerformancePreferenceStorage>((ref) async {
+  final prefs = await ref.watch(sharedPreferencesProvider.future);
+  return PerformancePreferenceStorage(prefs);
+});
+
+class PerformancePreferenceNotifier extends AsyncNotifier<bool> {
+  @override
+  Future<bool> build() async {
+    final storage =
+        await ref.watch(performancePreferenceStorageProvider.future);
+    return storage.read();
+  }
+
+  Future<void> setPreference(bool enabled) async {
+    final storage =
+        await ref.read(performancePreferenceStorageProvider.future);
+    state = const AsyncValue<bool>.loading().copyWithPrevious(state);
+    try {
+      await storage.write(enabled);
+      if (Firebase.apps.isNotEmpty) {
+        await FirebasePerformance.instance
+            .setPerformanceCollectionEnabled(enabled);
+      }
+      state = AsyncValue.data(enabled);
+    } catch (error, stack) {
+      state =
+          AsyncValue<bool>.error(error, stack).copyWithPrevious(state);
+      rethrow;
+    }
+  }
+}
+
+final performancePreferenceProvider =
+    AsyncNotifierProvider<PerformancePreferenceNotifier, bool>(
+  PerformancePreferenceNotifier.new,
 );

@@ -4,32 +4,32 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers.dart';
 
-class CrashlyticsToggleTile extends ConsumerWidget {
-  const CrashlyticsToggleTile({super.key});
+class PerformanceToggleTile extends ConsumerWidget {
+  const PerformanceToggleTile({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final crashlyticsAsync = ref.watch(crashlyticsPreferenceProvider);
-    final enabled = crashlyticsAsync.valueOrNull ?? true;
+    final performanceAsync = ref.watch(performancePreferenceProvider);
+    final enabled = performanceAsync.valueOrNull ?? true;
 
     return SwitchListTile(
-      secondary: const Icon(Icons.bug_report_outlined),
-      title: Text(l10n.settingsCrashlyticsTitle),
-      subtitle: Text(l10n.settingsCrashlyticsDescription),
+      secondary: const Icon(Icons.speed),
+      title: Text(l10n.settingsPerformanceTitle),
+      subtitle: Text(l10n.settingsPerformanceDescription),
       value: enabled,
-      onChanged: crashlyticsAsync.isLoading ? null : (value) async {
+      onChanged: performanceAsync.isLoading ? null : (value) async {
         try {
           await ref
-              .read(crashlyticsPreferenceProvider.notifier)
+              .read(performancePreferenceProvider.notifier)
               .setPreference(value);
         } catch (error, stack) {
-          debugPrint('Failed to change crashlytics: $error\n$stack');
+          debugPrint('Failed to change performance: $error\n$stack');
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content:
-                    Text(l10n.settingsCrashlyticsChangeFailureSnackbar),
+                    Text(l10n.settingsPerformanceChangeFailureSnackbar),
               ),
             );
           }

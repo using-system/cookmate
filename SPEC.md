@@ -53,7 +53,8 @@
 ## Observability
 
 - firebase_core (Firebase initialization)
-- firebase_crashlytics (opt-in crash reporting)
+- firebase_crashlytics (crash reporting, enabled by default)
+- firebase_performance (performance monitoring, enabled by default)
 
 ## Internationalization
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'crashlytics_toggle_tile.dart';
+import 'performance_toggle_tile.dart';
 
 class ObservabilitySection extends StatelessWidget {
   const ObservabilitySection({super.key});
@@ -11,6 +12,8 @@ class ObservabilitySection extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         CrashlyticsToggleTile(),
+        Divider(height: 1),
+        PerformanceToggleTile(),
         Divider(height: 1),
       ],
     );

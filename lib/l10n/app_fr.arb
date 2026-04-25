@@ -147,5 +147,9 @@
   "settingsSectionObservability": "Observabilité",
   "settingsCrashlyticsTitle": "Rapport de plantage",
   "settingsCrashlyticsDescription": "Envoyer des rapports de plantage anonymes pour améliorer l'application",
-  "settingsCrashlyticsChangeFailureSnackbar": "Impossible de modifier le paramètre de rapport de plantage. Veuillez réessayer."
+  "settingsCrashlyticsChangeFailureSnackbar": "Impossible de modifier le paramètre de rapport de plantage. Veuillez réessayer.",
+
+  "settingsPerformanceTitle": "Rapport de performance",
+  "settingsPerformanceDescription": "Collecter des données de performance anonymes pour améliorer l'application",
+  "settingsPerformanceChangeFailureSnackbar": "Impossible de modifier le paramètre de performance. Veuillez réessayer."
 }

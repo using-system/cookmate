@@ -1,4 +1,4 @@
-import 'package:cookmate/features/observability/presentation/crashlytics_toggle_tile.dart';
+import 'package:cookmate/features/observability/presentation/performance_toggle_tile.dart';
 import 'package:cookmate/features/observability/providers.dart';
 import 'package:cookmate/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _FakeNotifier extends CrashlyticsPreferenceNotifier {
+class _FakeNotifier extends PerformancePreferenceNotifier {
   _FakeNotifier(this._initial);
   final bool _initial;
 
@@ -16,7 +16,7 @@ class _FakeNotifier extends CrashlyticsPreferenceNotifier {
   @override
   Future<void> setPreference(bool enabled) async {
     final storage =
-        await ref.read(crashlyticsPreferenceStorageProvider.future);
+        await ref.read(performancePreferenceStorageProvider.future);
     state = const AsyncValue<bool>.loading().copyWithPrevious(state);
     await storage.write(enabled);
     state = AsyncValue.data(enabled);
@@ -26,7 +26,7 @@ class _FakeNotifier extends CrashlyticsPreferenceNotifier {
 Widget _wrap(Widget child, {bool initialValue = true}) {
   return ProviderScope(
     overrides: [
-      crashlyticsPreferenceProvider.overrideWith(
+      performancePreferenceProvider.overrideWith(
         () => _FakeNotifier(initialValue),
       ),
     ],
@@ -51,20 +51,20 @@ void main() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
 
     await tester.pumpWidget(
-      _wrap(const CrashlyticsToggleTile()),
+      _wrap(const PerformanceToggleTile()),
     );
     await tester.pumpAndSettle();
 
     final l10n = _l10n(tester);
-    expect(find.text(l10n.settingsCrashlyticsTitle), findsOneWidget);
-    expect(find.text(l10n.settingsCrashlyticsDescription), findsOneWidget);
+    expect(find.text(l10n.settingsPerformanceTitle), findsOneWidget);
+    expect(find.text(l10n.settingsPerformanceDescription), findsOneWidget);
   });
 
-  testWidgets('switch reflects provided on value', (tester) async {
+  testWidgets('switch defaults to on', (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
 
     await tester.pumpWidget(
-      _wrap(const CrashlyticsToggleTile(), initialValue: true),
+      _wrap(const PerformanceToggleTile(), initialValue: true),
     );
     await tester.pumpAndSettle();
 
@@ -72,25 +72,25 @@ void main() {
     expect(switchWidget.value, true);
   });
 
-  testWidgets('switch reflects stored true value', (tester) async {
+  testWidgets('switch reflects provided false value', (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{
-      'observability_crashlytics_enabled': true,
+      'observability_performance_enabled': false,
     });
 
     await tester.pumpWidget(
-      _wrap(const CrashlyticsToggleTile(), initialValue: true),
+      _wrap(const PerformanceToggleTile(), initialValue: false),
     );
     await tester.pumpAndSettle();
 
     final switchWidget = tester.widget<Switch>(find.byType(Switch));
-    expect(switchWidget.value, true);
+    expect(switchWidget.value, false);
   });
 
   testWidgets('toggling switch persists false', (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
 
     await tester.pumpWidget(
-      _wrap(const CrashlyticsToggleTile()),
+      _wrap(const PerformanceToggleTile()),
     );
     await tester.pumpAndSettle();
 
@@ -98,17 +98,17 @@ void main() {
     await tester.pumpAndSettle();
 
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getBool('observability_crashlytics_enabled'), false);
+    expect(prefs.getBool('observability_performance_enabled'), false);
   });
 
-  testWidgets('shows bug report icon', (tester) async {
+  testWidgets('shows speed icon', (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
 
     await tester.pumpWidget(
-      _wrap(const CrashlyticsToggleTile()),
+      _wrap(const PerformanceToggleTile()),
     );
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.bug_report_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.speed), findsOneWidget);
   });
 }

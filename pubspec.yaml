@@ -53,6 +53,7 @@ dependencies:
   http: ^1.4.0
   firebase_core: ^3.13.0
   firebase_crashlytics: ^4.3.5
+  firebase_performance: ^0.10.0+12
 
 dev_dependencies:
   flutter_test:

@@ -664,7 +664,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       // (happens without thinking mode).
       if (!_hadToolCall && mounted && _chat == chat) {
         final parsed = _parseRawToolCall(buffer.toString());
-        if (parsed != null) {
+        if (parsed != null && mounted) {
           debugPrint('>>> Stream: detected raw tool call in text buffer');
           buffer.clear();
           final toolReg = ref.read(toolRegistryProvider);
@@ -750,7 +750,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         // Detect raw tool call tokens in text buffer (no-thinking mode).
         if (!_hadToolCall && mounted && _chat == chat) {
           final parsed = _parseRawToolCall(buffer.toString());
-          if (parsed != null) {
+          if (parsed != null && mounted) {
             debugPrint('>>> Re-gen round ${round + 1}: '
                 'detected raw tool call in text buffer');
             buffer.clear();

@@ -18,6 +18,7 @@ class ModelDownloadPage extends ConsumerStatefulWidget {
 class _ModelDownloadPageState extends ConsumerState<ModelDownloadPage> {
   int _progress = 0;
   String? _error;
+  bool _downloading = false;
 
   @override
   void initState() {
@@ -75,6 +76,8 @@ class _ModelDownloadPageState extends ConsumerState<ModelDownloadPage> {
   }
 
   Future<void> _startDownload() async {
+    if (_downloading) return;
+    _downloading = true;
     setState(() {
       _error = null;
       _progress = 0;
@@ -82,6 +85,7 @@ class _ModelDownloadPageState extends ConsumerState<ModelDownloadPage> {
 
     final shouldProceed = await _checkConnectivity();
     if (!shouldProceed) {
+      _downloading = false;
       if (mounted) {
         setState(() {
           _error = 'connectivity';
@@ -116,6 +120,8 @@ class _ModelDownloadPageState extends ConsumerState<ModelDownloadPage> {
           _error = e.toString();
         });
       }
+    } finally {
+      _downloading = false;
     }
   }
 

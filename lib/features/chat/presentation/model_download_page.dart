@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cookmate/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
@@ -24,11 +25,70 @@ class _ModelDownloadPageState extends ConsumerState<ModelDownloadPage> {
     _startDownload();
   }
 
+  /// Returns true if the download should proceed, false otherwise.
+  Future<bool> _checkConnectivity() async {
+    final results = await Connectivity().checkConnectivity();
+
+    if (results.contains(ConnectivityResult.none)) {
+      if (!mounted) return false;
+      final l10n = AppLocalizations.of(context);
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(l10n.chatModelDownloadNoConnectionTitle),
+          content: Text(l10n.chatModelDownloadNoConnectionBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.ok),
+            ),
+          ],
+        ),
+      );
+      return false;
+    }
+
+    if (!results.contains(ConnectivityResult.wifi)) {
+      if (!mounted) return false;
+      final l10n = AppLocalizations.of(context);
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(l10n.chatModelDownloadMobileDataTitle),
+          content: Text(l10n.chatModelDownloadMobileDataBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.chatModelDownloadContinue),
+            ),
+          ],
+        ),
+      );
+      return proceed ?? false;
+    }
+
+    return true;
+  }
+
   Future<void> _startDownload() async {
     setState(() {
       _error = null;
       _progress = 0;
     });
+
+    final shouldProceed = await _checkConnectivity();
+    if (!shouldProceed) {
+      if (mounted) {
+        setState(() {
+          _error = 'connectivity';
+        });
+      }
+      return;
+    }
 
     try {
       final model = await ref.read(chatModelPreferenceProvider.future);

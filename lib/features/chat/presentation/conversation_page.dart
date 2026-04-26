@@ -41,6 +41,30 @@ class ConversationPage extends ConsumerStatefulWidget {
   ConsumerState<ConversationPage> createState() => _ConversationPageState();
 }
 
+/// Parse a raw `<|tool_call>call:name{key:<|"|>value<|"|>}<tool_call|>`
+/// token into a tool name and args map. Returns `null` if not a match.
+({String name, Map<String, dynamic> args})? _parseRawToolCall(String text) {
+  final raw = text.trim();
+  final re = RegExp(
+    r'<\|tool_call\>call:(\w+)\{(.+?)\}<tool_call\|>',
+  );
+  final match = re.firstMatch(raw);
+  if (match == null) return null;
+
+  final name = match.group(1)!;
+  final paramsRaw = match.group(2)!;
+  final args = <String, dynamic>{};
+
+  // Parse key:<|"|>value<|"|> pairs.
+  final paramRe = RegExp(r'(\w+):<\|"\|>(.+?)<\|"\|>');
+  for (final pm in paramRe.allMatches(paramsRaw)) {
+    args[pm.group(1)!] = pm.group(2)!;
+  }
+
+  debugPrint('>>> _parseRawToolCall: name="$name" args=$args');
+  return (name: name, args: args);
+}
+
 class _ConversationPageState extends ConsumerState<ConversationPage> {
   final InMemoryChatController _chatController = InMemoryChatController();
   final StreamStateStore _streamStates = StreamStateStore();
@@ -636,6 +660,30 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         }
       }
 
+      // Detect raw tool call tokens that the model emits as text
+      // (happens without thinking mode).
+      if (!_hadToolCall && mounted && _chat == chat) {
+        final parsed = _parseRawToolCall(buffer.toString());
+        if (parsed != null) {
+          debugPrint('>>> Stream: detected raw tool call in text buffer');
+          buffer.clear();
+          final toolReg = ref.read(toolRegistryProvider);
+          final fakeResponse = FunctionCallResponse(
+            name: parsed.name,
+            args: parsed.args,
+          );
+          final toolResult = await toolReg.handle(fakeResponse, context);
+          if (toolResult != null && _chat == chat) {
+            _hadToolCall = true;
+            await chat.addQueryChunk(gemma.Message.toolResponse(
+              toolName: toolResult.name,
+              response: toolResult.result,
+            ));
+            debugPrint('>>> Stream: raw tool call handled');
+          }
+        }
+      }
+
       // After stream ends, if a tool was called, re-generate so the LLM
       // produces its final answer using the tool results as context.
       // Loop up to maxRounds to support chained tool calls (e.g.
@@ -698,6 +746,32 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             }
           }
         }
+
+        // Detect raw tool call tokens in text buffer (no-thinking mode).
+        if (!_hadToolCall && mounted && _chat == chat) {
+          final parsed = _parseRawToolCall(buffer.toString());
+          if (parsed != null) {
+            debugPrint('>>> Re-gen round ${round + 1}: '
+                'detected raw tool call in text buffer');
+            buffer.clear();
+            final toolReg = ref.read(toolRegistryProvider);
+            final fakeResponse = FunctionCallResponse(
+              name: parsed.name,
+              args: parsed.args,
+            );
+            final toolResult = await toolReg.handle(fakeResponse, context);
+            if (toolResult != null && _chat == chat) {
+              _hadToolCall = true;
+              await chat.addQueryChunk(gemma.Message.toolResponse(
+                toolName: toolResult.name,
+                response: toolResult.result,
+              ));
+              debugPrint('>>> Re-gen round ${round + 1}: '
+                  'raw tool call handled');
+            }
+          }
+        }
+
         debugPrint('>>> Re-gen round ${round + 1} done: $tokenCount tokens, '
             'hadToolCall=$_hadToolCall');
       }

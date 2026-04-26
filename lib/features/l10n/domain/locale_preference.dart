@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 sealed class LocalePreference {
   const LocalePreference();
 
-  static const Set<String> supportedLanguageCodes = {'en', 'fr', 'es', 'de'};
+  static const Set<String> supportedLanguageCodes = {'en', 'fr', 'es', 'de', 'it'};
 
   String toStorageValue();
 

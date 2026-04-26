@@ -37,6 +37,10 @@
 
 - http (REST client for Cookidoo recipe search and detail APIs)
 
+## Connectivity
+
+- connectivity_plus (network type detection before model download)
+
 ## Chat UI
 
 - flutter_chat_ui (Flyer Chat v2 — message list, composer, streaming)
@@ -58,7 +62,7 @@
 
 ## Internationalization
 
-- flutter_localizations (ARB-based, 4 locales: en, fr, de, es)
+- flutter_localizations (ARB-based, 5 locales: en, fr, de, es, it)
 
 ## Build & CI
 

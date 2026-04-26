@@ -151,5 +151,15 @@
 
   "settingsPerformanceTitle": "Leistungsüberwachung",
   "settingsPerformanceDescription": "Anonyme Leistungsdaten sammeln, um die App zu verbessern",
-  "settingsPerformanceChangeFailureSnackbar": "Leistungsüberwachung-Einstellung konnte nicht geändert werden. Bitte versuchen Sie es erneut."
+  "settingsPerformanceChangeFailureSnackbar": "Leistungsüberwachung-Einstellung konnte nicht geändert werden. Bitte versuchen Sie es erneut.",
+
+  "chatModelDownloadNoConnectionTitle": "Keine Internetverbindung",
+  "chatModelDownloadNoConnectionBody": "Verbinde dich mit dem Internet, um das KI-Modell herunterzuladen.",
+  "chatModelDownloadMobileDataTitle": "Großer Download",
+  "chatModelDownloadMobileDataBody": "Der Download des KI-Modells ist groß. Eine WLAN-Verbindung wird empfohlen.",
+  "chatModelDownloadContinue": "Weiter",
+
+  "settingsResetAll": "Alle Einstellungen zurücksetzen",
+  "settingsResetAllConfirmation": "Alle Einstellungen zurücksetzen? Die App wird geschlossen und alle Daten werden gelöscht. Dies kann nicht rückgängig gemacht werden.",
+  "settingsResetAllButton": "Zurücksetzen"
 }

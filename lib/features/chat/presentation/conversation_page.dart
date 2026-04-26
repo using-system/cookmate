@@ -58,6 +58,7 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
     'en': 'English',
     'es': 'Español',
     'de': 'Deutsch',
+    'it': 'Italiano',
   };
 
   void _clearPendingAudio() {

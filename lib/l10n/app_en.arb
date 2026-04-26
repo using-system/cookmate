@@ -461,5 +461,29 @@
   "@settingsPerformanceDescription": { "description": "Subtitle explaining what performance monitoring does." },
 
   "settingsPerformanceChangeFailureSnackbar": "Couldn't change performance monitoring setting. Please try again.",
-  "@settingsPerformanceChangeFailureSnackbar": { "description": "Shown when persisting the performance monitoring toggle fails." }
+  "@settingsPerformanceChangeFailureSnackbar": { "description": "Shown when persisting the performance monitoring toggle fails." },
+
+  "chatModelDownloadNoConnectionTitle": "No internet connection",
+  "@chatModelDownloadNoConnectionTitle": { "description": "Dialog title when there is no internet connection before model download." },
+
+  "chatModelDownloadNoConnectionBody": "Connect to the internet to download the AI model.",
+  "@chatModelDownloadNoConnectionBody": { "description": "Dialog body when there is no internet connection before model download." },
+
+  "chatModelDownloadMobileDataTitle": "Large download",
+  "@chatModelDownloadMobileDataTitle": { "description": "Dialog title warning about large download on mobile data." },
+
+  "chatModelDownloadMobileDataBody": "The AI model download is large. A WiFi connection is recommended.",
+  "@chatModelDownloadMobileDataBody": { "description": "Dialog body warning about large download on mobile data." },
+
+  "chatModelDownloadContinue": "Continue",
+  "@chatModelDownloadContinue": { "description": "Button label to proceed with download on mobile data." },
+
+  "settingsResetAll": "Reset all settings",
+  "@settingsResetAll": { "description": "Label for the reset all settings action in settings." },
+
+  "settingsResetAllConfirmation": "Reset all settings? The app will close and all data will be deleted. This cannot be undone.",
+  "@settingsResetAllConfirmation": { "description": "Confirmation prompt before resetting all settings." },
+
+  "settingsResetAllButton": "Reset",
+  "@settingsResetAllButton": { "description": "Button label to confirm reset all settings." }
 }

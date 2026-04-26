@@ -10,6 +10,7 @@ const Map<String, String> _languageNames = {
   'en': 'English',
   'es': 'Español',
   'de': 'Deutsch',
+  'it': 'Italiano',
 };
 
 class LanguagePickerTile extends ConsumerWidget {

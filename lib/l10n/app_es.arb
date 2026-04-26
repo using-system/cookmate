@@ -151,5 +151,11 @@
 
   "settingsPerformanceTitle": "Monitoreo de rendimiento",
   "settingsPerformanceDescription": "Recopilar datos de rendimiento anónimos para mejorar la aplicación",
-  "settingsPerformanceChangeFailureSnackbar": "No se pudo cambiar la configuración de monitoreo de rendimiento. Inténtelo de nuevo."
+  "settingsPerformanceChangeFailureSnackbar": "No se pudo cambiar la configuración de monitoreo de rendimiento. Inténtelo de nuevo.",
+
+  "chatModelDownloadNoConnectionTitle": "Sin conexión a internet",
+  "chatModelDownloadNoConnectionBody": "Conéctate a internet para descargar el modelo de IA.",
+  "chatModelDownloadMobileDataTitle": "Descarga grande",
+  "chatModelDownloadMobileDataBody": "La descarga del modelo de IA es grande. Se recomienda usar una conexión WiFi.",
+  "chatModelDownloadContinue": "Continuar"
 }

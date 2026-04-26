@@ -588,30 +588,51 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             await Future<void>.delayed(Duration.zero);
           }
         } else if (response is FunctionCallResponse) {
+          debugPrint('>>> Stream: FunctionCallResponse name="${response.name}" '
+              'args=${response.args}');
           if (mounted) {
             final toolReg = ref.read(toolRegistryProvider);
             final toolResult = await toolReg.handle(response, context);
             if (toolResult != null && _chat == chat) {
               _hadToolCall = true;
+              debugPrint('>>> Stream: sending toolResponse for '
+                  '"${toolResult.name}" to chat');
               await chat.addQueryChunk(gemma.Message.toolResponse(
                 toolName: toolResult.name,
                 response: toolResult.result,
               ));
+              debugPrint('>>> Stream: toolResponse sent successfully');
+            } else {
+              debugPrint('>>> Stream: tool returned null or chat changed '
+                  '(toolResult=${toolResult != null}, sameChat=${_chat == chat})');
             }
           }
         } else if (response is ParallelFunctionCallResponse) {
+          debugPrint('>>> Stream: ParallelFunctionCallResponse with '
+              '${response.calls.length} calls');
           if (!mounted) continue;
           final toolReg = ref.read(toolRegistryProvider);
           for (final call in response.calls) {
+            debugPrint('>>> Stream: parallel call name="${call.name}" '
+                'args=${call.args}');
             final toolResult = await toolReg.handle(call, context);
             if (toolResult != null && _chat == chat) {
               _hadToolCall = true;
+              debugPrint('>>> Stream: sending parallel toolResponse for '
+                  '"${toolResult.name}"');
               await chat.addQueryChunk(gemma.Message.toolResponse(
                 toolName: toolResult.name,
                 response: toolResult.result,
               ));
+              debugPrint('>>> Stream: parallel toolResponse sent');
+            } else {
+              debugPrint('>>> Stream: parallel tool returned null or '
+                  'chat changed');
             }
           }
+        } else {
+          debugPrint('>>> Stream: unknown response type: '
+              '${response.runtimeType}');
         }
       }
 
@@ -634,7 +655,12 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               await Future<void>.delayed(Duration.zero);
             }
           } else if (response is FunctionCallResponse) {
-            debugPrint('>>> Re-gen: LLM called another tool: ${response.name}');
+            debugPrint('>>> Re-gen: LLM called another tool: '
+                '"${response.name}" args=${response.args} — '
+                'NOT handled (only 1 round of tool calls supported)');
+          } else {
+            debugPrint('>>> Re-gen: unexpected response type: '
+                '${response.runtimeType}');
           }
         }
         debugPrint('>>> Re-gen done: $tokenCount tokens');

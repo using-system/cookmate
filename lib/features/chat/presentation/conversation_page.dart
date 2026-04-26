@@ -638,13 +638,23 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
 
       // After stream ends, if a tool was called, re-generate so the LLM
       // produces its final answer using the tool results as context.
-      if (_hadToolCall && mounted && _chat == chat) {
-        debugPrint('>>> Re-generating after tool call...');
+      // Loop up to maxRounds to support chained tool calls (e.g.
+      // search_recipes → get_recipe_detail → final text).
+      const maxToolRounds = 10;
+      for (var round = 0;
+          _hadToolCall && mounted && _chat == chat && round < maxToolRounds;
+          round++) {
+        debugPrint('>>> Re-generating after tool call (round ${round + 1})...');
         int tokenCount = 0;
+        _hadToolCall = false; // reset for this round
+
         await for (final response in chat.generateChatResponseAsync()) {
           if (!mounted) break;
-          debugPrint('>>> Re-gen response: ${response.runtimeType}');
-          if (response is TextResponse) {
+
+          if (response is ThinkingResponse) {
+            // Thinking tokens during re-gen — skip silently.
+            continue;
+          } else if (response is TextResponse) {
             tokenCount++;
             buffer.write(response.token);
             final elapsed = DateTime.now().difference(lastUpdate);
@@ -655,15 +665,41 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               await Future<void>.delayed(Duration.zero);
             }
           } else if (response is FunctionCallResponse) {
-            debugPrint('>>> Re-gen: LLM called another tool: '
-                '"${response.name}" args=${response.args} — '
-                'NOT handled (only 1 round of tool calls supported)');
-          } else {
-            debugPrint('>>> Re-gen: unexpected response type: '
-                '${response.runtimeType}');
+            debugPrint('>>> Re-gen round ${round + 1}: tool call '
+                '"${response.name}" args=${response.args}');
+            if (mounted) {
+              final toolReg = ref.read(toolRegistryProvider);
+              final toolResult = await toolReg.handle(response, context);
+              if (toolResult != null && _chat == chat) {
+                _hadToolCall = true;
+                debugPrint('>>> Re-gen round ${round + 1}: sending '
+                    'toolResponse for "${toolResult.name}"');
+                await chat.addQueryChunk(gemma.Message.toolResponse(
+                  toolName: toolResult.name,
+                  response: toolResult.result,
+                ));
+                debugPrint('>>> Re-gen round ${round + 1}: toolResponse sent');
+              }
+            }
+          } else if (response is ParallelFunctionCallResponse) {
+            if (!mounted) continue;
+            final toolReg = ref.read(toolRegistryProvider);
+            for (final call in response.calls) {
+              debugPrint('>>> Re-gen round ${round + 1}: parallel tool call '
+                  '"${call.name}" args=${call.args}');
+              final toolResult = await toolReg.handle(call, context);
+              if (toolResult != null && _chat == chat) {
+                _hadToolCall = true;
+                await chat.addQueryChunk(gemma.Message.toolResponse(
+                  toolName: toolResult.name,
+                  response: toolResult.result,
+                ));
+              }
+            }
           }
         }
-        debugPrint('>>> Re-gen done: $tokenCount tokens');
+        debugPrint('>>> Re-gen round ${round + 1} done: $tokenCount tokens, '
+            'hadToolCall=$_hadToolCall');
       }
     } catch (e, stack) {
       debugPrint('Stream error: $e\n$stack');

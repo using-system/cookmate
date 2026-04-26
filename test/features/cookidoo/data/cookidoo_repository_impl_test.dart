@@ -40,7 +40,7 @@ void main() {
       final repo = CookidooRepositoryImpl(
         client: CookidooClient(httpClient: mockClient),
         locale: 'fr-FR',
-        credentialsReader: () => null,
+        credentialsReader: () async => null,
       );
 
       final results = await repo.searchRecipes('pasta', limit: 3);
@@ -55,7 +55,7 @@ void main() {
       final repo = CookidooRepositoryImpl(
         client: CookidooClient(),
         locale: 'en-US',
-        credentialsReader: () => null,
+        credentialsReader: () async => null,
       );
 
       expect(
@@ -68,7 +68,7 @@ void main() {
       final repo = CookidooRepositoryImpl(
         client: CookidooClient(),
         locale: 'en-US',
-        credentialsReader: () =>
+        credentialsReader: () async =>
             const CookidooCredentials(email: '', password: ''),
       );
 
@@ -82,7 +82,7 @@ void main() {
       final repo = CookidooRepositoryImpl(
         client: CookidooClient(),
         locale: 'en-US',
-        credentialsReader: () =>
+        credentialsReader: () async =>
             const CookidooCredentials(email: '', password: 'secret'),
       );
 
@@ -98,7 +98,7 @@ void main() {
       final repo = CookidooRepositoryImpl(
         client: CookidooClient(),
         locale: 'en-US',
-        credentialsReader: () => null,
+        credentialsReader: () async => null,
       );
 
       expect(await repo.isAuthenticated(), isFalse);
@@ -108,7 +108,7 @@ void main() {
       final repo = CookidooRepositoryImpl(
         client: CookidooClient(),
         locale: 'en-US',
-        credentialsReader: () =>
+        credentialsReader: () async =>
             const CookidooCredentials(email: '', password: ''),
       );
 
@@ -121,7 +121,7 @@ void main() {
       final repo = CookidooRepositoryImpl(
         client: CookidooClient(httpClient: mockClient),
         locale: 'en-US',
-        credentialsReader: () =>
+        credentialsReader: () async =>
             const CookidooCredentials(email: 'a@b.com', password: 'pw'),
       );
 
@@ -141,7 +141,7 @@ void main() {
       final repo = CookidooRepositoryImpl(
         client: CookidooClient(httpClient: mockClient),
         locale: 'en-US',
-        credentialsReader: () =>
+        credentialsReader: () async =>
             const CookidooCredentials(email: 'a@b.com', password: 'pw'),
       );
 

@@ -62,7 +62,7 @@
 
 ## Internationalization
 
-- flutter_localizations (ARB-based, 4 locales: en, fr, de, es)
+- flutter_localizations (ARB-based, 5 locales: en, fr, de, es, it)
 
 ## Build & CI
 

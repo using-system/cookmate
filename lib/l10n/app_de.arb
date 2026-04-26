@@ -157,5 +157,9 @@
   "chatModelDownloadNoConnectionBody": "Verbinde dich mit dem Internet, um das KI-Modell herunterzuladen.",
   "chatModelDownloadMobileDataTitle": "Großer Download",
   "chatModelDownloadMobileDataBody": "Der Download des KI-Modells ist groß. Eine WLAN-Verbindung wird empfohlen.",
-  "chatModelDownloadContinue": "Weiter"
+  "chatModelDownloadContinue": "Weiter",
+
+  "settingsResetAll": "Alle Einstellungen zurücksetzen",
+  "settingsResetAllConfirmation": "Alle Einstellungen zurücksetzen? Die App wird geschlossen und alle Daten werden gelöscht. Dies kann nicht rückgängig gemacht werden.",
+  "settingsResetAllButton": "Zurücksetzen"
 }

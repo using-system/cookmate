@@ -157,5 +157,9 @@
   "chatModelDownloadNoConnectionBody": "Connettiti a internet per scaricare il modello IA.",
   "chatModelDownloadMobileDataTitle": "Download di grandi dimensioni",
   "chatModelDownloadMobileDataBody": "Il download del modello IA \u00e8 di grandi dimensioni. Si consiglia una connessione WiFi.",
-  "chatModelDownloadContinue": "Continua"
+  "chatModelDownloadContinue": "Continua",
+
+  "settingsResetAll": "Ripristina tutte le impostazioni",
+  "settingsResetAllConfirmation": "Ripristinare tutte le impostazioni? L'app si chiuderà e tutti i dati verranno eliminati. Questa azione non può essere annullata.",
+  "settingsResetAllButton": "Ripristina"
 }

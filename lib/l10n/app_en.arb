@@ -476,5 +476,14 @@
   "@chatModelDownloadMobileDataBody": { "description": "Dialog body warning about large download on mobile data." },
 
   "chatModelDownloadContinue": "Continue",
-  "@chatModelDownloadContinue": { "description": "Button label to proceed with download on mobile data." }
+  "@chatModelDownloadContinue": { "description": "Button label to proceed with download on mobile data." },
+
+  "settingsResetAll": "Reset all settings",
+  "@settingsResetAll": { "description": "Label for the reset all settings action in settings." },
+
+  "settingsResetAllConfirmation": "Reset all settings? The app will close and all data will be deleted. This cannot be undone.",
+  "@settingsResetAllConfirmation": { "description": "Confirmation prompt before resetting all settings." },
+
+  "settingsResetAllButton": "Reset",
+  "@settingsResetAllButton": { "description": "Button label to confirm reset all settings." }
 }

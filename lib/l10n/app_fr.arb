@@ -157,5 +157,9 @@
   "chatModelDownloadNoConnectionBody": "Connectez-vous à internet pour télécharger le modèle IA.",
   "chatModelDownloadMobileDataTitle": "Téléchargement volumineux",
   "chatModelDownloadMobileDataBody": "Le téléchargement du modèle IA est volumineux. Une connexion WiFi est recommandée.",
-  "chatModelDownloadContinue": "Continuer"
+  "chatModelDownloadContinue": "Continuer",
+
+  "settingsResetAll": "Réinitialiser tous les réglages",
+  "settingsResetAllConfirmation": "Réinitialiser tous les réglages ? L'application se fermera et toutes les données seront supprimées. Cette action est irréversible.",
+  "settingsResetAllButton": "Réinitialiser"
 }

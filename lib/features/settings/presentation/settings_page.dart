@@ -1,6 +1,13 @@
 import 'package:cookmate/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
+
+import '../../chat/domain/chat_model_preference.dart';
 
 import '../../chat/presentation/backend_picker_tile.dart';
 import '../../chat/presentation/expert_picker_tile.dart';
@@ -100,6 +107,20 @@ class SettingsPage extends ConsumerWidget {
             onTap: () => _confirmDeleteAll(context, ref),
           ),
           const Divider(height: 1),
+          ListTile(
+            leading: Icon(
+              Icons.restore,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            title: Text(
+              l10n.settingsResetAll,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+            onTap: () => _confirmResetAll(context, ref),
+          ),
+          const Divider(height: 1),
         ],
       ),
     );
@@ -131,5 +152,59 @@ class SettingsPage extends ConsumerWidget {
     if (confirmed == true) {
       await ref.read(conversationsProvider.notifier).deleteAll();
     }
+  }
+
+  Future<void> _confirmResetAll(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      useRootNavigator: true,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.settingsResetAll),
+        content: Text(l10n.settingsResetAllConfirmation),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              l10n.settingsResetAllButton,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    // 1. Read installed model before clearing preferences.
+    final prefs = await SharedPreferences.getInstance();
+    final installedModelName = prefs.getString('chat_model_installed');
+
+    // 2. Clear all shared preferences.
+    await prefs.clear();
+
+    // 3. Uninstall downloaded model if one exists.
+    if (installedModelName != null) {
+      for (final model in ChatModelPreference.values) {
+        if (model.name == installedModelName) {
+          try {
+            await FlutterGemma.uninstallModel(model.fileName);
+          } catch (_) {
+            // Best-effort — model file may already be gone.
+          }
+          break;
+        }
+      }
+    }
+
+    // 4. Delete SQLite database.
+    final dbPath = join(await getDatabasesPath(), 'cookmate_chat.db');
+    await deleteDatabase(dbPath);
+
+    // 5. Close the app.
+    await SystemNavigator.pop();
   }
 }

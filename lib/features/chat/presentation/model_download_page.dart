@@ -23,7 +23,7 @@ class _ModelDownloadPageState extends ConsumerState<ModelDownloadPage> {
   @override
   void initState() {
     super.initState();
-    _startDownload();
+    Future.microtask(_startDownload);
   }
 
   /// Returns true if the download should proceed, false otherwise.
@@ -35,6 +35,7 @@ class _ModelDownloadPageState extends ConsumerState<ModelDownloadPage> {
       final l10n = AppLocalizations.of(context);
       await showDialog<void>(
         context: context,
+        barrierDismissible: false,
         builder: (context) => AlertDialog(
           title: Text(l10n.chatModelDownloadNoConnectionTitle),
           content: Text(l10n.chatModelDownloadNoConnectionBody),
@@ -49,7 +50,8 @@ class _ModelDownloadPageState extends ConsumerState<ModelDownloadPage> {
       return false;
     }
 
-    if (!results.contains(ConnectivityResult.wifi)) {
+    if (results.contains(ConnectivityResult.mobile) &&
+        !results.contains(ConnectivityResult.wifi)) {
       if (!mounted) return false;
       final l10n = AppLocalizations.of(context);
       final proceed = await showDialog<bool>(
@@ -83,18 +85,17 @@ class _ModelDownloadPageState extends ConsumerState<ModelDownloadPage> {
       _progress = 0;
     });
 
-    final shouldProceed = await _checkConnectivity();
-    if (!shouldProceed) {
-      _downloading = false;
-      if (mounted) {
-        setState(() {
-          _error = 'connectivity';
-        });
-      }
-      return;
-    }
-
     try {
+      final shouldProceed = await _checkConnectivity();
+      if (!shouldProceed) {
+        if (mounted) {
+          setState(() {
+            _error = 'connectivity';
+          });
+        }
+        return;
+      }
+
       final model = await ref.read(chatModelPreferenceProvider.future);
 
       await FlutterGemma.installModel(

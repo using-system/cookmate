@@ -7,8 +7,6 @@ import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../../chat/domain/chat_model_preference.dart';
-
 import '../../chat/presentation/backend_picker_tile.dart';
 import '../../chat/presentation/expert_picker_tile.dart';
 import '../../chat/presentation/model_picker_tile.dart';
@@ -179,28 +177,27 @@ class SettingsPage extends ConsumerWidget {
     );
     if (confirmed != true) return;
 
-    // 1. Read installed model before clearing preferences.
-    final prefs = await SharedPreferences.getInstance();
-    final installedModelName = prefs.getString('chat_model_installed');
+    // 1. Read installed model via provider before clearing preferences.
+    final storage =
+        await ref.read(chatModelPreferenceStorageProvider.future);
+    final installedModel = storage.readInstalled();
 
     // 2. Clear all shared preferences.
+    final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
 
     // 3. Uninstall downloaded model if one exists.
-    if (installedModelName != null) {
-      for (final model in ChatModelPreference.values) {
-        if (model.name == installedModelName) {
-          try {
-            await FlutterGemma.uninstallModel(model.fileName);
-          } catch (_) {
-            // Best-effort — model file may already be gone.
-          }
-          break;
-        }
+    if (installedModel != null) {
+      try {
+        await FlutterGemma.uninstallModel(installedModel.fileName);
+      } catch (_) {
+        // Best-effort — model file may already be gone.
       }
     }
 
-    // 4. Delete SQLite database.
+    // 4. Close and delete SQLite database.
+    final db = await ref.read(chatDatabaseProvider.future);
+    await db.close();
     final dbPath = join(await getDatabasesPath(), 'cookmate_chat.db');
     await deleteDatabase(dbPath);
 

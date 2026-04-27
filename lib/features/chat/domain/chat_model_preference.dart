@@ -23,7 +23,7 @@ enum ChatModelPreference {
     url:
         'https://huggingface.co/typomonster/supergemma4-e4b-abliterated-litert-lm/resolve/main/supergemma4-e4b-abliterated.litertlm',
     modelType: ModelType.gemmaIt,
-    fileType: ModelFileType.litertlm,
+    fileType: ModelFileType.task,
   ),
   ;
 

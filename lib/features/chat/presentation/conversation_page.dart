@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:cookmate/l10n/app_localizations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter_chat_core/flutter_chat_core.dart';
@@ -46,7 +47,7 @@ class ConversationPage extends ConsumerStatefulWidget {
 ({String name, Map<String, dynamic> args})? _parseRawToolCall(String text) {
   final raw = text.trim();
   final re = RegExp(
-    r'<\|tool_call\>call:(\w+)\{(.+?)\}<tool_call\|>',
+    r'^<\|tool_call\>call:(\w+)\{(.+?)\}<tool_call\|>$',
   );
   final match = re.firstMatch(raw);
   if (match == null) return null;
@@ -55,13 +56,17 @@ class ConversationPage extends ConsumerStatefulWidget {
   final paramsRaw = match.group(2)!;
   final args = <String, dynamic>{};
 
-  // Parse key:<|"|>value<|"|> pairs.
+  // Parse key:<|"|>value<|"|> pairs, attempting numeric conversion.
   final paramRe = RegExp(r'(\w+):<\|"\|>(.+?)<\|"\|>');
   for (final pm in paramRe.allMatches(paramsRaw)) {
-    args[pm.group(1)!] = pm.group(2)!;
+    final value = pm.group(2)!;
+    final asNum = num.tryParse(value);
+    args[pm.group(1)!] = asNum ?? value;
   }
 
-  debugPrint('>>> _parseRawToolCall: name="$name" args=$args');
+  if (kDebugMode) {
+    debugPrint('>>> _parseRawToolCall: name="$name" args=$args');
+  }
   return (name: name, args: args);
 }
 
@@ -612,49 +617,63 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
             await Future<void>.delayed(Duration.zero);
           }
         } else if (response is FunctionCallResponse) {
-          debugPrint('>>> Stream: FunctionCallResponse name="${response.name}" '
-              'args=${response.args}');
+          if (kDebugMode) {
+            debugPrint('>>> Stream: FunctionCallResponse name="${response.name}" '
+                'args=${response.args}');
+          }
           if (mounted) {
             final toolReg = ref.read(toolRegistryProvider);
             final toolResult = await toolReg.handle(response, context);
             if (toolResult != null && _chat == chat) {
               _hadToolCall = true;
-              debugPrint('>>> Stream: sending toolResponse for '
-                  '"${toolResult.name}" to chat');
+              if (kDebugMode) {
+                debugPrint('>>> Stream: sending toolResponse for '
+                    '"${toolResult.name}" to chat');
+              }
               await chat.addQueryChunk(gemma.Message.toolResponse(
                 toolName: toolResult.name,
                 response: toolResult.result,
               ));
-              debugPrint('>>> Stream: toolResponse sent successfully');
-            } else {
+              if (kDebugMode) {
+                debugPrint('>>> Stream: toolResponse sent successfully');
+              }
+            } else if (kDebugMode) {
               debugPrint('>>> Stream: tool returned null or chat changed '
                   '(toolResult=${toolResult != null}, sameChat=${_chat == chat})');
             }
           }
         } else if (response is ParallelFunctionCallResponse) {
-          debugPrint('>>> Stream: ParallelFunctionCallResponse with '
-              '${response.calls.length} calls');
+          if (kDebugMode) {
+            debugPrint('>>> Stream: ParallelFunctionCallResponse with '
+                '${response.calls.length} calls');
+          }
           if (!mounted) continue;
           final toolReg = ref.read(toolRegistryProvider);
           for (final call in response.calls) {
-            debugPrint('>>> Stream: parallel call name="${call.name}" '
-                'args=${call.args}');
+            if (kDebugMode) {
+              debugPrint('>>> Stream: parallel call name="${call.name}" '
+                  'args=${call.args}');
+            }
             final toolResult = await toolReg.handle(call, context);
             if (toolResult != null && _chat == chat) {
               _hadToolCall = true;
-              debugPrint('>>> Stream: sending parallel toolResponse for '
-                  '"${toolResult.name}"');
+              if (kDebugMode) {
+                debugPrint('>>> Stream: sending parallel toolResponse for '
+                    '"${toolResult.name}"');
+              }
               await chat.addQueryChunk(gemma.Message.toolResponse(
                 toolName: toolResult.name,
                 response: toolResult.result,
               ));
-              debugPrint('>>> Stream: parallel toolResponse sent');
-            } else {
+              if (kDebugMode) {
+                debugPrint('>>> Stream: parallel toolResponse sent');
+              }
+            } else if (kDebugMode) {
               debugPrint('>>> Stream: parallel tool returned null or '
                   'chat changed');
             }
           }
-        } else {
+        } else if (kDebugMode) {
           debugPrint('>>> Stream: unknown response type: '
               '${response.runtimeType}');
         }
@@ -665,7 +684,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       if (!_hadToolCall && mounted && _chat == chat) {
         final parsed = _parseRawToolCall(buffer.toString());
         if (parsed != null && mounted) {
-          debugPrint('>>> Stream: detected raw tool call in text buffer');
+          if (kDebugMode) {
+            debugPrint('>>> Stream: detected raw tool call in text buffer');
+          }
           buffer.clear();
           final toolReg = ref.read(toolRegistryProvider);
           final fakeResponse = FunctionCallResponse(
@@ -679,7 +700,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               toolName: toolResult.name,
               response: toolResult.result,
             ));
-            debugPrint('>>> Stream: raw tool call handled');
+            if (kDebugMode) {
+              debugPrint('>>> Stream: raw tool call handled');
+            }
           }
         }
       }
@@ -692,7 +715,9 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
       for (var round = 0;
           _hadToolCall && mounted && _chat == chat && round < maxToolRounds;
           round++) {
-        debugPrint('>>> Re-generating after tool call (round ${round + 1})...');
+        if (kDebugMode) {
+          debugPrint('>>> Re-generating after tool call (round ${round + 1})...');
+        }
         int tokenCount = 0;
         _hadToolCall = false; // reset for this round
 
@@ -713,28 +738,36 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
               await Future<void>.delayed(Duration.zero);
             }
           } else if (response is FunctionCallResponse) {
-            debugPrint('>>> Re-gen round ${round + 1}: tool call '
-                '"${response.name}" args=${response.args}');
+            if (kDebugMode) {
+              debugPrint('>>> Re-gen round ${round + 1}: tool call '
+                  '"${response.name}" args=${response.args}');
+            }
             if (mounted) {
               final toolReg = ref.read(toolRegistryProvider);
               final toolResult = await toolReg.handle(response, context);
               if (toolResult != null && _chat == chat) {
                 _hadToolCall = true;
-                debugPrint('>>> Re-gen round ${round + 1}: sending '
-                    'toolResponse for "${toolResult.name}"');
+                if (kDebugMode) {
+                  debugPrint('>>> Re-gen round ${round + 1}: sending '
+                      'toolResponse for "${toolResult.name}"');
+                }
                 await chat.addQueryChunk(gemma.Message.toolResponse(
                   toolName: toolResult.name,
                   response: toolResult.result,
                 ));
-                debugPrint('>>> Re-gen round ${round + 1}: toolResponse sent');
+                if (kDebugMode) {
+                  debugPrint('>>> Re-gen round ${round + 1}: toolResponse sent');
+                }
               }
             }
           } else if (response is ParallelFunctionCallResponse) {
             if (!mounted) continue;
             final toolReg = ref.read(toolRegistryProvider);
             for (final call in response.calls) {
-              debugPrint('>>> Re-gen round ${round + 1}: parallel tool call '
-                  '"${call.name}" args=${call.args}');
+              if (kDebugMode) {
+                debugPrint('>>> Re-gen round ${round + 1}: parallel tool call '
+                    '"${call.name}" args=${call.args}');
+              }
               final toolResult = await toolReg.handle(call, context);
               if (toolResult != null && _chat == chat) {
                 _hadToolCall = true;
@@ -751,8 +784,10 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
         if (!_hadToolCall && mounted && _chat == chat) {
           final parsed = _parseRawToolCall(buffer.toString());
           if (parsed != null && mounted) {
-            debugPrint('>>> Re-gen round ${round + 1}: '
-                'detected raw tool call in text buffer');
+            if (kDebugMode) {
+              debugPrint('>>> Re-gen round ${round + 1}: '
+                  'detected raw tool call in text buffer');
+            }
             buffer.clear();
             final toolReg = ref.read(toolRegistryProvider);
             final fakeResponse = FunctionCallResponse(
@@ -766,14 +801,18 @@ class _ConversationPageState extends ConsumerState<ConversationPage> {
                 toolName: toolResult.name,
                 response: toolResult.result,
               ));
-              debugPrint('>>> Re-gen round ${round + 1}: '
-                  'raw tool call handled');
+              if (kDebugMode) {
+                debugPrint('>>> Re-gen round ${round + 1}: '
+                    'raw tool call handled');
+              }
             }
           }
         }
 
-        debugPrint('>>> Re-gen round ${round + 1} done: $tokenCount tokens, '
+        if (kDebugMode) {
+          debugPrint('>>> Re-gen round ${round + 1} done: $tokenCount tokens, '
             'hadToolCall=$_hadToolCall');
+        }
       }
     } catch (e, stack) {
       debugPrint('Stream error: $e\n$stack');

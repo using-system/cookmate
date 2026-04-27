@@ -17,6 +17,14 @@ enum ChatModelPreference {
     modelType: ModelType.gemmaIt,
     fileType: ModelFileType.task,
   ),
+  superGemma4E4BAbliterated(
+    label: 'SuperGemma4-E4B-abliterated',
+    fileName: 'supergemma4-e4b-abliterated.litertlm',
+    url:
+        'https://huggingface.co/typomonster/supergemma4-e4b-abliterated-litert-lm/resolve/main/supergemma4-e4b-abliterated.litertlm',
+    modelType: ModelType.gemmaIt,
+    fileType: ModelFileType.task,
+  ),
   ;
 
   const ChatModelPreference({

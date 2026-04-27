@@ -134,11 +134,27 @@ class CookidooClient {
       '?query=${Uri.encodeComponent(query)}&context=recipes&limit=$limit',
     );
 
+    if (kDebugMode) {
+      debugPrint('>>> CookidooClient.searchRecipes: GET $url');
+    }
+
     final http.Response response;
     try {
       response = await _http.get(url, headers: {'Accept': 'application/json'});
     } on Exception catch (e) {
+      if (kDebugMode) {
+        debugPrint('>>> CookidooClient.searchRecipes: request exception — $e');
+      }
       throw CookidooNetworkException('Search request failed: $e');
+    }
+
+    if (kDebugMode) {
+      debugPrint(
+          '>>> CookidooClient.searchRecipes: ${response.statusCode} '
+          '(${response.body.length} bytes)');
+      debugPrint(
+          '>>> CookidooClient.searchRecipes body: '
+          '${response.body.length > 500 ? '${response.body.substring(0, 500)}…' : response.body}');
     }
 
     if (response.statusCode != 200) {
@@ -149,6 +165,11 @@ class CookidooClient {
 
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     final data = json['data'] as List<dynamic>? ?? [];
+    if (kDebugMode) {
+      debugPrint(
+          '>>> CookidooClient.searchRecipes: parsed ${data.length} items '
+          'from json keys=${json.keys.toList()}');
+    }
     return data
         .map((e) =>
             CookidooRecipeOverview.fromJson(e as Map<String, dynamic>))
@@ -167,6 +188,10 @@ class CookidooClient {
       '${_baseUrl(countryCode)}/recipes/recipe/$lang/$recipeId',
     );
 
+    if (kDebugMode) {
+      debugPrint('>>> CookidooClient.getRecipeDetail: GET $url');
+    }
+
     final http.Response response;
     try {
       response = await _http.get(url, headers: {
@@ -174,7 +199,20 @@ class CookidooClient {
         'Authorization': 'Bearer ${_token!.accessToken}',
       });
     } on Exception catch (e) {
+      if (kDebugMode) {
+        debugPrint(
+            '>>> CookidooClient.getRecipeDetail: request exception — $e');
+      }
       throw CookidooNetworkException('Recipe detail request failed: $e');
+    }
+
+    if (kDebugMode) {
+      debugPrint(
+          '>>> CookidooClient.getRecipeDetail: ${response.statusCode} '
+          '(${response.body.length} bytes)');
+      debugPrint(
+          '>>> CookidooClient.getRecipeDetail body: '
+          '${response.body.length > 500 ? '${response.body.substring(0, 500)}…' : response.body}');
     }
 
     if (response.statusCode == 404) {

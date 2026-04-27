@@ -14,9 +14,7 @@ class CookidooRepositoryImpl implements CookidooRepository {
 
   final CookidooClient client;
   final String locale;
-  final CookidooCredentials? Function() credentialsReader;
-
-  CookidooCredentials? get credentials => credentialsReader();
+  final Future<CookidooCredentials?> Function() credentialsReader;
 
   String get _lang => locale;
   String get _countryCode => CookidooClient.countryCodeFromLocale(locale);
@@ -36,7 +34,7 @@ class CookidooRepositoryImpl implements CookidooRepository {
 
   @override
   Future<CookidooRecipeDetail> getRecipeDetail(String recipeId) async {
-    final creds = credentials;
+    final creds = await credentialsReader();
     if (creds == null || creds.isEmpty) {
       throw const CookidooAuthException(
         'Cookidoo credentials not configured',
@@ -52,7 +50,7 @@ class CookidooRepositoryImpl implements CookidooRepository {
 
   @override
   Future<bool> isAuthenticated() async {
-    final creds = credentials;
+    final creds = await credentialsReader();
     if (creds == null || creds.isEmpty) return false;
     try {
       await client.login(creds, countryCode: _countryCode);

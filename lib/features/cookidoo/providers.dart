@@ -61,9 +61,12 @@ final cookidooRepositoryProvider = Provider<CookidooRepository>((ref) {
   return CookidooRepositoryImpl(
     client: client,
     locale: lang,
-    // Read credentials lazily to avoid rebuilding the repository (and the
-    // entire tool registry chain) every time credentials change.
-    credentialsReader: () =>
-        ref.read(cookidooCredentialsProvider).valueOrNull,
+    // Read credentials lazily and asynchronously so the provider resolves
+    // even when accessed before the credentials Future completes.
+    credentialsReader: () async {
+      final storage =
+          await ref.read(cookidooCredentialsStorageProvider.future);
+      return storage.read();
+    },
   );
 });

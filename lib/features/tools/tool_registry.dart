@@ -55,6 +55,17 @@ class ToolRegistry {
       return null;
     }
     final result = await handler.execute(response.args, context);
+    if (kDebugMode) {
+      if (result == null) {
+        debugPrint('>>> ToolRegistry: handler "${response.name}" returned null '
+            '(fire-and-forget)');
+      } else {
+        final preview = result.toString();
+        debugPrint('>>> ToolRegistry: handler "${response.name}" result '
+            '(${preview.length} chars): '
+            '${preview.length > 300 ? '${preview.substring(0, 300)}…' : preview}');
+      }
+    }
     if (result == null) return null;
     return (name: response.name, result: result);
   }

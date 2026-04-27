@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../cookidoo/providers.dart';
@@ -26,10 +27,22 @@ final toolRegistryProvider = Provider<ToolRegistry>(
     final enabledToolNames =
         enabledSkills.expand((s) => s.tools).toSet();
 
+    if (kDebugMode) {
+      debugPrint('>>> ToolRegistryProvider: enabled skills='
+          '${enabledSkills.map((s) => s.name).toList()}, '
+          'enabled tools=$enabledToolNames, '
+          'all handlers=${allHandlers.keys.toList()}');
+    }
+
     final activeHandlers = allHandlers.entries
         .where((e) => enabledToolNames.contains(e.key))
         .map((e) => e.value)
         .toList();
+
+    if (kDebugMode) {
+      debugPrint('>>> ToolRegistryProvider: active handlers='
+          '${activeHandlers.map((h) => h.definition.name).toList()}');
+    }
 
     return ToolRegistry(activeHandlers);
   },
